@@ -7,6 +7,15 @@ Orange (chart lane 4 / MIDI pitch 76) is blocked in Medium at conversion and exp
 This is a tested **source release**. Windows, TheGHOST, Dolphin and Wii execution have
 not been tested here. No prebuilt Windows EXE is included.
 
+## One-file setup, test and launch
+
+Place START_WINDOWS.cmd in the extracted app folder beside run_app.py, then double-click
+it. It verifies Python 3.11 x64, creates/uses .venv, installs pinned dependencies,
+runs the full test suite, then launches only on success. No intermediate key presses
+are required. start_windows.log records the latest attempt, including app errors.
+A failed stage stops and leaves the window open. Existing separate scripts still work.
+This CMD file was statically reviewed; Windows execution remains unverified here.
+
 ## Start on Windows 10/11 x64
 
 1. Extract the complete ZIP into a normal writable folder (not inside the ZIP viewer).
