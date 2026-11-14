@@ -83,7 +83,7 @@ def write_midi(song, path):
         for tick,priority,msg in sorted(entries,key=lambda e:(e[0],e[1])):
             tr.append(msg.copy(time=tick-last)); last=tick
         tr.append(mido.MetaMessage('end_of_track',time=0)); mid.tracks.append(tr)
-    track(song.metadata.get('Name','TEMPO'), [(t,0,mido.MetaMessage('set_tempo',tempo=round(us))) for t,us in song.tempos]+
+    track(song.metadata.get('Name','TEMPO').encode('latin-1',errors='replace').decode('latin-1'), [(t,0,mido.MetaMessage('set_tempo',tempo=round(us))) for t,us in song.tempos]+
           [(t,1,mido.MetaMessage('time_signature',numerator=n,denominator=d)) for t,n,d in song.signatures]+
           [(0,2,mido.MetaMessage('text',text=META_PREFIX+json.dumps(song.metadata,ensure_ascii=True)))])
     entries=[]

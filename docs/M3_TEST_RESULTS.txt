@@ -1,0 +1,7 @@
+........................................................................ [ 69%]
+...............................                                          [100%]
+103 passed in 5.98s
+
+GUI stress after disposal fix: 10 fresh processes; 60 GUI tests passed; 120 main-thread callback assertions.
+Environment: CPython 3.11.18, Linux x64, Qt offscreen, PySide6 6.8.3, NumPy 2.2.4, SciPy 1.15.2, SoundFile 0.13.1.
+Windows/TheGHOST/Dolphin/Wii: NOT RUN.

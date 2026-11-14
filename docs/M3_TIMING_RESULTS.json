@@ -1,0 +1,11 @@
+{
+  "fixture": "examples/audio/onset-study.wav",
+  "expected_onsets": 15,
+  "detected_onsets": 15,
+  "expected_bpm": 120,
+  "estimated_bpm": 120.034,
+  "max_absolute_onset_error_ms": 0.18100000000043082,
+  "median_absolute_onset_error_ms": 0.0910000000002853,
+  "beat_fit": 1.0,
+  "scope": "Synthetic tone bursts only; not real-song transcription accuracy"
+}

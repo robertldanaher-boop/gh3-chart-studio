@@ -1,0 +1,61 @@
+{
+  "errors": [],
+  "warnings": [
+    "Onsets are mixed-audio attack candidates, not isolated guitar notes.",
+    "Tempo/beat grid is a constant-tempo estimate; half/double-time ambiguity and drift are possible.",
+    "Energy-change markers are review points, not verified musical phrase boundaries.",
+    "This is an onset-derived draft, not verified guitar transcription. No sustain or Star Power inference is performed.",
+    "Positive shift moves chart notes later relative to audio; the original audio is never moved or re-encoded.",
+    "Without learned patterns, lane shape follows timbre ranks, not detected guitar pitches.",
+    "TheGHOST/Windows/Dolphin/Wii runtime acceptance remains pending.",
+    "MIDI zero-length chart gems use 1 tick note duration; MIDI imports preserve their actual duration, including 1-tick notes.",
+    "TheGHOST legacy MIDI parser discards sustains shorter than 160 ticks. Prefer notes.chart for short sustains.",
+    "TheGHOST may alter sustain lengths, especially across tempo changes. In-game verification is pending.",
+    "Audio files are not copied. Import the original audio in TheGHOST. Choose either notes.chart OR notes.mid."
+  ],
+  "source_events": 15,
+  "source_gems": 15,
+  "medium_events": 15,
+  "medium_gems": 15,
+  "removed_events": 0,
+  "removed_gems": 0,
+  "status": "Audio onset draft \u2014 listening and gameplay review required",
+  "settings": {
+    "audio_analysis": {
+      "sensitivity": 4,
+      "min_interval_ms": 70,
+      "manual_bpm": 0
+    },
+    "shift_ms": 0,
+    "use_authored_tempo_map": false,
+    "use_learned_patterns": false,
+    "seed": 0
+  },
+  "audio": {
+    "path": "examples/audio/onset-study.wav",
+    "sha256": "4d70e1ffe3ca98b34f492ed83a2348f2cc292350470c83507f0fe7c2e956ff7d",
+    "duration": 9.0,
+    "algorithm": "spectral-energy-v1",
+    "estimated_bpm": 120.034,
+    "beat_fit": 1.0
+  },
+  "pattern_transfer": null,
+  "max_tick_rounding_error_ms": 0.24223891564068012,
+  "exports": {
+    "notes.chart": {
+      "reopened": true,
+      "medium_orange_gems": 0,
+      "max_tempo_boundary_drift_ms": 0.0,
+      "sha256": "e334a392024b558489ff2ff0fdb55d1e2e9cab76e83c451ac1a846604d61ed15"
+    },
+    "notes.mid": {
+      "reopened": true,
+      "medium_orange_gems": 0,
+      "max_tempo_boundary_drift_ms": 0.0056034688782347075,
+      "sha256": "19cd77bf3503759687ca4e94b2db1d2c759e35b93936a6bbb700636747ee1ad3"
+    }
+  },
+  "version": "0.3.0",
+  "midi_profile": "TheGHOST legacy per-difficulty phrases; Medium star power = 79",
+  "source_sha256": "4d70e1ffe3ca98b34f492ed83a2348f2cc292350470c83507f0fe7c2e956ff7d"
+}

@@ -63,8 +63,13 @@ def export_bundle(song, report, destination, source_path=None):
             'TheGHOST legacy MIDI parser discards sustains shorter than 160 ticks. Prefer notes.chart for short sustains.',
             'TheGHOST may alter sustain lengths, especially across tempo changes. In-game verification is pending.',
             'Audio files are not copied. Import the original audio in TheGHOST. Choose either notes.chart OR notes.mid.']
+        if song.metadata.get('Name','').encode('latin-1',errors='replace').decode('latin-1')!=song.metadata.get('Name',''):
+            details['warnings'].append('MIDI track title uses Latin-1 replacement characters; the complete Unicode title is retained in song.ini and application MIDI metadata.')
         if source_path:
-            details['source_sha256']=hashlib.sha256(Path(source_path).read_bytes()).hexdigest()
+            digest=hashlib.sha256()
+            with Path(source_path).open('rb') as source:
+                while chunk:=source.read(1024*1024): digest.update(chunk)
+            details['source_sha256']=digest.hexdigest()
         (staging/'validation.json').write_text(json.dumps(details,indent=2),encoding='utf-8')
         (staging/'settings.json').write_text(json.dumps(report.get('settings',{}),indent=2),encoding='utf-8')
         staging.rename(destination)

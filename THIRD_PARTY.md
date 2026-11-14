@@ -26,3 +26,17 @@ The chart-format documentation was consulted as a reference. See COMPATIBILITY.m
 Before distributing compiled Qt binaries, include their applicable notices and
 source/relinking availability as required by the chosen Qt license. This source
 package does not include Qt binaries or claim commercial-license authorization.
+
+## Audio stack added in 0.3.0
+
+- NumPy 2.2.4 and SciPy 1.15.2: BSD-3-Clause; Python 3.11 wheels verified in local QA.
+  https://numpy.org/doc/stable/license.html ; https://scipy.org/faq/
+- SoundFile 0.13.1: BSD-3-Clause; its bundled libsndfile uses LGPL-2.1 terms.
+  https://python-soundfile.readthedocs.io/en/latest/
+  Library notice is copied from the installed wheel's _soundfile_data/COPYING.
+- CFFI and pycparser: transitive decoder dependencies; installed notices collected.
+- No FFmpeg binary, model weights, dataset or source-separation code is bundled.
+
+PyInstaller's installed SoundFile hook was inspected: it collects the libsndfile
+shared library and COPYING notice. That source inspection does not prove a Windows
+binary build. Review the bundled dependency notices for binary redistribution.

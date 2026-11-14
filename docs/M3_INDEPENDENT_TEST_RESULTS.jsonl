@@ -1,0 +1,3 @@
+{"parser":"parsehero 0.0.2","file":"notes.chart","medium_gems":15,"orange":0,"warnings":[],"resolution":960,"timing_scope":"Original chart ticks retained"}
+{"parser":"parsehero 0.0.2","file":"notes.mid","medium_gems":15,"orange":0,"warnings":[],"resolution":192,"timing_scope":"Parser rounds individual delta times to 192 PPQ; not used for exact timing assertions"}
+{"parser":"midi-file (independent raw SMF parser)","file":"notes.mid","resolution":960,"exact_chart_tick_and_lane_match":true,"medium_gems":15}

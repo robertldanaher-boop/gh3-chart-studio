@@ -11,3 +11,13 @@ for dist in distributions():
             if src.is_file():
                 dest=root/name/entry.name; dest.parent.mkdir(parents=True,exist_ok=True); shutil.copyfile(src,dest)
 print('Collected installed distribution license notices.')
+
+# SoundFile wheels carry libsndfile's LGPL notice outside dist-info.
+try:
+    import _soundfile_data
+    notice=Path(_soundfile_data.__file__).parent/'COPYING'
+    if notice.is_file():
+        dest=root/'libsndfile'/'COPYING';dest.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(notice,dest)
+except ImportError:
+    pass

@@ -1,136 +1,150 @@
-# GH3 Chart Studio — current Claude / ChatGPT relay checkpoint
+# GH3 Chart Studio — current relay checkpoint
 
-Prepared November 14, 2026. Owner: Robert (Bob) Danaher.
-This supersedes the earlier Milestone 1 handoff. No Claude execution has occurred.
+Prepared November 14, 2026 for Robert (Bob) Danaher.
+This supersedes the Milestone 2 handoff. No Claude execution/contribution has occurred.
 
-## Transfer instructions
+## Transfer and source identity
 
-Give the next assistant this file AND `GH3_Chart_Studio_M2_v0_2_0.zip`.
-The file alone does not contain application source. Extract the ZIP; either use the
-extracted project or restore its included repository.bundle to a separate checkout:
+Give the next assistant this file AND GH3_Chart_Studio_M3_v0_3_0.zip.
+The file alone does not contain source. Extract the ZIP, or restore its Git bundle:
 
     git clone repository.bundle GH3-Chart-Studio-repo
 
-Edit/test only one chosen checkout. Read README.md, docs/PROJECT_REQUIREMENTS.md,
-docs/M2_IMPLEMENTATION_LOG.md, docs/PATTERN_LIBRARY.md and docs/COMPATIBILITY.md first.
+Use one checkout for edits/tests. Version 0.3.0, tag v0.3.0, branch
+milestone-3-audio-analysis. The exact release commit is in RELEASE_COMMIT.txt beside
+this file in the ZIP; the tagged Git bundle is authoritative. Release tree is clean.
+Previous baseline: v0.2.0, 17f00c1fc4f22fbbeec9102c47894ddc7c6f50c0.
 
-Suggested prompt: "Continue GH3 Chart Studio from this checkpoint. Inspect the code
-and reproduce the baseline tests before editing. Follow the next task below. Keep
-working features intact and return updated source, test evidence and a handoff."
+Read README.md, docs/PROJECT_REQUIREMENTS.md, docs/M3_IMPLEMENTATION_LOG.md,
+docs/AUDIO_ANALYSIS.md and docs/COMPATIBILITY.md before editing.
 
-## Current version / source identity
+Suggested prompt: "Continue GH3 Chart Studio from this checkpoint. Verify the source
+and tests, preserve working features, and follow the next task below. Return updated
+source, Git history, actual test evidence, limitations and a fresh handoff."
 
-Version: 0.2.0, tag v0.2.0.
-Branch: milestone-2-pattern-learning.
-Starting baseline: c08fb07cb987cec4eb1be2eb8614e4963c879bee (v0.1.0).
-The release's exact commit is supplied in RELEASE_COMMIT.txt beside this handoff in
-the ZIP. The tagged Git bundle is authoritative. The release working tree is clean.
-Do not revert to the older v0.1.0 ZIP without comparing the newer implementation.
+## Mandatory rules
 
-## Non-negotiable project rules
+Python 3.11, PySide6, Git, pytest, modular design; Windows 10/11 x64 desktop app.
+Primary target: GH3 Wii through TheGHOST. Bob uses Windows 7 separately for TheGHOST;
+the new application must not require it.
+Expert Medium must be ACTUAL Medium, only Green/Red/Yellow/Blue:
+.chart MediumSingle lanes 0–3; MIDI PART GUITAR playable pitches 72–75; never Orange 76.
+Preserve tempo maps, retained onset/sustain timing and valid chords. Do not add notes
+into silence to reach a quota. Event counts and gem counts are distinct.
+Never overwrite original songs. Keep charts/training data local. Check code/model
+licenses before reuse. No placeholder controls or invented tests/compatibility claims.
 
-Python 3.11, PySide6, Git, pytest, modular design; Windows 10/11 x64 application.
-Primary gameplay target: GH3 Wii via TheGHOST (Bob uses Windows 7 separately for it).
-Expert Medium must be ACTUAL Medium, with only Green/Red/Yellow/Blue:
-.chart MediumSingle lanes 0–3, MIDI PART GUITAR playable pitches 72–75. No Orange 76.
-Preserve tempo maps, retained authored onset/sustain timing and valid chords.
-Do not invent notes in silence or treat density as proof of musical accuracy.
-Never overwrite original charts/audio. Keep user chart/training data local.
-Check licenses and technical compatibility before adding third-party code/models.
-No placeholder controls, fake successes or claimed runtime tests that were not run.
+## Implemented state
 
-## Current implementation
+M1: authored .chart/MIDI import, Expert/Hard-to-four-fret conversion, controls, preview,
+validated paired exports, metadata/settings and no-overwrite source protection.
+M2: recursive scans, SQLite v1 patterns, deduplication/resume, feature/motif extraction,
+category browsing, bounded similarity, preference ratings and seeded variation modes.
+M3: WAV/FLAC/OGG/MP3 decoding, spectral/energy onset candidates, constant BPM/beat
+estimation, manual BPM, draft shift, waveform preview, quiet/energy-change review
+markers, four-fret onset drafts, authored tempo-map preservation, optional learned
+lane shapes, alignment diagnostics and report/settings persistence.
 
-Milestone 1 converter, GUI, parser/exporter and validation remain in place.
-Milestone 2 now adds:
-- Recursive chart scanning with progress, cancellation and per-file reports.
-- Transactional SQLite v1 pattern store with GH3 application ID.
-- Content/metadata deduplication and resumable rescans; failed files retried.
-- Eight-quarter-note windows, exact fractional rhythm, tempo-aware rates, chord/
-  sustain/movement features, repeated 2–4-event motifs and HOPO opportunity estimates.
-- Category browsing, bounded similarity queries and local 1–5 pattern preferences.
-- Three seeded variation modes using real retrieved donor shapes on existing events.
-- Pattern Library tab, variant selection/preview, normal paired export and provenance.
+New audio modules: gh3studio/audio_analysis.py, audio_chart.py, audio_gui.py.
+Existing architecture: model.py, chartio.py, midiio.py, converter.py, validation.py,
+service.py, gui.py, patterns.py, variations.py, library_gui.py.
+Tests: test_core.py, test_gui.py, test_patterns.py, test_audio.py.
+Pinned audio dependencies: NumPy 2.2.4, SciPy 1.15.2, SoundFile 0.13.1.
+SoundFile/libsndfile covers required formats without a separate FFmpeg binary.
+Updated requirements-windows.lock has transitive versions and hashes.
 
-Core modules: gh3studio/model.py, chartio.py, midiio.py, converter.py, validation.py,
-service.py, gui.py. New modules: patterns.py, variations.py, library_gui.py.
-Tests: tests/test_core.py, test_gui.py, test_patterns.py.
-No new third-party dependency beyond Milestone 1; sqlite3 is Python standard library.
-requirements-windows.lock remains the pinned, hashed Windows dependency set.
+## Actual test evidence
 
-## Actual verification
+103 pytest tests passed on Linux CPython 3.11.18 / PySide6 6.8.3 / NumPy 2.2.4 /
+SciPy 1.15.2 / SoundFile 0.13.1. All 74 prior tests remain included.
+Ten fresh GUI test processes passed 60 GUI tests, including audio analysis/draft/
+comparison/export, settings and 120 main-thread callback assertions.
+See docs/M3_TEST_RESULTS.txt for final captured output.
 
-74 pytest tests passed on Linux CPython 3.11.18 / PySide6 6.8.3 / Mido 1.3.3.
-All original 53 baseline tests remain included.
-Five fresh GUI test processes additionally passed 20 GUI tests, including the
-scan/browse/rate/generate/export workflow and 60 main-thread callback assertions.
-Independent parsehero 0.0.2 opened all six variation sample files without warnings
-or Orange; counts matched the reports. It is external QA, not an app dependency.
-A 1,000-file synthetic corpus produced 6,000 windows with zero errors; rescan skipped
-all duplicates. These tests do not demonstrate real-song musical quality.
-See docs/M2_TEST_RESULTS.txt, M2_BENCHMARK.json and M2_INDEPENDENT_TEST_RESULTS.jsonl.
+Original synthetic fixture: 15/15 tone-burst attacks detected; estimated 120.034 BPM
+versus known 120; maximum absolute onset error 0.181 ms. These measurements do not
+establish real-song accuracy. Source fixture/truth and sample exports are in examples/audio.
+The prior M2 synthetic stress test covered 1,000 files/6,000 windows without errors.
 
-An earlier Qt crash was fixed with explicit queued QObject slots for worker results.
-Preserve this architecture and the shared QApplication test lifetime. Do not mutate
-widgets from worker callbacks. Database connections open/close in their own thread.
+Independent parsehero reads both audio draft formats with no warnings or Orange.
+Its MIDI conversion rounds each delta to 192 PPQ, so it is NOT an exact timing oracle.
+The independent midi-file raw SMF parser verified 960-PPQ MIDI ticks/lanes match the
+.chart draft exactly. See docs/M3_INDEPENDENT_TEST_RESULTS.jsonl.
 
-NOT TESTED: Windows execution/build, TheGHOST runtime import, Dolphin/Wii gameplay,
-audio synchronization or a real-user chart corpus. No Windows EXE is included.
+NOT RUN: Windows runtime/build, TheGHOST runtime import, Dolphin/Wii gameplay,
+a real-user song corpus or subjective musical-quality assessment. No Windows EXE.
 
-## Known limits
+## Regression fixes to preserve
 
-Pattern learning is statistical retrieval/transfer, not neural training or audio analysis.
-Windows are fixed eight-quarter-note blocks, not detected musical phrases. Similarity
-ranks at most 512 candidates. Ratings adjust ranking; the full eight-axis feedback
-system is not implemented. Old content snapshots are retained; no prune UI yet.
-Three variation modes can produce fewer than three distinct arrangements on a small
-corpus; this is explicitly reported. The tiny included sample produces two distinct
-arrangements across its three modes. No arbitrary differences are inserted.
+- Worker results must route through explicit queued QObject slots on the GUI thread.
+- Closed windows use WA_DeleteOnClose; completed worker callbacks/operations release
+  references. GUI tests flush deferred native deletion on the main thread before a
+  new allocation-heavy worker starts. This fixed a repeated-run Qt cleanup crash.
+- MIDI track-title Latin-1 fallback is reported; full Unicode titles remain in
+  song.ini and private MIDI metadata. Standard event text still has format limitations.
+- Source hashing streams file bytes rather than reading an entire recording at once.
 
-Modifiers in source difficulties can prevent conversion/learning. Open notes, modern
-taps/forcing, disjoint/extended sustains, anchors and nonzero offsets retain the
-conservative restrictions described in COMPATIBILITY.md. Natural HOPO behavior may
-change. Other instruments are omitted with warnings. No waveform editor/playback,
-audio generation, batch song generation, neural training or GPU requirement.
+## Current limitations
 
-TheGHOST reference commit: 27f143205d3698a1fca49f34c0710bd8347e8cb3,
-https://github.com/Nanook/TheGHOST — Chart.cs, Mid.cs, MidNote.cs reviewed; no code copied.
-Legacy Medium Star Power is MIDI 79; modern shared 116 is input-only. Reopen our MIDI
-in Legacy mode. TheGHOST MIDI discards sustain lengths below 160 ticks; prefer .chart
-for short sustains. Runtime may alter lengths across tempo changes.
+Audio detection sees the entire mix, not isolated guitar. It does not infer pitches,
+chords, note sustains or Star Power. Drafts have one zero-length gem per detected attack.
+Without learned patterns, lanes follow a timbre-rank heuristic. No neural training.
+Constant-tempo estimates have half/double-time ambiguity; no automatic variable-tempo
+map or tempo editor. Energy-change markers are review hints, not verified phrases.
+No audio playback, synchronized editor, undo/redo or batch song generation yet.
+
+Draft shift is positive for later notes. Generation rejects negative resulting times.
+Timing comparison measures the current chart and does not apply Draft shift again.
+Nearest-attack matching can associate the wrong beat/instrument; ±250 ms matching
+and residual trends are review aids, not automatic repairs. At least three distinct
+matched attacks are required for a correction suggestion.
+
+Analysis limits: 512 MiB input, 20 minutes, 128 MiB raw mono working data, 8–192 kHz,
+1–8 channels. Preview waveform/marker caps do not truncate exported notes.
+MP3 encoder padding/decoder differences may require real-path synchronization checks.
+
+M2 windows are fixed eight-quarter-note blocks, not inferred musical phrases.
+Similarity ranks a bounded pool of 512 candidates, ratings are single 1–5 scores,
+old snapshots remain, and small corpora may produce identical variation modes.
+The full eight-axis feedback system and prune UI are not implemented.
+
+M1 conservative restrictions remain: modern forcing/taps/opens, disjoint/extended
+source sustains, tempo anchors and nonzero template Offset can block operations.
+Natural HOPO behavior can change. Other instruments are omitted with warnings.
+TheGHOST MIDI uses legacy Medium Star Power pitch 79, not shared 116. Reopen our
+MIDI in Legacy mode. TheGHOST can alter short/cross-tempo sustains; prefer chart.
+Upstream behavior reviewed at Nanook/TheGHOST commit
+27f143205d3698a1fca49f34c0710bd8347e8cb3; no TheGHOST code was copied.
 
 ## Next executable task
 
-1. Inspect the tagged source and run the test suite. Record your actual environment.
-2. If Windows is available, execute docs/WINDOWS_TEST.md, including the new pattern
-   workflow, then build_windows.cmd. Do not claim Windows success from Linux tests.
-3. With a supplied, legally usable real song/chart, compare source and variants and
-   perform TheGHOST/Dolphin acceptance. Fix specific failures before expanding scope.
-4. If external game validation remains unavailable, record the blocker and proceed
-   with useful local work: Milestone 3's smallest audio decoding/onset-analysis pipeline.
-   Review licenses first, preserve authored charts, and measure alignment instead of
-   claiming transcription accuracy. Keep audio analysis separate from fret generation.
-5. Commit coherent changes; return a new source ZIP, Git bundle, updated logs and
-   HANDOFF_LATEST.md. Do not silently rewrite this release's history.
+1. Inspect source/Git status, reproduce tests and record the actual environment.
+2. If Windows is available, run docs/WINDOWS_TEST.md and build_windows.cmd. Do not
+   represent Linux tests as Windows execution. Verify packaged libsndfile/NumPy/SciPy.
+3. With a legally usable user song/chart, compare timing against the recording and
+   run TheGHOST/Dolphin acceptance. Fix specific regressions before broader features.
+4. If external validation is unavailable, document it and begin Milestone 4's smallest
+   functional editor: editable note timeline, insertion/deletion, sustain editing,
+   undo/redo and synchronized playback. Preserve data/tempo rules and exporter checks.
+5. Keep checkpointed commits, update implementation log, return a new ZIP with Git
+   history and HANDOFF_LATEST.md. Do not silently rewrite released tags/history.
 
-## Quick demo
+## Quick Windows demo
 
-Install Python 3.11 x64 with launcher; run setup_windows.cmd, test_windows.cmd,
-launch_windows.cmd. Copy only examples/technical-study.chart into a test folder.
-Pattern Library -> select test database -> Scan folder -> expect 1 source, 6 windows.
-Browse/rate patterns. Open the study in Chart Converter, set seed 42, and generate.
-Select each mode and export it to a fresh folder. See the full Windows acceptance doc.
+Install Python 3.11 x64 with launcher. Extract fresh ZIP; run setup_windows.cmd,
+test_windows.cmd, launch_windows.cmd. Audio Analysis -> examples/audio/onset-study.wav.
+Expect 15 attacks and about 120 BPM. Create draft -> inspect four lanes -> export.
+For pattern transfer, first scan a folder containing only technical-study.chart;
+expect six patterns, then enable learned patterns for audio generation.
+Detailed checks, offsets and expected values are in docs/WINDOWS_TEST.md.
 
-## Resource continuity and return requirements
+## Continuity
 
-ChatGPT account allowance/reset time is not visible to the assistant. There is no
-reliable prediction, automatic quota monitor, background Claude handoff or automatic
-resumption. Bob can switch when the app warns him or whenever convenient.
-Checkpoint after each working milestone and before stopping, not only at a limit.
-Use one active implementation owner and one chosen repository checkout at a time.
-
-Each handoff must state version/branch/exact commit, clean/dirty status, changes,
+ChatGPT remaining allowance/reset time is not visible. No automatic quota monitor,
+Claude handoff, background continuation or automatic resumption is configured.
+Checkpoint after every working milestone and before stopping, not just at a warning.
+Use one active developer and one chosen checkout at a time.
+Every return handoff must include version/branch/commit, clean/dirty state, changes,
 actual test commands/results, environment, untested areas, blockers and next tasks.
-Include portable source/Git history; never include credentials or secrets.
-To return to ChatGPT, upload the updated ZIP and handoff and say:
-"Resume GH3 Chart Studio from Claude's checkpoint. Verify state/tests before continuing."
+Return portable source/Git history; never embed credentials or secrets.
+To resume in ChatGPT, upload the latest ZIP/handoff and ask to verify before continuing.

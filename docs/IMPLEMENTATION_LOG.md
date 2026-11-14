@@ -1,4 +1,4 @@
-Latest checkpoint: version 0.2.0. See M2_IMPLEMENTATION_LOG.md and HANDOFF_LATEST.md.
+Latest checkpoint: version 0.3.0. See M3_IMPLEMENTATION_LOG.md and HANDOFF_LATEST.md.
 
 # Implementation log — 0.1.0 / Milestone 1
 

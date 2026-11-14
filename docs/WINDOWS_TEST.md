@@ -68,3 +68,26 @@ when symlink privileges are unavailable; other failures require investigation.
 
 Do not copy the examples/variations outputs into the training folder for the minimal
 six-window check; each exported file is a separate content snapshot.
+
+## Version 0.3.0 audio-analysis acceptance
+
+1. Extract the new release into a fresh folder. Run setup_windows.cmd to install the
+   audio dependencies, then test_windows.cmd and launch_windows.cmd.
+2. Open Audio Analysis -> examples/audio/onset-study.wav. With defaults, expect
+   15 attacks, approximately 120 BPM and a visible waveform/grid. Compare truth.json.
+3. Enter manual BPM 120 and reanalyze. Confirm the grid changes without quantizing attacks.
+4. With no authored chart loaded, create a draft. Verify 15 Medium notes, only G/R/Y/B,
+   no inferred sustains/SP, and then export both formats to a fresh folder.
+5. Use Compare timing with current chart; the fixture should show very small residuals.
+6. Set Draft shift to +120 ms and regenerate. Comparison measures the already-shifted
+   chart; expect a suggested additional correction near -120 ms, not a second +120 shift.
+7. Save analysis/diagnostics and settings. Reload settings, select the recording and reanalyze.
+8. Load an authored chart, then generate with the template checkbox on. Confirm the original
+   tempo map and source difficulty remain in the exported file.
+9. Scan a pattern corpus and test the optional learned-pattern checkbox.
+10. Try a legally usable real recording in WAV, FLAC, OGG and MP3; verify codec availability,
+    responsiveness, cancellation and timing against the actual audio import path.
+11. Run build_windows.cmd and repeat steps 2–5 using the packaged executable. Verify that
+    NumPy/SciPy and libsndfile load. The source-release build recipe has not been run here.
+
+A low fixture error does not certify real-song guitar transcription or in-game playability.

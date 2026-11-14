@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 — November 14, 2026
+
+Local audio decoding, spectral/energy attack analysis, tempo/beat estimates, manual
+BPM and draft shift, waveform preview, onset-aligned four-fret drafts, authored
+tempo preservation, learned-pattern transfer and offset/drift diagnostics.
+Unicode title handling and Qt disposal fixes. See docs/M3_IMPLEMENTATION_LOG.md.
+
 ## 0.2.0 — November 14, 2026
 
 Local pattern library: recursive scans, SQLite storage, deduplication/resume,

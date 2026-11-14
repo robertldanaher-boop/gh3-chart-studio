@@ -1,0 +1,11 @@
+{
+  "audio_analysis": {
+    "sensitivity": 4,
+    "min_interval_ms": 70,
+    "manual_bpm": 0
+  },
+  "shift_ms": 0,
+  "use_authored_tempo_map": false,
+  "use_learned_patterns": false,
+  "seed": 0
+}

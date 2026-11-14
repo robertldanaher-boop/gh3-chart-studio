@@ -20,7 +20,7 @@ existing events only and prioritizes quarter-note anchors and phrase/section sta
 Future milestones can consume/produce Song without replacing the GUI or exporters.
 Milestone 2 now provides a SQLite pattern store and separate extraction/scoring modules.
 Audio analysis should be an independent pipeline feeding proposed tick events, with
-explicit uncertainty and offset handling. It is not implemented in this release.
+explicit uncertainty and offset handling. The initial onset pipeline is implemented in version 0.3.0.
 
 Dependencies are pinned in requirements-windows.lock with SHA-256 hashes. Setup
 uses binary wheels only. The lock targets Windows/Python 3.11; Linux QA uses matching
@@ -35,3 +35,13 @@ variations.py retrieves seeded candidate patterns and transfers their lane shape
 onto the converter's existing Medium events. library_gui.py supplies the library tab
 and delegates work to the main window's explicit queued result/progress slots.
 No new third-party dependency is introduced; sqlite3 is Python standard library.
+
+## Milestone 3 audio pipeline
+
+audio_analysis.py owns guarded decoding, spectral/energy feature extraction and an
+AudioAnalysis result with source hash, measured candidates and warnings. audio_chart.py
+converts detected seconds through a rational tempo-map clock and provides non-mutating
+alignment diagnostics. audio_gui.py provides preview and controls while the shared
+worker owns long operations. No widget access occurs inside analysis code.
+SoundFile/libsndfile replaces the need for a separate FFmpeg decoder in this first
+implementation; NumPy/SciPy provide CPU-only analysis. All dependencies are pinned.

@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.2.0 — Milestones 1–2
+# GH3 Chart Studio 0.3.0 — Milestones 1–3
 
 A Python 3.11 / PySide6 desktop converter for authored Expert or Hard guitar tracks.
 Expert Medium is written into **MediumSingle** and MIDI **PART GUITAR pitches 72–75**.
@@ -25,7 +25,15 @@ For your own song, import its original audio separately in TheGHOST and choose
 on folder auto-detection when both files are present. Reimporting our MIDI requires
 **Legacy MIDI / TheGHOST** mode. The default Modern mode handles pitch 116 phrases.
 
-## New in 0.2.0
+## New in 0.3.0
+
+The **Audio Analysis** tab imports WAV/FLAC/OGG/MP3, detects candidate attacks,
+estimates constant tempo, supports manual BPM and draft shifts, shows a real waveform,
+and creates reviewable four-fret onset drafts. It can preserve an authored tempo map
+and use local learned patterns. Timing diagnostics distinguish possible offset/drift
+issues. See `docs/AUDIO_ANALYSIS.md`. This is not verified guitar transcription.
+
+## Added in 0.2.0
 
 The **Pattern Library** tab recursively scans chart folders into local SQLite storage,
 extracts reusable patterns, supports similarity search and preference ratings, and
@@ -46,8 +54,8 @@ This is statistical pattern retrieval, not neural training or audio analysis.
 - Save/load settings, diagnostic log, atomic new-folder export and read-back checks.
 
 The preview is read-only and limited to 2,000 gems. The engine uses authored chart
-structure and stored patterns; it does not analyze audio, train a neural model, or
-claim measured musical quality.
+structure, stored patterns and the optional onset-analysis pipeline; it does not train
+a neural model or claim measured real-song musical quality.
 
 ## Controls
 
@@ -78,7 +86,7 @@ claim of byte-identical executables on different Windows machines.
 ## Project files
 
 - `gh3studio/`: data model, parsers, converter, validator, export service, GUI,
-  pattern database, scanner and variation engine.
+  pattern database, scanner, variation engine and audio-analysis pipeline.
 - `tests/`: unit/integration/GUI regression tests.
 - `examples/`: original synthetic study and verified paired exports (no commercial music).
 - `presets/`: working JSON presets.
@@ -90,5 +98,5 @@ claim of byte-identical executables on different Windows machines.
   `git clone repository.bundle GH3-Chart-Studio-repo`.
 
 Recommended next step: run the Windows/TheGHOST acceptance checks on one real song,
-evaluate learned variations against a real chart, then begin Milestone 3's audio analysis. Fix import or gameplay regressions
+evaluate learned variations against a real chart, then begin Milestone 4's editor and playback. Fix import or gameplay regressions
 before expanding features. The current relay checkpoint is `HANDOFF_LATEST.md`. No Claude handoff has occurred.

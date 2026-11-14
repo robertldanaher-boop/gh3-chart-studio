@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
 from .converter import Settings, convert
 from .service import load, export_bundle
 from .library_gui import LibraryPanel
+from .audio_gui import AudioPanel
 from .variations import generate_variations, VARIANTS
 from . import __version__
 
@@ -49,6 +50,7 @@ class Preview(QGraphicsView):
 class Window(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.song=None; self.converted=None; self.report=None; self.path=None; self.worker=None
         self.variants={}
         self.setWindowTitle(f'GH3 Chart Studio {__version__} — Expert Medium')
@@ -57,7 +59,7 @@ class Window(QMainWindow):
         root=QWidget(); self.tabs.addTab(root,'Chart Converter'); layout=QVBoxLayout(root)
         title=QLabel('GH3 Chart Studio  |  Four-fret technical Medium')
         title.setStyleSheet('font-size:22px;font-weight:600;padding:8px;'); layout.addWidget(title)
-        layout.addWidget(QLabel('Drop a .chart or .mid file here. Originals are never overwritten.'))
+        layout.addWidget(QLabel('Drop a chart, audio file or chart folder here. Originals are never overwritten.'))
         row=QHBoxLayout(); layout.addLayout(row)
         self.open_button=QPushButton('Open chart…'); self.open_button.clicked.connect(self.browse); row.addWidget(self.open_button)
         self.phrase_mode=QComboBox(); self.phrase_mode.addItems(['Modern MIDI (116 Star Power)','Legacy MIDI / TheGHOST'])
@@ -97,6 +99,7 @@ class Window(QMainWindow):
         save_log=QPushButton('Save diagnostic log…'); save_log.clicked.connect(self.save_diagnostics); layout.addWidget(save_log)
         self.log_line('Ready. Structural checks do not certify TheGHOST or in-game compatibility.')
         self.library=LibraryPanel(self); self.tabs.addTab(self.library,'Pattern Library')
+        self.audio=AudioPanel(self); self.tabs.addTab(self.audio,'Audio Analysis')
         self.update_buttons()
     def log_line(self,text):
         self.log.append(datetime.now().strftime('%H:%M:%S')+'  '+str(text).replace('&','&amp;').replace('<','&lt;').replace('\n','<br>'))
@@ -108,6 +111,7 @@ class Window(QMainWindow):
         self.export_button.setEnabled(not busy and self.converted is not None)
         self.generate_button.setEnabled(not busy and self.song is not None)
         if hasattr(self,'library'): self.library.update_busy(busy,getattr(self,'cancellable',False))
+        if hasattr(self,'audio'): self.audio.update_busy(busy,getattr(self,'cancellable',False))
         self.cancel_button.setEnabled(busy and getattr(self,'cancellable',False))
     def invalidate(self,*args):
         self.converted=None; self.report=None; self.variants={}
@@ -128,6 +132,9 @@ class Window(QMainWindow):
     def job_progress(self,done,total,name):
         self.progress.setRange(0,total); self.progress.setValue(done)
         self.library.summary.setText(f'{done}/{total} — {name}' if total else name)
+        if hasattr(self,'audio'):
+            self.audio.progress.setRange(0,total); self.audio.progress.setValue(done)
+            self.audio.summary.setText(f'{done}/{total} — {name}' if total else name)
     @Slot(object)
     def job_succeeded(self,value):
         try: self.success_callback(value)
@@ -136,10 +143,14 @@ class Window(QMainWindow):
     def job_failed(self,error):
         self.log_line('ERROR — '+error)
         if hasattr(self,'library'): self.library.summary.setText('Operation failed: '+error)
+        if hasattr(self,'audio'): self.audio.summary.setText('Operation failed: '+error)
     @Slot()
     def job_finished(self):
-        worker=self.worker; self.worker=None; worker.deleteLater()
-        self.progress.setRange(0,1); self.progress.setValue(1); self.update_buttons()
+        worker=self.worker; self.worker=None
+        self.success_callback=None; worker.operation=None; worker.deleteLater()
+        self.progress.setRange(0,1); self.progress.setValue(1)
+        if hasattr(self,'audio'): self.audio.progress.setRange(0,1); self.audio.progress.setValue(1)
+        self.update_buttons()
     def browse(self):
         filename,_=QFileDialog.getOpenFileName(self,'Open authored chart','','Charts (*.chart *.mid *.midi)')
         if filename: self.open_path(filename)
@@ -199,7 +210,9 @@ class Window(QMainWindow):
         from dataclasses import asdict
         path,_=QFileDialog.getSaveFileName(self,'Save settings','expert-medium.json','JSON (*.json)')
         if path:
-            try: Path(path).write_text(json.dumps(dict(asdict(self.settings()),seed=self.seed.value()),indent=2),encoding='utf-8')
+            try:
+                config=self.report['settings'] if self.report and 'audio' in self.report else dict(asdict(self.settings()),seed=self.seed.value())
+                Path(path).write_text(json.dumps(config,indent=2),encoding='utf-8')
             except Exception as e: self.job_failed(str(e))
     def load_config(self):
         path,_=QFileDialog.getOpenFileName(self,'Load settings','','JSON (*.json)')
@@ -208,6 +221,13 @@ class Window(QMainWindow):
                 config=json.loads(Path(path).read_text(encoding='utf-8'))
                 settings=Settings(**{k:v for k,v in config.items() if k in Settings.__dataclass_fields__}); settings.check()
                 if 'seed' in config: self.seed.setValue(int(config['seed']))
+                if 'audio_analysis' in config:
+                    from .audio_analysis import AudioSettings
+                    audio_settings=AudioSettings(**config['audio_analysis']); audio_settings.validate()
+                    self.audio.sensitivity.setValue(audio_settings.sensitivity); self.audio.spacing.setValue(audio_settings.min_interval_ms); self.audio.bpm.setValue(audio_settings.manual_bpm)
+                    self.audio.shift.setValue(float(config.get('shift_ms',0)))
+                    self.audio.template.setChecked(bool(config.get('use_authored_tempo_map',False))); self.audio.learned.setChecked(bool(config.get('use_learned_patterns',False)))
+                    self.log_line('Audio settings loaded. Select the matching recording and reanalyze before creating a draft.')
                 self.source.setCurrentText(settings.source); self.max_chord.setValue(settings.max_chord)
                 for name,attr in [('Density','density'),('Chords','chords'),('Movement','movement')]: self.sliders[name].setValue(getattr(settings,attr))
             except Exception as e: self.job_failed(str(e))
@@ -223,6 +243,8 @@ class Window(QMainWindow):
         if len(paths)!=1: self.log_line('Drop one chart or a single parent folder for recursive pattern scanning.'); return
         if Path(paths[0]).is_dir():
             self.tabs.setCurrentWidget(self.library); self.library.scan(paths[0]); event.acceptProposedAction(); return
+        if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3'):
+            self.tabs.setCurrentWidget(self.audio); self.audio.open_path(paths[0]); event.acceptProposedAction(); return
         self.open_path(paths[0]); event.acceptProposedAction()
     def closeEvent(self,event):
         if self.busy():
