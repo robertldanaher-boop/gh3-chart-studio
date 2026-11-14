@@ -1,12 +1,15 @@
 """Audio-only draft workflow; full-mix analysis, not instrument isolation."""
 import json
+from dataclasses import replace
 from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor,QPen
 from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSpinBox,QDoubleSpinBox,
-    QCheckBox,QFileDialog,QTextEdit,QGraphicsView,QGraphicsScene,QProgressBar,QSlider)
+    QCheckBox,QFileDialog,QTextEdit,QGraphicsView,QGraphicsScene,QProgressBar,QSlider,
+    QScrollArea,QStackedWidget,QTableView,QHeaderView,QGroupBox)
 from .audio_analysis import AudioSettings,analyze_audio
 from .audio_chart import make_draft,alignment_report
+from .onset_review import OnsetModel
 
 class WavePreview(QGraphicsView):
     def __init__(self):
@@ -26,45 +29,105 @@ class WavePreview(QGraphicsView):
 class AudioPanel(QWidget):
     def __init__(self,owner):
         super().__init__();self.owner=owner;self.path=None;self.analysis=None;self.last_diagnostics=None
+        self.original_audio=None;self.last_draft_source=None
         layout=QVBoxLayout(self)
-        title=QLabel('Audio Analysis — reviewable onset drafts');title.setStyleSheet('font-size:22px;font-weight:600');layout.addWidget(title)
-        hint=QLabel('No existing chart required: Open audio → Analyze → Create four-fret draft → Listen & Sync.\nDetect attack candidates in the full mix. This does not isolate guitar or prove transcription accuracy.\nOrange is prohibited in generated Medium charts. Original audio stays unchanged.')
-        hint.setWordWrap(True);layout.addWidget(hint)
+        title=QLabel('Audio Studio — choose → review → listen → export');title.setStyleSheet('font-size:20px;font-weight:600');layout.addWidget(title)
+        self.next_step=QLabel('Step 1: Choose a recording. No chart or pattern library is required.');self.next_step.setWordWrap(True);layout.addWidget(self.next_step)
         row=QHBoxLayout();layout.addLayout(row)
-        self.open_button=QPushButton('Open audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
-        self.file_label=QLabel('WAV • FLAC • OGG • MP3');self.file_label.setWordWrap(True);row.addWidget(self.file_label,1)
-        row=QHBoxLayout();layout.addLayout(row)
-        row.addWidget(QLabel('Sensitivity'));self.sensitivity=QSpinBox();self.sensitivity.setRange(1,6);self.sensitivity.setValue(4);row.addWidget(self.sensitivity)
-        row.addWidget(QLabel('Min spacing (ms)'));self.spacing=QSpinBox();self.spacing.setRange(30,1000);self.spacing.setValue(70);row.addWidget(self.spacing)
-        row.addWidget(QLabel('BPM override'));self.bpm=QDoubleSpinBox();self.bpm.setDecimals(3);self.bpm.setRange(0,300);self.bpm.setSpecialValueText('Automatic');row.addWidget(self.bpm)
-        self.analyze_button=QPushButton('Analyze / reanalyze');self.analyze_button.clicked.connect(self.start_analysis);row.addWidget(self.analyze_button)
-        for widget in (self.sensitivity,self.spacing,self.bpm):widget.valueChanged.connect(self.invalidate)
+        self.open_button=QPushButton('1. Choose audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
+        self.review_button=QPushButton('2. Review attacks');self.review_button.clicked.connect(self.show_analysis);row.addWidget(self.review_button)
+        self.listen_button=QPushButton('3. Listen / timing');self.listen_button.clicked.connect(self.show_listen);row.addWidget(self.listen_button)
+        self.export_button=QPushButton('4. Export chart + MIDI…');self.export_button.clicked.connect(owner.start_export);row.addWidget(self.export_button)
+        self.file_label=QLabel('Analysis source: none');self.file_label.setWordWrap(True);layout.addWidget(self.file_label)
         self.progress=QProgressBar();self.progress.setRange(0,1);layout.addWidget(self.progress)
-        self.summary=QLabel('Open a recording to begin. Analysis runs locally.');self.summary.setWordWrap(True);layout.addWidget(self.summary)
-        self.wave=WavePreview();layout.addWidget(self.wave,1)
-        row=QHBoxLayout();layout.addLayout(row)
-        row.addWidget(QLabel('Orange lines: detected attacks • Gray lines: estimated beats | Zoom'))
+        self.pages=QStackedWidget();layout.addWidget(self.pages,1)
+        self.analysis_page=QWidget();page_layout=QVBoxLayout(self.analysis_page)
+        self.scroll=QScrollArea();self.scroll.setWidgetResizable(True);page_layout.addWidget(self.scroll,1)
+        body=QWidget();content=QVBoxLayout(body);self.scroll.setWidget(body)
+        hint=QLabel('Detected attacks are suggestions, not identified guitar notes. Drums, vocals and other instruments can trigger them. Uncheck unwanted attacks below.')
+        hint.setWordWrap(True);content.addWidget(hint)
+        self.summary=QLabel('Choose a recording to begin.');self.summary.setWordWrap(True);content.addWidget(self.summary)
+        row=QHBoxLayout();content.addLayout(row)
+        self.stem_button=QPushButton('Analyze a guitar / instrument stem…');self.stem_button.clicked.connect(self.browse_stem);row.addWidget(self.stem_button)
+        self.mix_button=QPushButton('Analyze original mix again');self.mix_button.clicked.connect(self.restore_mix);row.addWidget(self.mix_button)
+        note=QLabel('Optional: supply an already-separated file with the same start time as the mix. This app does not separate instruments yet.');note.setWordWrap(True);content.addWidget(note)
+        self.wave=WavePreview();self.wave.setMaximumHeight(230);content.addWidget(self.wave)
+        row=QHBoxLayout();content.addLayout(row)
+        row.addWidget(QLabel('Attacks: orange | Estimated beats: gray | Zoom'))
         self.zoom=QSlider(Qt.Horizontal);self.zoom.setRange(20,250);self.zoom.setValue(100);self.zoom.valueChanged.connect(self.redraw);row.addWidget(self.zoom)
-        row=QHBoxLayout();layout.addLayout(row)
+        row=QHBoxLayout();content.addLayout(row)
+        self.selection_label=QLabel('0 attacks selected');row.addWidget(self.selection_label,1)
+        self.keep_all=QPushButton('Include all');self.keep_all.clicked.connect(lambda:self.onsets.select_all(True));row.addWidget(self.keep_all)
+        self.keep_none=QPushButton('Exclude all');self.keep_none.clicked.connect(lambda:self.onsets.select_all(False));row.addWidget(self.keep_none)
+        self.onsets=OnsetModel(self);self.onsets.selection_changed.connect(self.selection_changed)
+        self.attack_table=QTableView();self.attack_table.setModel(self.onsets);self.attack_table.setMinimumHeight(130);self.attack_table.setMaximumHeight(200)
+        self.attack_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch);content.addWidget(self.attack_table)
+        self.attack_table.doubleClicked.connect(self.audition_attack)
+        note=QLabel('Double-click an attack to listen from just before it. Attack strength is not guitar confidence.');note.setWordWrap(True);content.addWidget(note)
+        self.advanced_toggle=QCheckBox('Optional settings: detection, tempo map and learned patterns');content.insertWidget(0,self.advanced_toggle)
+        self.advanced=QGroupBox('Optional — defaults work without a chart or library');advanced=QVBoxLayout(self.advanced);content.insertWidget(1,self.advanced)
+        self.advanced.setVisible(False);self.advanced_toggle.toggled.connect(self.advanced.setVisible)
+        row=QHBoxLayout();advanced.addLayout(row)
+        row.addWidget(QLabel('Sensitivity'));self.sensitivity=QSpinBox();self.sensitivity.setRange(1,6);self.sensitivity.setValue(4);row.addWidget(self.sensitivity)
+        row.addWidget(QLabel('Minimum spacing (ms)'));self.spacing=QSpinBox();self.spacing.setRange(30,1000);self.spacing.setValue(70);row.addWidget(self.spacing)
+        row.addWidget(QLabel('BPM override'));self.bpm=QDoubleSpinBox();self.bpm.setDecimals(3);self.bpm.setRange(0,300);self.bpm.setSpecialValueText('Automatic');row.addWidget(self.bpm)
+        for widget in (self.sensitivity,self.spacing,self.bpm):widget.valueChanged.connect(self.invalidate)
+        row=QHBoxLayout();advanced.addLayout(row)
         row.addWidget(QLabel('Draft shift (ms; + = later)'));self.shift=QDoubleSpinBox();self.shift.setRange(-10000,10000);self.shift.setDecimals(1);row.addWidget(self.shift)
-        self.template=QCheckBox('Use open chart tempo map when available');self.template.setChecked(False);row.addWidget(self.template)
-        self.learned=QCheckBox('Use local learned patterns');row.addWidget(self.learned)
-        row=QHBoxLayout();layout.addLayout(row)
-        self.draft_button=QPushButton('Create four-fret draft');self.draft_button.clicked.connect(self.create_draft);row.addWidget(self.draft_button)
-        self.compare_button=QPushButton('Compare timing with current chart');self.compare_button.clicked.connect(self.compare);row.addWidget(self.compare_button)
-        self.save_button=QPushButton('Save analysis / diagnostics…');self.save_button.clicked.connect(self.save_report);row.addWidget(self.save_button)
+        self.template=QCheckBox('Use the open chart’s tempo map (optional)');advanced.addWidget(self.template)
+        self.learned=QCheckBox('Use local learned patterns (optional; successful library scan required)');advanced.addWidget(self.learned)
+        self.compare_button=QPushButton('Compare timing with current chart');self.compare_button.clicked.connect(self.compare);advanced.addWidget(self.compare_button)
+        self.save_button=QPushButton('Save analysis / diagnostics…');self.save_button.clicked.connect(self.save_report);advanced.addWidget(self.save_button)
+        self.details=QTextEdit();self.details.setReadOnly(True);self.details.setMaximumHeight(140);advanced.addWidget(self.details)
+        row=QHBoxLayout();page_layout.addLayout(row)
+        self.analyze_button=QPushButton('Reanalyze with current settings');self.analyze_button.clicked.connect(self.start_analysis);row.addWidget(self.analyze_button)
+        self.draft_button=QPushButton('Create draft from selected attacks → Listen');self.draft_button.clicked.connect(self.create_draft);row.addWidget(self.draft_button,1)
         self.cancel_button=QPushButton('Cancel');self.cancel_button.clicked.connect(owner.cancel);row.addWidget(self.cancel_button)
-        self.details=QTextEdit();self.details.setReadOnly(True);self.details.setMaximumHeight(180);layout.addWidget(self.details)
-        self.controls=(self.open_button,self.sensitivity,self.spacing,self.bpm,self.shift,self.template,self.learned)
+        self.pages.addWidget(self.analysis_page);self.pages.addWidget(owner.playback)
+        self.controls=(self.open_button,self.sensitivity,self.spacing,self.bpm,self.shift,self.template,self.learned,self.attack_table,self.keep_all,self.keep_none)
+    def show_analysis(self):
+        self.pages.setCurrentWidget(self.analysis_page)
+        if hasattr(self,"draft_button"):self.update_busy(self.owner.busy(),getattr(self.owner,"cancellable",False))
+    def show_listen(self):
+        self.owner.tabs.setCurrentWidget(self);self.pages.setCurrentWidget(self.owner.playback)
+        self.update_busy(self.owner.busy(),getattr(self.owner,"cancellable",False))
+    def selection_changed(self):
+        count=sum(self.onsets.included);self.selection_label.setText(f'{count} of {len(self.onsets.included)} attacks included')
+        if self.last_draft_source is not None and self.owner.song is self.last_draft_source:
+            self.owner.song=None;self.owner.path=None;self.last_draft_source=None;self.owner.invalidate()
+        self.owner.update_buttons()
+    def audition_attack(self,index):
+        if self.owner.busy() or not index.isValid():return
+        time=self.onsets.onsets[index.row()]['time']
+        self.owner.playback.player.setPosition(max(0,int((time-.5)*1000)))
+        self.show_listen();self.owner.playback.player.play()
+    def browse_stem(self):
+        path,_=QFileDialog.getOpenFileName(self,'Choose an already-separated instrument file with the same time origin','','Audio (*.wav *.flac *.ogg *.mp3)')
+        if path:self.open_stem(path)
+    def open_stem(self,path):
+        if self.owner.busy() or self.original_audio is None:return
+        self.path=Path(path);self.file_label.setText('Analysis stem: '+str(path)+' | Listening mix: '+self.original_audio.name)
+        self.invalidate();self.show_analysis();self.start_analysis()
+    def restore_mix(self):
+        if self.original_audio:self.open_path(self.original_audio)
     def update_busy(self,busy,cancellable):
         for widget in self.controls:widget.setEnabled(not busy)
         self.analyze_button.setEnabled(not busy and self.path is not None)
-        self.draft_button.setEnabled(not busy and self.analysis is not None and bool(self.analysis.onsets))
+        self.draft_button.setEnabled(not busy and self.analysis is not None and any(self.onsets.included))
+        self.review_button.setEnabled(not busy and self.path is not None)
+        self.listen_button.setEnabled(not busy and (self.path is not None or self.owner.song is not None))
+        self.export_button.setEnabled(not busy and self.owner.converted is not None)
+        self.stem_button.setEnabled(not busy and self.original_audio is not None)
+        self.mix_button.setEnabled(not busy and self.original_audio is not None and self.path!=self.original_audio)
+        if busy:self.next_step.setText('Working… wait for completion or cancel analysis.')
+        elif self.owner.converted is not None and self.pages.currentWidget() is self.owner.playback:self.next_step.setText('Step 3: Listen and adjust. When satisfied, click 4. Export chart + MIDI.')
+        elif self.analysis is not None:self.next_step.setText('Step 2: Review attacks below. Then click Create draft from selected attacks → Listen.')
+        elif self.path is not None:self.next_step.setText('Step 2: Run analysis. If BPM is unknown, set it under Optional settings and reanalyze.')
         self.compare_button.setEnabled(not busy and self.analysis is not None and self.owner.song is not None)
         self.save_button.setEnabled(not busy and self.analysis is not None)
         self.cancel_button.setEnabled(busy and cancellable)
     def invalidate(self,*args):
-        self.analysis=None;self.last_diagnostics=None;self.wave.scene().clear();self.summary.setText('Settings changed; reanalyze before generating.')
+        self.analysis=None;self.last_diagnostics=None;self.onsets.reset_onsets([]);self.wave.scene().clear();self.summary.setText('Settings changed; reanalyze before generating.')
         if self.owner.report and 'audio' in self.owner.report:self.owner.invalidate()
         self.owner.update_buttons()
     def browse(self):
@@ -73,13 +136,15 @@ class AudioPanel(QWidget):
     def open_path(self,path):
         if self.owner.busy():return
         self.owner.playback.open_audio(path)
-        self.path=Path(path);self.file_label.setText(str(path));self.invalidate();self.start_analysis()
+        self.original_audio=Path(path);self.path=Path(path);self.file_label.setText('Analysis and listening: '+str(path));self.show_analysis();self.invalidate();self.start_analysis()
     def start_analysis(self):
         if self.path is None or self.owner.busy():return
+        self.owner.invalidate()  # A new analysis must not leave an older output exportable.
         settings=AudioSettings(self.sensitivity.value(),self.spacing.value(),self.bpm.value())
-        self.analysis=None;self.last_diagnostics=None
+        self.analysis=None;self.last_diagnostics=None;self.onsets.reset_onsets([])
         def ready(result):
             self.analysis=result;self.summary.setText(f'{result.duration:.2f} seconds | {len(result.onsets)} attacks | BPM: {result.bpm or "unknown"} | beat fit: {result.beat_fit:.0%} (not confidence)')
+            self.onsets.reset_onsets(result.onsets)
             self.details.setPlainText('\n'.join(result.warnings));self.redraw();self.owner.log_line(self.summary.text())
         self.owner.run_job('Analyzing audio locally…',lambda cancel:analyze_audio(self.path,settings,cancel,
             lambda done,total,text:self.owner.worker.progress.emit(done,total,text)),ready,True)
@@ -87,12 +152,21 @@ class AudioPanel(QWidget):
         if self.analysis:self.wave.render(self.analysis,self.zoom.value())
     def create_draft(self):
         if self.analysis is None or self.owner.busy():return
-        analysis=self.analysis;template=self.owner.song if self.template.isChecked() else None
+        analysis=replace(self.analysis,onsets=self.onsets.selected());template=self.owner.song if self.template.isChecked() else None
+        if self.template.isChecked() and template is None:
+            self.owner.job_failed('No chart is open. Uncheck the optional tempo-map setting to create from audio only.');return
         shift=self.shift.value();seed=self.owner.seed.value()
+        excluded=[o['time'] for o,keep in zip(self.onsets.onsets,self.onsets.included) if not keep]
         try:store=self.owner.library.store() if self.learned.isChecked() else None
         except Exception as exc:self.owner.job_failed(str(exc));return
         def ready(value):
             song,report=value
+            report['attack_review']={'detected':len(self.analysis.onsets),'included':len(analysis.onsets),'excluded_times_seconds':excluded}
+            report['audio']['listening_path']=str(self.original_audio)
+            report['audio']['external_stem']=self.path!=self.original_audio
+            if self.path!=self.original_audio:
+                report['warnings'].append('External stem supplied: same time origin as the original mix is assumed, not verified. Instrument separation was not performed by this app.')
+            self.last_draft_source=song
             self.owner.original_song=None;self.owner.cleanup_report=None
             self.owner.song=song;self.owner.converted=song;self.owner.report=report;self.owner.path=Path(analysis.source_path);self.owner.variants={}
             available=[d for d in ('Expert','Hard') if song.tracks.get(d)]
@@ -100,7 +174,7 @@ class AudioPanel(QWidget):
                 self.owner.source.blockSignals(True); self.owner.source.setCurrentText(available[0]); self.owner.source.blockSignals(False)
             self.owner.file_label.setText(Path(analysis.source_path).name+' — audio draft')
             self.owner.info.setText(f'Audio draft: {len(song.tracks["Medium"])} Medium gems. Review against the recording before use.')
-            self.owner.refresh_preview();self.owner.log_line(json.dumps(report,indent=2));self.owner.tabs.setCurrentIndex(0)
+            self.owner.refresh_preview();self.owner.log_line(json.dumps(report,indent=2));self.show_listen()
         self.owner.run_job('Creating onset-aligned four-fret draft…',lambda cancel:make_draft(analysis,shift,template,store,seed,cancel),ready,True)
     def compare(self):
         if self.analysis is None or self.owner.song is None or self.owner.busy():return
@@ -112,5 +186,5 @@ class AudioPanel(QWidget):
         if self.analysis is None:return
         path,_=QFileDialog.getSaveFileName(self,'Save audio analysis','audio-analysis.json','JSON (*.json)')
         if path:
-            try:Path(path).write_text(json.dumps({'analysis':self.analysis.report(),'alignment':self.last_diagnostics},indent=2),encoding='utf-8')
+            try:Path(path).write_text(json.dumps({'analysis':self.analysis.report(),'included_attack_times':[o['time'] for o in self.onsets.selected()],'listening_path':str(self.original_audio),'alignment':self.last_diagnostics},indent=2),encoding='utf-8')
             except Exception as exc:self.owner.job_failed(str(exc))

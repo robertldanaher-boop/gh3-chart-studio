@@ -175,3 +175,70 @@ def test_real_media_playback_pause_and_seek(app):
     assert panel.player.position()==2500
     panel.stop();assert panel.player.position()==0 and panel.player.playbackState()==QMediaPlayer.PausedState
     panel.player.setPosition(2500);w.close()
+
+
+def test_guided_audio_review_excludes_attack_and_stays_in_workspace(tmp_path,app):
+    w=Window();w.show();audio=w.audio;w.tabs.setCurrentWidget(audio)
+    audio.open_path(FIXTURE.parent/'audio'/'onset-study.wav');wait(w)
+    assert w.tabs.currentWidget() is audio and audio.pages.currentWidget() is audio.analysis_page
+    assert audio.onsets.rowCount()==15 and 'Step 2' in audio.next_step.text()
+    excluded=audio.analysis.onsets[0]['time']
+    audio.onsets.setData(audio.onsets.index(0,0),Qt.Unchecked,Qt.CheckStateRole)
+    audio.create_draft();wait(w)
+    assert w.tabs.currentWidget() is audio and audio.pages.currentWidget() is w.playback
+    assert len(w.converted.tracks['Medium'])==14 and audio.export_button.isEnabled()
+    assert w.report['attack_review']['excluded_times_seconds']==[excluded]
+    assert all(abs(w.converted.seconds(n.tick)-excluded)>.001 for n in w.converted.tracks['Medium'])
+    w.export_to(tmp_path/'reviewed');wait(w)
+    assert (tmp_path/'reviewed'/'notes.mid').exists()
+    audio.show_analysis();audio.onsets.select_all(False)
+    assert not audio.draft_button.isEnabled() and w.converted is None and not audio.export_button.isEnabled()
+    w.close()
+
+
+def test_external_stem_analyzed_original_mix_retained(tmp_path,app):
+    import shutil
+    original=FIXTURE.parent/'audio'/'onset-study.wav';stem=tmp_path/'guitar.wav';shutil.copyfile(original,stem)
+    w=Window();w.audio.open_path(original);wait(w)
+    w.audio.open_stem(stem);wait(w)
+    assert w.audio.analysis.source_path==str(stem.resolve())
+    assert w.playback.player.source().toLocalFile()==str(original.resolve())
+    w.audio.create_draft();wait(w)
+    assert w.report['audio']['external_stem'] is True
+    assert w.report['audio']['listening_path']==str(original)
+    w.audio.restore_mix();wait(w)
+    assert w.audio.path==original and not w.audio.mix_button.isEnabled()
+    w.close()
+
+
+def test_horizontal_preview_time_and_lane_geometry(app):
+    w=Window();view=w.playback.highway;view.resize(900,300)
+    view.notes=[(1,2,0,False),(1,1,3,True),(2,2,0,False)]
+    x,end,y=view.note_geometry(view.notes[0]);x2,_,y2=view.note_geometry(view.notes[1])
+    assert x==x2 and y<y2 and end>x
+    assert view.note_geometry(view.notes[2])[0]>x
+    view.position=1
+    assert view.note_geometry(view.notes[0])[0]==90
+    view.shift=.1
+    assert view.note_geometry(view.notes[0])[0]>90
+    w.close()
+
+
+def test_guided_footer_visible_at_small_window(app):
+    w=Window();w.resize(1024,700);w.show();w.tabs.setCurrentWidget(w.audio);QApplication.processEvents()
+    assert w.audio.draft_button.isVisible()
+    assert w.audio.draft_button.visibleRegion().boundingRect().height()>0
+    assert not w.audio.advanced.isVisible()
+    w.audio.advanced_toggle.setChecked(True);QApplication.processEvents()
+    assert w.audio.template.isVisible() and w.audio.learned.isVisible()
+    assert w.audio.draft_button.visibleRegion().boundingRect().height()>0
+    w.close()
+
+
+def test_new_audio_analysis_cannot_export_previous_chart(app):
+    w=Window();w.open_path(FIXTURE);wait(w);w.start_convert();wait(w)
+    source=w.song;assert w.converted is not None
+    w.audio.open_path(FIXTURE.parent/'audio'/'onset-study.wav');wait(w)
+    assert w.song is source  # Still available as an optional tempo-map template.
+    assert w.converted is None and not w.audio.export_button.isEnabled()
+    w.close()

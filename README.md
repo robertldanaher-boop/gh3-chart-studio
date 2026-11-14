@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.4.0 — Playback, cleanup and timing review
+# GH3 Chart Studio 0.4.1 — Guided audio workflow and horizontal preview
 
 A Python 3.11 / PySide6 desktop converter for authored Expert or Hard guitar tracks.
 Expert Medium is written into **MediumSingle** and MIDI **PART GUITAR pitches 72–75**.
@@ -25,7 +25,20 @@ For your own song, import its original audio separately in TheGHOST and choose
 on folder auto-detection when both files are present. Reimporting our MIDI requires
 **Legacy MIDI / TheGHOST** mode. The default Modern mode handles pitch 116 phrases.
 
-## New in 0.4.0
+## New in 0.4.1
+
+Start audio workflow → Audio Studio: **1. Choose audio → 2. Review attacks →
+Create draft → 3. Listen / timing → 4. Export**. The entire audio path stays in
+one workspace. Optional settings are visible by name and expand when needed.
+
+Uncheck unwanted attacks before generation. Listen on horizontal G/R/Y/B rows,
+matching the Converter map. Analyze an already-separated guitar file while keeping
+the original mix for playback. Built-in separation and tablature integration are
+not implemented; see docs/INSTRUMENT_AND_TAB_ROADMAP.md.
+
+Use docs/M4_1_WINDOWS_GUIDE.md for the current 129-test GUI acceptance checklist.
+
+## Added in 0.4.0
 
 - **Start from audio…**: no chart required. Analyze, create a four-fret draft,
   then use **Listen & Sync** to hear the recording and review scrolling notes.
@@ -43,7 +56,7 @@ Read `docs/M4_WINDOWS_GUIDE.md` for the exact audio-only and cleanup workflows.
 
 ## Added in 0.3.0
 
-The **Audio Analysis** tab imports WAV/FLAC/OGG/MP3, detects candidate attacks,
+The audio-analysis page in **Audio Studio** imports WAV/FLAC/OGG/MP3, detects candidate attacks,
 estimates constant tempo, supports manual BPM and draft shifts, shows a real waveform,
 and creates reviewable four-fret onset drafts. It can preserve an authored tempo map
 and use local learned patterns. Timing diagnostics distinguish possible offset/drift

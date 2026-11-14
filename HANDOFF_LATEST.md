@@ -1,9 +1,22 @@
-# GH3 Chart Studio — 0.4.0 handoff
+# GH3 Chart Studio — 0.4.1 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_M4_v0_4_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.0 is authoritative.
+GH3_Chart_Studio_M4_1_v0_4_1.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.1 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
+
+## Current 0.4.1 update
+
+Read docs/M4_1_WINDOWS_GUIDE.md and docs/M4_1_IMPLEMENTATION_LOG.md first.
+129 tests passed; M4_1_TEST_RESULTS.txt is current. The 124-test result below is
+historical 0.4.0 evidence. Audio Studio now contains numbered steps and embedded
+horizontal playback; there is no separate Listen & Sync tab. Creating a draft
+stays in Audio Studio. The checkbox onset model permits candidate exclusions,
+invalidates stale drafts and records excluded times. Optional settings are clearly
+labeled. An external pre-separated stem can drive analysis while the original mix
+remains the playback source. No automatic instrument separation or tab search/import
+was built; research/next steps are in INSTRUMENT_AND_TAB_ROADMAP.md. Do not claim
+all detected attacks are guitar notes, or that a tab MIDI is a GH3 game-chart MIDI.
 
 ## Actual handoff status and environment
 

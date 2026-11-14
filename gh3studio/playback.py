@@ -9,29 +9,38 @@ from .editing import timeline,shift_timing
 from .validation import ensure_valid
 
 class Highway(QWidget):
+    """Horizontal lanes matching the converter; notes scroll toward a playhead."""
     def __init__(self):
-        super().__init__();self.notes=[];self.position=0.;self.shift=0.;self.highlight=True;self.setMinimumHeight(240)
+        super().__init__();self.notes=[];self.position=0.;self.shift=0.;self.highlight=True;self.setMinimumHeight(220)
+    def note_geometry(self,note,lanes=None):
+        start,end,lane,_=note
+        if lanes is None:lanes=5 if any(n[2]==4 for n in self.notes) else 4
+        hit=90;scale=max(1,(self.width()-hit-20)/6)
+        y=35+lane*max(1,(self.height()-65)/max(1,lanes-1))
+        return hit+(start+self.shift-self.position)*scale,hit+(end+self.shift-self.position)*scale,y
     def paintEvent(self,event):
         p=QPainter(self);p.fillRect(self.rect(),QColor('#101722'))
-        width=self.width();height=self.height();hit=height-35;scale=(height-55)/3
         colors=['#4cd964','#ef5350','#ffe066','#42a5f5','#ff9800']
-        # Five source lanes are shown when needed; exported Medium stays four.
         lanes=5 if any(n[2]==4 for n in self.notes) else 4
-        lane_width=width/lanes
-        p.setPen(QPen(QColor('#344356'),1))
-        for lane in range(lanes+1):p.drawLine(int(lane*lane_width),0,int(lane*lane_width),height)
-        p.setPen(QPen(QColor('white'),2));p.drawLine(0,hit,width,hit)
-        for start,end,lane,hopo in self.notes:
-            y=hit-(start+self.shift-self.position)*scale
-            tail=hit-(end+self.shift-self.position)*scale
-            if tail>height or y<0:continue
-            x=int((lane+.5)*lane_width);p.setPen(QPen(QColor(colors[lane]),5))
-            if end>start:p.drawLine(x,int(max(0,tail)),x,int(min(height,y)))
-            if 0<=y<=height:
-                p.setBrush(QColor(colors[lane]));p.setPen(QPen(QColor('white') if hopo and self.highlight else QColor('#111111'),3))
-                p.drawEllipse(x-10,int(y)-7,20,14)
+        width=self.width();height=self.height();scale=max(1,(width-110)/6)
         for lane in range(lanes):
-            p.setPen(QColor(colors[lane]));p.drawText(int(lane*lane_width),height-25,int(lane_width),22,Qt.AlignCenter,'GRYBO'[lane])
+            y=35+lane*max(1,(height-65)/max(1,lanes-1))
+            p.setPen(QPen(QColor('#344356'),1));p.drawLine(40,int(y),width,int(y))
+            p.setPen(QColor(colors[lane]));p.drawText(8,int(y)+5,'GRYBO'[lane])
+        for second in range(max(0,int(self.position)-1),int(self.position)+8):
+            x=90+(second-self.position)*scale
+            if x<40 or x>width:continue
+            p.setPen(QPen(QColor('#263346'),1));p.drawLine(int(x),25,int(x),height-18)
+            p.setPen(QColor('#c6d4e3'));p.drawText(int(x)+3,16,f'{second}s')
+        p.setPen(QPen(QColor('white'),2));p.drawLine(90,22,90,height-15)
+        for note in self.notes:
+            x,tail,y=self.note_geometry(note,lanes);lane=note[2];hopo=note[3]
+            if tail<40 or x>width:continue
+            p.setPen(QPen(QColor(colors[lane]),4))
+            if tail>x:p.drawLine(int(max(40,x)),int(y),int(min(width,tail)),int(y))
+            if 40<=x<=width:
+                p.setBrush(QColor(colors[lane]));p.setPen(QPen(QColor('white') if hopo and self.highlight else QColor('#111111'),2))
+                p.drawEllipse(int(x)-7,int(y)-7,14,14)
         p.end()
 
 class PlaybackPanel(QWidget):
@@ -39,7 +48,7 @@ class PlaybackPanel(QWidget):
         super().__init__();self.owner=owner;self.current=None;self.undo_stack=[];self.redo_stack=[]
         self.player=QMediaPlayer(self);self.output=QAudioOutput(self);self.player.setAudioOutput(self.output);self.output.setVolume(.7)
         layout=QVBoxLayout(self)
-        hint=QLabel('Listen and review timing. White outlines mark estimated natural HOPO candidates, not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
+        hint=QLabel('Step 3 — Listen and adjust timing. Notes move left toward the white playhead. White outlines mark estimated natural HOPO candidates, not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
         hint.setWordWrap(True);layout.addWidget(hint)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Choose preview audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
