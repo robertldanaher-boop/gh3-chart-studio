@@ -7,13 +7,17 @@ from PySide6.QtCore import Qt, QThread, Signal, Slot
 from PySide6.QtGui import QColor, QPen, QBrush
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QComboBox, QSpinBox, QSlider, QTextEdit, QFileDialog,
-    QGraphicsView, QGraphicsScene, QSplitter, QGroupBox, QFormLayout, QProgressBar)
+    QGraphicsView, QGraphicsScene, QSplitter, QGroupBox, QFormLayout, QProgressBar, QTabWidget)
 from .converter import Settings, convert
 from .service import load, export_bundle
+from .library_gui import LibraryPanel
+from .variations import generate_variations, VARIANTS
+from . import __version__
 
 class Worker(QThread):
     succeeded=Signal(object)
     failed=Signal(str)
+    progress=Signal(int,int,str)
     def __init__(self, operation, parent=None):
         super().__init__(parent); self.operation=operation
     def run(self):
@@ -46,9 +50,11 @@ class Window(QMainWindow):
     def __init__(self):
         super().__init__()
         self.song=None; self.converted=None; self.report=None; self.path=None; self.worker=None
-        self.setWindowTitle('GH3 Chart Studio 0.1.0 — Expert Medium')
+        self.variants={}
+        self.setWindowTitle(f'GH3 Chart Studio {__version__} — Expert Medium')
         self.resize(1120,800); self.setAcceptDrops(True)
-        root=QWidget(); self.setCentralWidget(root); layout=QVBoxLayout(root)
+        self.tabs=QTabWidget(); self.setCentralWidget(self.tabs)
+        root=QWidget(); self.tabs.addTab(root,'Chart Converter'); layout=QVBoxLayout(root)
         title=QLabel('GH3 Chart Studio  |  Four-fret technical Medium')
         title.setStyleSheet('font-size:22px;font-weight:600;padding:8px;'); layout.addWidget(title)
         layout.addWidget(QLabel('Drop a .chart or .mid file here. Originals are never overwritten.'))
@@ -78,6 +84,10 @@ class Window(QMainWindow):
         self.save_settings=QPushButton('Save settings…'); self.save_settings.clicked.connect(self.save_config); row.addWidget(self.save_settings)
         self.load_settings=QPushButton('Load settings…'); self.load_settings.clicked.connect(self.load_config); row.addWidget(self.load_settings)
         self.cancel_button=QPushButton('Cancel'); self.cancel_button.clicked.connect(self.cancel); row.addWidget(self.cancel_button)
+        row=QHBoxLayout(); layout.addLayout(row)
+        self.generate_button=QPushButton('Generate 3 learned variations'); self.generate_button.clicked.connect(self.start_variations); row.addWidget(self.generate_button)
+        row.addWidget(QLabel('Seed:')); self.seed=QSpinBox(); self.seed.setRange(0,2147483647); self.seed.valueChanged.connect(self.invalidate); row.addWidget(self.seed)
+        self.variant_choice=QComboBox(); self.variant_choice.addItems(['Choose generated variation',*VARIANTS]); self.variant_choice.currentIndexChanged.connect(self.select_variant); row.addWidget(self.variant_choice,1)
         self.progress=QProgressBar(); self.progress.setRange(0,1); self.progress.setValue(0); layout.addWidget(self.progress)
         row=QHBoxLayout(); row.addWidget(QLabel('Note preview (first 2,000 gems; scroll horizontally):'))
         self.view_choice=QComboBox(); self.view_choice.addItems(['Converted Medium','Source']); self.view_choice.currentIndexChanged.connect(self.refresh_preview)
@@ -86,18 +96,23 @@ class Window(QMainWindow):
         self.log=QTextEdit(); self.log.setReadOnly(True); split.addWidget(self.log); layout.addWidget(split,1)
         save_log=QPushButton('Save diagnostic log…'); save_log.clicked.connect(self.save_diagnostics); layout.addWidget(save_log)
         self.log_line('Ready. Structural checks do not certify TheGHOST or in-game compatibility.')
+        self.library=LibraryPanel(self); self.tabs.addTab(self.library,'Pattern Library')
         self.update_buttons()
     def log_line(self,text):
         self.log.append(datetime.now().strftime('%H:%M:%S')+'  '+str(text).replace('&','&amp;').replace('<','&lt;').replace('\n','<br>'))
     def busy(self): return self.worker is not None
     def update_buttons(self):
         busy=self.busy()
-        for widget in (self.open_button,self.source,self.max_chord,self.phrase_mode,self.save_settings,self.load_settings,*self.sliders.values()): widget.setEnabled(not busy)
+        for widget in (self.open_button,self.source,self.max_chord,self.phrase_mode,self.seed,self.variant_choice,self.save_settings,self.load_settings,*self.sliders.values()): widget.setEnabled(not busy)
         self.convert_button.setEnabled(not busy and self.song is not None)
         self.export_button.setEnabled(not busy and self.converted is not None)
+        self.generate_button.setEnabled(not busy and self.song is not None)
+        if hasattr(self,'library'): self.library.update_busy(busy,getattr(self,'cancellable',False))
         self.cancel_button.setEnabled(busy and getattr(self,'cancellable',False))
     def invalidate(self,*args):
-        self.converted=None; self.report=None; self.update_buttons(); self.refresh_preview()
+        self.converted=None; self.report=None; self.variants={}
+        self.variant_choice.blockSignals(True); self.variant_choice.setCurrentIndex(0); self.variant_choice.blockSignals(False)
+        self.update_buttons(); self.refresh_preview()
     def settings(self):
         return Settings(self.source.currentText(),self.sliders['Density'].value(),self.sliders['Chords'].value(),self.sliders['Movement'].value(),self.max_chord.value())
     def run_job(self,label,fn,on_success,cancellable=False):
@@ -107,12 +122,20 @@ class Window(QMainWindow):
         self.worker.succeeded.connect(self.job_succeeded, Qt.QueuedConnection)
         self.worker.failed.connect(self.job_failed, Qt.QueuedConnection)
         self.worker.finished.connect(self.job_finished, Qt.QueuedConnection)
+        self.worker.progress.connect(self.job_progress, Qt.QueuedConnection)
         self.update_buttons(); self.worker.start()
+    @Slot(int,int,str)
+    def job_progress(self,done,total,name):
+        self.progress.setRange(0,total); self.progress.setValue(done)
+        self.library.summary.setText(f'{done}/{total} — {name}' if total else name)
     @Slot(object)
     def job_succeeded(self,value):
-        self.success_callback(value)
+        try: self.success_callback(value)
+        except Exception as exc: self.job_failed(f"Result display failed: {exc}")
     @Slot(str)
-    def job_failed(self,error): self.log_line('ERROR — '+error)
+    def job_failed(self,error):
+        self.log_line('ERROR — '+error)
+        if hasattr(self,'library'): self.library.summary.setText('Operation failed: '+error)
     @Slot()
     def job_finished(self):
         worker=self.worker; self.worker=None; worker.deleteLater()
@@ -122,7 +145,7 @@ class Window(QMainWindow):
         if filename: self.open_path(filename)
     def open_path(self,path):
         if self.busy(): return
-        self.song=None; self.converted=None; self.report=None; self.path=None
+        self.song=None; self.converted=None; self.report=None; self.path=None; self.variants={}
         self.info.setText('Loading…'); self.preview.scene().clear()
         mode='modern' if self.phrase_mode.currentIndex()==0 else 'legacy'
         def ready(song):
@@ -134,11 +157,28 @@ class Window(QMainWindow):
         self.run_job('Reading chart…',lambda cancel:load(path,mode),ready)
     def start_convert(self):
         if self.song is None or self.busy(): return
-        settings=self.settings(); self.converted=None; self.report=None
+        settings=self.settings(); self.converted=None; self.report=None; self.variants={}
         def ready(value):
             self.converted,self.report=value
             self.log_line(json.dumps(self.report,indent=2)); self.refresh_preview()
         self.run_job('Converting authored rhythm…',lambda cancel:convert(self.song,settings,cancel),ready,True)
+    def start_variations(self):
+        if self.song is None or self.busy(): return
+        settings=self.settings(); seed=self.seed.value()
+        try: store=self.library.store()
+        except Exception as exc: self.job_failed(str(exc)); return
+        self.converted=None; self.report=None; self.variants={}
+        def ready(results):
+            self.variants=results
+            self.variant_choice.blockSignals(True); self.variant_choice.setCurrentIndex(1); self.variant_choice.blockSignals(False)
+            self.select_variant()
+            self.log_line('Generated three candidates. Select each to compare and export; some may be identical with a small corpus.')
+        self.run_job('Retrieving patterns and generating variations…',lambda cancel:generate_variations(self.song,settings,store,seed,cancel),ready,True)
+    def select_variant(self,*args):
+        name=self.variant_choice.currentText()
+        if name in self.variants:
+            self.converted,self.report=self.variants[name]
+            self.refresh_preview(); self.log_line(json.dumps(self.report,indent=2)); self.update_buttons()
     def refresh_preview(self,*args):
         if self.view_choice.currentIndex()==0 and self.converted:
             self.preview.show_notes(self.converted,'Medium')
@@ -159,13 +199,15 @@ class Window(QMainWindow):
         from dataclasses import asdict
         path,_=QFileDialog.getSaveFileName(self,'Save settings','expert-medium.json','JSON (*.json)')
         if path:
-            try: Path(path).write_text(json.dumps(asdict(self.settings()),indent=2),encoding='utf-8')
+            try: Path(path).write_text(json.dumps(dict(asdict(self.settings()),seed=self.seed.value()),indent=2),encoding='utf-8')
             except Exception as e: self.job_failed(str(e))
     def load_config(self):
         path,_=QFileDialog.getOpenFileName(self,'Load settings','','JSON (*.json)')
         if path:
             try:
-                settings=Settings(**json.loads(Path(path).read_text(encoding='utf-8'))); settings.check()
+                config=json.loads(Path(path).read_text(encoding='utf-8'))
+                settings=Settings(**{k:v for k,v in config.items() if k in Settings.__dataclass_fields__}); settings.check()
+                if 'seed' in config: self.seed.setValue(int(config['seed']))
                 self.source.setCurrentText(settings.source); self.max_chord.setValue(settings.max_chord)
                 for name,attr in [('Density','density'),('Chords','chords'),('Movement','movement')]: self.sliders[name].setValue(getattr(settings,attr))
             except Exception as e: self.job_failed(str(e))
@@ -178,7 +220,9 @@ class Window(QMainWindow):
         if not self.busy() and event.mimeData().hasUrls(): event.acceptProposedAction()
     def dropEvent(self,event):
         paths=[u.toLocalFile() for u in event.mimeData().urls() if u.isLocalFile()]
-        if len(paths)!=1: self.log_line('Milestone 1 accepts one chart at a time; folder/batch import is planned.'); return
+        if len(paths)!=1: self.log_line('Drop one chart or a single parent folder for recursive pattern scanning.'); return
+        if Path(paths[0]).is_dir():
+            self.tabs.setCurrentWidget(self.library); self.library.scan(paths[0]); event.acceptProposedAction(); return
         self.open_path(paths[0]); event.acceptProposedAction()
     def closeEvent(self,event):
         if self.busy():
@@ -186,5 +230,5 @@ class Window(QMainWindow):
         else: event.accept()
 
 def main():
-    app=QApplication(sys.argv); app.setStyle('Fusion')
+    app=QApplication(sys.argv); app.setOrganizationName('GH3ChartStudio'); app.setApplicationName('GH3ChartStudio'); app.setStyle('Fusion')
     window=Window(); window.show(); sys.exit(app.exec())

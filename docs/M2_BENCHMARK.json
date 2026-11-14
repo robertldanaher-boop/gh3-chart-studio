@@ -1,0 +1,11 @@
+{
+  "corpus": "1000 generated synthetic chart files; no real-user corpus",
+  "unique_chart_contents": 1000,
+  "patterns": 6000,
+  "scan_seconds": 1.675,
+  "rescan_seconds": 0.085,
+  "variation_seconds": 0.194,
+  "errors": 0,
+  "variant_count": 3,
+  "platform": "Linux CPython 3.11.18; not a Windows performance guarantee"
+}

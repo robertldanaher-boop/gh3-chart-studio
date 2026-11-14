@@ -47,3 +47,21 @@ def test_worker_results_delivered_on_main_thread(app):
         wait(window)
     assert seen==[(42,True)]*12
     window.close()
+
+def test_pattern_library_scan_browse_rate_generate_export(tmp_path,app):
+    import shutil
+    root=tmp_path/'charts';root.mkdir();shutil.copyfile(FIXTURE,root/'study.chart')
+    w=Window();w.library.db_path.setText(str(tmp_path/'library.sqlite3'))
+    w.library.scan(root);wait(w)
+    assert w.library.last_scan['state']=='completed'
+    w.library.refresh();wait(w)
+    assert w.library.table.rowCount()>0
+    w.library.table.selectRow(0);w.library.rating.setValue(5);w.library.save_rating();wait(w)
+    assert w.library.store().summary()['ratings']==1
+    w.open_path(FIXTURE);wait(w);w.start_variations();wait(w)
+    assert len(w.variants)==3 and w.export_button.isEnabled()
+    w.variant_choice.setCurrentIndex(2)
+    assert w.report['variant']=='Melodic Technical'
+    w.export_to(tmp_path/'variant');wait(w)
+    assert (tmp_path/'variant'/'notes.mid').exists()
+    w.close()

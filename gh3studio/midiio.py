@@ -42,7 +42,7 @@ def read_midi(path, phrase_mode='modern'):
                     if absolute <= start: raise ChartError('MIDI note must have a positive duration')
                     spans.append((start,msg.note,absolute-start))
             elif guitar and msg.type=='sysex':
-                raise ChartError('Guitar SysEx mechanics are unsupported in Milestone 1')
+                raise ChartError('Guitar SysEx mechanics are unsupported in this version')
         if active: raise ChartError('Unterminated MIDI notes')
         if guitar:
             modern_sp = []

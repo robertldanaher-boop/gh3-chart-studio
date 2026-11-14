@@ -1,0 +1,7 @@
+........................................................................ [ 97%]
+..                                                                       [100%]
+74 passed in 4.95s
+
+M2 GUI stress: 5 fresh processes; 20 GUI tests passed; 60 main-thread callback assertions.
+Environment: CPython 3.11.18, Linux x64, PySide6 6.8.3, Qt offscreen, Mido 1.3.3.
+Windows/TheGHOST/Dolphin/Wii: NOT RUN.

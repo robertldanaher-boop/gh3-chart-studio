@@ -8,6 +8,7 @@ from .chartio import read_chart, write_chart
 from .midiio import read_midi, write_midi
 from .validation import ensure_valid
 from .model import ChartError, Note
+from . import __version__
 
 def load(path, phrase_mode='modern'):
     path=Path(path)
@@ -56,7 +57,7 @@ def export_bundle(song, report, destination, source_path=None):
         parser=configparser.ConfigParser(interpolation=None)
         parser['song']={k.lower():str(v) for k,v in song.metadata.items() if k in ('Name','Artist','Album','Year','Genre','Charter')}
         with (staging/'song.ini').open('w',encoding='utf-8') as f: parser.write(f)
-        details=dict(report,exports=checks,version='0.1.0',midi_profile='TheGHOST legacy per-difficulty phrases; Medium star power = 79')
+        details=dict(report,exports=checks,version=__version__,midi_profile='TheGHOST legacy per-difficulty phrases; Medium star power = 79')
         details['warnings']=list(details.get('warnings',[]))+[
             'MIDI zero-length chart gems use 1 tick note duration; MIDI imports preserve their actual duration, including 1-tick notes.',
             'TheGHOST legacy MIDI parser discards sustains shorter than 160 ticks. Prefer notes.chart for short sustains.',

@@ -39,3 +39,32 @@ Do not start by replacing a full setlist.
    offset, timing observations and any gameplay failure in a diagnostic report.
 
 A successful import alone does not prove in-game compatibility.
+
+## Version 0.2.0 pattern-library acceptance
+
+Run setup_windows.cmd, test_windows.cmd and launch_windows.cmd from the new release.
+The Linux reference has 74 passing tests. A symlink test may be skipped on Windows
+when symlink privileges are unavailable; other failures require investigation.
+
+1. Create a test folder and copy only examples/technical-study.chart into it.
+2. Open Pattern Library. Choose a new test SQLite database path.
+3. Scan the test folder; expect 1 imported chart content, 6 windows and no failures.
+4. Scan it again; expect 1 duplicate and no additional windows.
+5. Browse patterns; select one and save a rating of 5. Close/reopen the app, select
+   the same database and confirm the rating persists.
+6. Add a malformed .chart to the folder and rescan. Expect completed_with_errors,
+   with that file marked failed. The existing six windows must remain available.
+7. Open the original study in Chart Converter. Choose Expert, Density 6, Chords 6,
+   Movement 5, Max chord gems 3, seed 42. Generate the three variation modes.
+8. Select each variant; confirm four preview lanes, 31 retained events and no Orange.
+   Export each to a separate new folder. Check donor/seed/corpus details in validation.json.
+9. Regenerate with unchanged settings and database. Compare actual notes; they should
+   match. Changing ratings/database can intentionally change output.
+10. With only this tiny corpus, expect a warning if two modes produce the same notes.
+    Different labels alone are not proof of distinct arrangements.
+11. Test a larger folder; cancel while scanning, then rescan. Fully imported files
+    should be reused and unprocessed/failed files retried. Save the scan report.
+12. Repeat the TheGHOST/Dolphin acceptance steps above with a legally usable real song.
+
+Do not copy the examples/variations outputs into the training folder for the minimal
+six-window check; each exported file is a separate content snapshot.

@@ -18,10 +18,20 @@ transition cache makes repeated transitions consistent. Density thinning selects
 existing events only and prioritizes quarter-note anchors and phrase/section starts.
 
 Future milestones can consume/produce Song without replacing the GUI or exporters.
-Milestone 2 should add a SQLite pattern store and separate extraction/scoring modules.
+Milestone 2 now provides a SQLite pattern store and separate extraction/scoring modules.
 Audio analysis should be an independent pipeline feeding proposed tick events, with
 explicit uncertainty and offset handling. It is not implemented in this release.
 
 Dependencies are pinned in requirements-windows.lock with SHA-256 hashes. Setup
 uses binary wheels only. The lock targets Windows/Python 3.11; Linux QA uses matching
 primary versions. Updating dependencies requires rerunning tests and Windows checks.
+
+## Milestone 2 modules
+
+patterns.py owns exact fractional-beat extraction, SQLite schema v1, content snapshots,
+ratings, scanner transactions and bounded similarity queries. Every worker opens and
+closes its own SQLite connection; connections are not shared across threads.
+variations.py retrieves seeded candidate patterns and transfers their lane shapes
+onto the converter's existing Medium events. library_gui.py supplies the library tab
+and delegates work to the main window's explicit queued result/progress slots.
+No new third-party dependency is introduced; sqlite3 is Python standard library.

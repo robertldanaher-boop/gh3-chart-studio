@@ -1,0 +1,11 @@
+{
+  "source": "Expert",
+  "density": 6,
+  "chords": 6,
+  "movement": 5,
+  "max_chord": 3,
+  "variation": "Melodic Technical",
+  "seed": 42,
+  "algorithm": "pattern-transfer-v1",
+  "corpus_fingerprint": "6dc878a0ff4ac35acc79e996d6004e3b05e6f5a9122ef755b313f81a3b89638e"
+}

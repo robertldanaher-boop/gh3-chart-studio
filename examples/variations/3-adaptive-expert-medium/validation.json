@@ -1,0 +1,87 @@
+{
+  "errors": [],
+  "warnings": [
+    "Natural HOPO behavior may change after fret remapping. No forced HOPO or modern tap mechanics are generated.",
+    "Audio synchronization has not been measured; audio is not analyzed in this version.",
+    "TheGHOST MIDI discards sustains below 160 ticks; prefer .chart. Both importers may alter sustain lengths across tempo changes.",
+    "Legacy MIDI phrase export: Medium Star Power pitch 79. Modern shared pitch 116 is input-only.",
+    "Nonzero Offset blocks paired export. Apply timing offsets explicitly in TheGHOST.",
+    "7 source gems removed by settings and variation policy.",
+    "Variations transfer stored lane shapes onto existing authored events. No audio analysis or neural model training occurred.",
+    "Similarity and pattern ratings are selection heuristics, not objective musical-quality scores.",
+    "Only 2 distinct note arrangement(s) resulted; the corpus/input does not guarantee three unique patterns.",
+    "MIDI zero-length chart gems use 1 tick note duration; MIDI imports preserve their actual duration, including 1-tick notes.",
+    "TheGHOST legacy MIDI parser discards sustains shorter than 160 ticks. Prefer notes.chart for short sustains.",
+    "TheGHOST may alter sustain lengths, especially across tempo changes. In-game verification is pending.",
+    "Audio files are not copied. Import the original audio in TheGHOST. Choose either notes.chart OR notes.mid."
+  ],
+  "settings": {
+    "source": "Expert",
+    "density": 6,
+    "chords": 6,
+    "movement": 5,
+    "max_chord": 3,
+    "variation": "Adaptive Expert Medium",
+    "seed": 42,
+    "algorithm": "pattern-transfer-v1",
+    "corpus_fingerprint": "6dc878a0ff4ac35acc79e996d6004e3b05e6f5a9122ef755b313f81a3b89638e"
+  },
+  "source_events": 31,
+  "source_gems": 38,
+  "medium_events": 31,
+  "medium_gems": 31,
+  "removed_events": 0,
+  "removed_gems": 7,
+  "timing": "Retained onsets and sustain lengths are exact integer ticks",
+  "status": "Structural checks passed; TheGHOST/Dolphin testing required",
+  "variant": "Adaptive Expert Medium",
+  "seed": 42,
+  "algorithm": "pattern-transfer-v1",
+  "corpus_fingerprint": "6dc878a0ff4ac35acc79e996d6004e3b05e6f5a9122ef755b313f81a3b89638e",
+  "pattern_matches": [
+    {
+      "window_start_tick": 0,
+      "pattern_id": 5,
+      "source_hash": "51b3f2dfc134165fcfd7a17a9bd32a26e101b744c1068557485d7f439ea19207",
+      "source_difficulty": "Expert",
+      "source_window_start": 1536,
+      "distance": 1.4280303030303028,
+      "rating": 3
+    },
+    {
+      "window_start_tick": 1536,
+      "pattern_id": 4,
+      "source_hash": "51b3f2dfc134165fcfd7a17a9bd32a26e101b744c1068557485d7f439ea19207",
+      "source_difficulty": "Expert",
+      "source_window_start": 0,
+      "distance": 1.359090909090909,
+      "rating": 3
+    },
+    {
+      "window_start_tick": 3072,
+      "pattern_id": 3,
+      "source_hash": "51b3f2dfc134165fcfd7a17a9bd32a26e101b744c1068557485d7f439ea19207",
+      "source_difficulty": "Hard",
+      "source_window_start": 3072,
+      "distance": 1.7083333333333333,
+      "rating": 3
+    }
+  ],
+  "distinct_variation_count": 2,
+  "exports": {
+    "notes.chart": {
+      "reopened": true,
+      "medium_orange_gems": 0,
+      "max_tempo_boundary_drift_ms": 0.0,
+      "sha256": "5f5ad9b160d995b4c72a441de302dc69af293a0048989e8fa5f3aa289b6638cc"
+    },
+    "notes.mid": {
+      "reopened": true,
+      "medium_orange_gems": 0,
+      "max_tempo_boundary_drift_ms": 0.0,
+      "sha256": "5d25451bb642c10ecb1c30463b0e1527e9982d01b901870c1764dd26f8db008c"
+    }
+  },
+  "version": "0.2.0",
+  "midi_profile": "TheGHOST legacy per-difficulty phrases; Medium star power = 79"
+}

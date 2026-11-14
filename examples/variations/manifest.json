@@ -1,0 +1,20 @@
+{
+  "1-rhythm-technical": {
+    "name": "Rhythm Technical",
+    "medium_gems": 38,
+    "medium_events": 31,
+    "distinct_variation_count": 2
+  },
+  "2-melodic-technical": {
+    "name": "Melodic Technical",
+    "medium_gems": 31,
+    "medium_events": 31,
+    "distinct_variation_count": 2
+  },
+  "3-adaptive-expert-medium": {
+    "name": "Adaptive Expert Medium",
+    "medium_gems": 31,
+    "medium_events": 31,
+    "distinct_variation_count": 2
+  }
+}

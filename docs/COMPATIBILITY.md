@@ -65,7 +65,8 @@ If validation/writing fails, no complete output folder is reported.
   HOPO preservation. This release prioritizes valid notes and exact retained timing.
 - MIDI metadata beyond a standard title is application metadata plus song.ini;
   other applications may ignore the private text event. Use song.ini for interchange.
-- No audio analysis, ML, playback, full chart editor, folder import or batch UI.
+- No audio analysis, neural training, playback, full chart editor or batch generation UI.
+  Version 0.2.0 adds folder scanning for the pattern library; see PATTERN_LIBRARY.md.
 - MIDI export is TheGHOST-oriented. Clone Hero/YARG compatibility is not certified.
 - Import is limited to 32 MiB. A 100,000-gem warning is a review threshold, not a
   researched hard limit for GH3.
