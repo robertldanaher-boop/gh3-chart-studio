@@ -1,7 +1,9 @@
 from collections import defaultdict
 from .model import ChartError
 
-def validate(song, require_medium=False):
+def validate(song, require_medium=False, *, learning_only=False):
+    if require_medium and learning_only:
+        raise ValueError("Learning validation cannot validate an export")
     errors=[]; warnings=list(song.warnings)
     if not 1 <= song.resolution <= 32767: errors.append('Resolution must be 1..32767 PPQ')
     if not song.tempos or song.tempos[0][0]!=0: errors.append('Tempo map must start at zero')
@@ -24,8 +26,9 @@ def validate(song, require_medium=False):
             key=(note.tick,note.lane)
             if key in seen: errors.append(f'Duplicate gem in {diff} at {note.tick}')
             seen.add(key)
-            if ends.get(note.lane,0)>note.tick: errors.append(f'Same-lane sustain overlap in {diff} at {note.tick}')
-            ends[note.lane]=note.tick+note.length
+            if ends.get(note.lane,0)>note.tick:
+                (warnings if learning_only else errors).append(f'Same-lane sustain overlap in {diff} at {note.tick}')
+            ends[note.lane]=max(ends.get(note.lane,0),note.tick+note.length)
         for p in song.phrases.get(diff,[]):
             if p.tick<0 or p.length<=0 or p.tick+p.length>0x0fffffff or p.kind not in (0,1,2): errors.append('Invalid special phrase')
         for kind in (0,1,2):
@@ -38,7 +41,7 @@ def validate(song, require_medium=False):
     if sum(len(v) for v in song.tracks.values())>100000: warnings.append('Over 100,000 gems: review memory and import behavior; no proven GH3 limit asserted')
     return {'errors':sorted(set(errors)),'warnings':sorted(set(warnings))}
 
-def ensure_valid(song, require_medium=False):
-    report=validate(song,require_medium)
+def ensure_valid(song, require_medium=False, *, learning_only=False):
+    report=validate(song,require_medium,learning_only=learning_only)
     if report['errors']: raise ChartError('\n'.join(report['errors']))
     return report

@@ -10,7 +10,7 @@ from .validation import ensure_valid
 from .model import ChartError, Note
 from . import __version__
 
-def load(path, phrase_mode='modern'):
+def load(path, phrase_mode='modern', *, learning_only=False):
     path=Path(path)
     if path.stat().st_size>32*1024*1024: raise ChartError('Input exceeds the 32 MiB safety limit')
     if path.suffix.lower()=='.chart': song=read_chart(path)
@@ -25,7 +25,9 @@ def load(path, phrase_mode='modern'):
                 if parser.has_option('song',src): song.metadata[dst]=parser.get('song',src)
             if parser.has_option('song','delay'):
                 song.warnings.append('song.ini delay found: set the same delay in TheGHOST; no automatic offset is applied')
-    ensure_valid(song)
+    checks=ensure_valid(song,learning_only=learning_only)
+    if learning_only:
+        song.warnings=checks["warnings"]
     return song
 
 def export_bundle(song, report, destination, source_path=None):

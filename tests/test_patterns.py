@@ -161,9 +161,46 @@ def test_no_schema_collision_with_other_app(tmp_path):
 
 def test_modifier_track_skipped_not_marked_learned(tmp_path):
     root=tmp_path/'charts';root.mkdir()
-    text=FIXTURE.read_text().replace('[ExpertSingle]\n{','[ExpertSingle]\n{\n  0 = N 5 0')
+    text=FIXTURE.read_text().replace('[ExpertSingle]\n{','[ExpertSingle]\n{\n  0 = N 7 0')
     (root/'modified.chart').write_text(text)
     store=PatternStore(tmp_path/'patterns.sqlite3');report=scan_folder(root,store)
     assert report['imported']==1
     assert {r['difficulty'] for r in store.browse()}=={'Hard'}
     assert 'skipped Expert' in report['files'][0]['detail']
+
+@pytest.mark.parametrize('marker',['N 5','N 6','E solo','E soloend','E "solo"'])
+def test_shape_markers_are_retained_without_discarding_difficulty(tmp_path,marker):
+    from gh3studio.chartio import write_chart
+    song=Song(tracks={'Expert':[Note(0,0),Note(192,1)]},modifiers={'Expert':[(0,marker)]})
+    root=tmp_path/'charts';root.mkdir();path=root/'notes.chart';write_chart(song,path)
+    if marker.startswith('N '):
+        path.write_text(path.read_text().replace('= '+marker+'\n','= '+marker+' 0\n'))
+    original=path.read_bytes();store=PatternStore(tmp_path/'db.sqlite3')
+    report=scan_folder(root,store)
+    assert report['imported']==1 and report['failed']==0
+    payload=json.loads(store.browse()[0]['payload'])
+    assert payload['source_markers']==[[0,marker]]
+    assert 'shape-only' in report['files'][0]['detail']
+    assert path.read_bytes()==original
+
+
+def test_learning_accepts_overlap_but_load_and_export_stay_strict(tmp_path):
+    from gh3studio.chartio import write_chart
+    from gh3studio.validation import validate
+    song=Song(tracks={'Expert':[Note(0,0,384),Note(192,0,96)],'Medium':[Note(0,1)]})
+    root=tmp_path/'charts';root.mkdir();path=root/'notes.chart';write_chart(song,path)
+    store=PatternStore(tmp_path/'db.sqlite3');report=scan_folder(root,store)
+    assert report['imported']==1 and 'Same-lane sustain overlap' in report['files'][0]['detail']
+    payload=next(json.loads(r['payload']) for r in store.browse() if r['difficulty']=='Expert')
+    assert payload['tokens'][0]['lengths']==['2']
+    with pytest.raises(ChartError,match='overlap'):load(path)
+    with pytest.raises(ChartError,match='overlap'):export_bundle(song,{},tmp_path/'out')
+    with pytest.raises(ValueError):validate(song,True,learning_only=True)
+
+
+def test_learning_does_not_accept_invalid_notes(tmp_path):
+    from gh3studio.chartio import write_chart
+    root=tmp_path/'charts';root.mkdir()
+    write_chart(Song(tracks={'Expert':[Note(0,0,-1)]}),root/'bad.chart')
+    report=scan_folder(root,PatternStore(tmp_path/'db.sqlite3'))
+    assert report['failed']==1 and report['patterns_added']==0

@@ -11,7 +11,7 @@ class LibraryPanel(QWidget):
         super().__init__();self.owner=owner;self.rows=[];self.last_scan=None
         layout=QVBoxLayout(self)
         title=QLabel('Local Pattern Learning');title.setStyleSheet('font-size:22px;font-weight:600');layout.addWidget(title)
-        hint=QLabel('Scan authored charts, inspect extracted patterns, and rate useful examples.\nAll chart data and ratings remain on this computer. This is statistical pattern retrieval, not neural training.')
+        hint=QLabel('Scan authored charts, inspect extracted patterns, and rate useful examples.\nAll chart data and ratings remain on this computer. This is statistical pattern retrieval, not neural training.\nAfter scanning, switch to Chart Converter, open a supported chart, and select Generate 3 learned variations.\nLearning accepts source tap/HOPO markers and sustain overlaps as metadata; conversion remains strict.')
         hint.setWordWrap(True);layout.addWidget(hint)
         row=QHBoxLayout();layout.addLayout(row)
         local=QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation)

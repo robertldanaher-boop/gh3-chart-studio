@@ -14,6 +14,8 @@ from .service import load
 SCHEMA_VERSION = 1
 APPLICATION_ID = 0x47483343
 WINDOW_BEATS = 8
+EXTRACTION_VERSION = b"shape-learning-v2"
+SHAPE_ONLY_MARKERS = {"N 5", "N 6", "E solo", "E soloend", 'E "solo"', 'E "soloend"'}
 CATEGORIES = ('Steady rhythm','Fast rhythm','Repeating riff','Technical run','Alternating chord pattern','Sustained passage','Mixed passage')
 
 def groups(notes):
@@ -57,7 +59,9 @@ def extract(song,difficulty,cancelled=lambda:False):
             for i in range(max(0,count-size+1)):
                 key=json.dumps([[tokens[j]['lanes'],str(Fraction(events[j][0]-events[i][0],song.resolution))] for j in range(i,i+size)],separators=(',',':'))
                 motifs[key]+=1
-        payload=dict(tokens=tokens,rhythm=rhythm,features=features,start_tick=start,
+        payload=dict(source_markers=[(t,m) for t,m in song.modifiers.get(difficulty,[]) if start<=t<end],
+                     learning_scope="Fret/rhythm shapes only; source markers are not reproduced",
+                     tokens=tokens,rhythm=rhythm,features=features,start_tick=start,
                      repeated_motifs=[{'sequence':json.loads(key),'count':n} for key,n in sorted(motifs.items()) if n>1],
                      tempo_changes=[(t,str(us)) for t,us in song.tempos if start<=t<end])
         output.append(payload)
@@ -167,23 +171,28 @@ def scan_folder(root,store,phrase_mode='modern',cancelled=lambda:False,progress=
                     if path.stat().st_size>32*1024*1024: raise ChartError('Input exceeds 32 MiB')
                     raw=path.read_bytes();ini=path.parent/'song.ini'
                     if ini.exists() and ini.stat().st_size>1024*1024: raise ChartError('song.ini exceeds 1 MiB')
-                    identity=hashlib.sha256(raw+b'\0'+(ini.read_bytes() if ini.exists() else b'')+b'\0'+phrase_mode.encode()+path.suffix.lower().encode()).hexdigest()
+                    identity=hashlib.sha256(raw+b'\0'+(ini.read_bytes() if ini.exists() else b'')+b'\0'+phrase_mode.encode()+path.suffix.lower().encode()+b'\0'+EXTRACTION_VERSION).hexdigest()
                     with db:
                         known=db.execute('SELECT 1 FROM sources WHERE id=?',(identity,)).fetchone()
                         if known:
                             status='duplicate';detail='Content already indexed; source record reused';new_count=0
                         else:
-                            song=load(path,phrase_mode);patterns=[];skipped=[]
+                            song=load(path,phrase_mode,learning_only=True);patterns=[];skipped=[]
                             for diff in ('Easy','Medium','Hard','Expert'):
-                                if song.modifiers.get(diff): skipped.append(diff);continue
+                                if any(m not in SHAPE_ONLY_MARKERS for _,m in song.modifiers.get(diff,[])):
+                                    skipped.append(diff);continue
                                 patterns.extend((diff,p) for p in extract(song,diff,cancelled))
-                            if not patterns: raise ChartError('No supported playable guitar patterns')
+                            if not patterns:
+                                reasons={d:sorted({m for _,m in song.modifiers.get(d,[]) if m not in SHAPE_ONLY_MARKERS}) for d in skipped}
+                                raise ChartError(f'No supported playable guitar patterns; unsupported markers by difficulty: {reasons}; playable gems: '+str({d:len(n) for d,n in song.tracks.items()}))
                             db.execute('INSERT INTO sources VALUES(?,?,?)',(identity,song.metadata.get('Name',path.stem),json.dumps(song.metadata)))
                             for diff,p in patterns:
                                 db.execute('INSERT INTO patterns(source_id,difficulty,start_tick,category,rate,payload) VALUES(?,?,?,?,?,?)',
                                     (identity,diff,p['start_tick'],p['features']['category'],p['features']['events_per_beat'],json.dumps(p,sort_keys=True)))
                             status='imported';new_count=len(patterns)
                             detail=f'{new_count} windows added'+(f'; unsupported modifiers: skipped {", ".join(skipped)}' if skipped else '')
+                            if song.modifiers:
+                                detail+='; shape-only learning: source tap/forced-HOPO/solo markers retained as metadata, not gameplay instructions'
                             if song.warnings: detail+='; '+'; '.join(song.warnings)
                         if cancelled(): raise ChartError('Cancelled')
                         db.execute('INSERT INTO paths VALUES(?,?,?,?) ON CONFLICT(path) DO UPDATE SET source_id=excluded.source_id,status=excluded.status,detail=excluded.detail',
