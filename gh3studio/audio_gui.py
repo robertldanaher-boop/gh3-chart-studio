@@ -1,4 +1,4 @@
-"""Audio analysis workspace; no simulated playback or claimed instrument isolation."""
+"""Audio-only draft workflow; full-mix analysis, not instrument isolation."""
 import json
 from pathlib import Path
 from PySide6.QtCore import Qt
@@ -28,7 +28,7 @@ class AudioPanel(QWidget):
         super().__init__();self.owner=owner;self.path=None;self.analysis=None;self.last_diagnostics=None
         layout=QVBoxLayout(self)
         title=QLabel('Audio Analysis — reviewable onset drafts');title.setStyleSheet('font-size:22px;font-weight:600');layout.addWidget(title)
-        hint=QLabel('Detect attack candidates in the full mix. This does not isolate guitar or prove transcription accuracy.\nOrange is prohibited in generated Medium charts. Original audio stays unchanged.')
+        hint=QLabel('No existing chart required: Open audio → Analyze → Create four-fret draft → Listen & Sync.\nDetect attack candidates in the full mix. This does not isolate guitar or prove transcription accuracy.\nOrange is prohibited in generated Medium charts. Original audio stays unchanged.')
         hint.setWordWrap(True);layout.addWidget(hint)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Open audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
@@ -47,7 +47,7 @@ class AudioPanel(QWidget):
         self.zoom=QSlider(Qt.Horizontal);self.zoom.setRange(20,250);self.zoom.setValue(100);self.zoom.valueChanged.connect(self.redraw);row.addWidget(self.zoom)
         row=QHBoxLayout();layout.addLayout(row)
         row.addWidget(QLabel('Draft shift (ms; + = later)'));self.shift=QDoubleSpinBox();self.shift.setRange(-10000,10000);self.shift.setDecimals(1);row.addWidget(self.shift)
-        self.template=QCheckBox('Use open chart tempo map when available');self.template.setChecked(True);row.addWidget(self.template)
+        self.template=QCheckBox('Use open chart tempo map when available');self.template.setChecked(False);row.addWidget(self.template)
         self.learned=QCheckBox('Use local learned patterns');row.addWidget(self.learned)
         row=QHBoxLayout();layout.addLayout(row)
         self.draft_button=QPushButton('Create four-fret draft');self.draft_button.clicked.connect(self.create_draft);row.addWidget(self.draft_button)
@@ -72,6 +72,7 @@ class AudioPanel(QWidget):
         if path:self.open_path(path)
     def open_path(self,path):
         if self.owner.busy():return
+        self.owner.playback.open_audio(path)
         self.path=Path(path);self.file_label.setText(str(path));self.invalidate();self.start_analysis()
     def start_analysis(self):
         if self.path is None or self.owner.busy():return
@@ -92,6 +93,7 @@ class AudioPanel(QWidget):
         except Exception as exc:self.owner.job_failed(str(exc));return
         def ready(value):
             song,report=value
+            self.owner.original_song=None;self.owner.cleanup_report=None
             self.owner.song=song;self.owner.converted=song;self.owner.report=report;self.owner.path=Path(analysis.source_path);self.owner.variants={}
             available=[d for d in ('Expert','Hard') if song.tracks.get(d)]
             if available and self.owner.source.currentText() not in available:

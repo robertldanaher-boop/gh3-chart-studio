@@ -23,7 +23,7 @@ def convert(song, settings=Settings(), cancelled=lambda:False):
     notes=sorted(song.tracks.get(settings.source,[]))
     if not notes: raise ChartError(f'No {settings.source} guitar notes')
     if song.modifiers.get(settings.source):
-        raise ChartError('Source has forced HOPO/tap/open/unsupported events. This profile cannot safely translate these; remove them in a chart editor or select another track.')
+        raise ChartError('Source has forced HOPO/tap/open/unsupported events. This profile cannot safely translate these; use Review GH3 cleanup to inspect and remove them from a working copy.')
     result=copy.deepcopy(song)
     output=[]; previous_source=None; previous_target=None; cache={}; last_tick=-10**12
     dropped_events=0; dropped_gems=0; previous_end=0
@@ -36,9 +36,9 @@ def convert(song, settings=Settings(), cancelled=lambda:False):
         if cancelled(): raise ChartError('Cancelled; no export created')
         group=list(group)
         if len({n.length for n in group})>1:
-            raise ChartError(f'Disjoint chord sustains at tick {tick}: TheGHOST uses one duration per chord. Normalize in an editor first.')
+            raise ChartError(f'Disjoint chord sustains at tick {tick}: TheGHOST uses one duration per chord. Use Review GH3 cleanup with sustain shortening.')
         if tick < previous_end:
-            raise ChartError(f'Extended sustain at tick {tick}: unsupported by the conservative GH3 profile')
+            raise ChartError(f'Extended sustain at tick {tick}: use Review GH3 cleanup with sustain shortening')
         previous_end=max(n.tick+n.length for n in group)
         if tick-last_tick<spacing and tick%song.resolution and tick not in anchors:
             dropped_events+=1; dropped_gems+=len(group); continue
@@ -75,7 +75,7 @@ def convert(song, settings=Settings(), cancelled=lambda:False):
                   timing='Retained onsets and sustain lengths are exact integer ticks',
                   status='Structural checks passed; TheGHOST/Dolphin testing required')
     report['warnings'] += ['Natural HOPO behavior may change after fret remapping. No forced HOPO or modern tap mechanics are generated.',
-                           'Audio synchronization has not been measured; audio is not analyzed in this version.',
+                           'This conversion does not analyze audio. Use Audio Analysis and Listen & Sync to review synchronization.',
                            'TheGHOST MIDI discards sustains below 160 ticks; prefer .chart. Both importers may alter sustain lengths across tempo changes.',
                            'Legacy MIDI phrase export: Medium Star Power pitch 79. Modern shared pitch 116 is input-only.',
                            'Nonzero Offset blocks paired export. Apply timing offsets explicitly in TheGHOST.']

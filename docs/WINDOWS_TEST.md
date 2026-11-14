@@ -91,3 +91,9 @@ six-window check; each exported file is a separate content snapshot.
     NumPy/SciPy and libsndfile load. The source-release build recipe has not been run here.
 
 A low fixture error does not certify real-song guitar transcription or in-game playability.
+
+
+## 0.4.0 acceptance
+
+Use M4_WINDOWS_GUIDE.md for playback, audio-only creation, explicit cleanup,
+style filtering, timing shifts and undo/redo checks. Prior milestone checks remain.

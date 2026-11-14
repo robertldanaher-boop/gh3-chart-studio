@@ -114,3 +114,64 @@ def dispose_closed_windows_on_gui_thread(app):
     QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete)
     app.processEvents();gc.collect()
     QCoreApplication.sendPostedEvents(None,QEvent.DeferredDelete)
+
+
+def test_cleanup_dialog_review_cancel_and_apply(tmp_path,app):
+    from gh3studio.cleanup_gui import CleanupDialog
+    from gh3studio.model import Song,Note
+    song=Song(tracks={'Expert':[Note(0,0,300),Note(192,0)]},modifiers={'Expert':[(0,'N 6')]})
+    dialog=CleanupDialog(song)
+    assert not dialog.apply_button.isEnabled()
+    dialog.trim.setChecked(True)
+    assert dialog.apply_button.isEnabled() and len(dialog.report['changes'])==2
+    assert song.modifiers and song.tracks['Expert'][0].length==300
+    dialog.reject();dialog.close()
+
+
+def test_playback_shift_preview_apply_undo_redo_export(tmp_path,app):
+    w=Window();w.open_path(FIXTURE);wait(w);w.start_convert();wait(w)
+    original=w.converted;notes=list(original.tracks['Medium'])
+    panel=w.playback;panel.shift.setValue(100)
+    assert w.converted is original and panel.highway.shift==.1
+    panel.apply_shift()
+    assert w.converted is not original and w.converted.tracks['Medium']!=notes
+    assert w.report['timing_edits_ms']==[100] and panel.undo_button.isEnabled()
+    changed=w.converted
+    panel.undo();assert w.converted is original and w.converted.tracks['Medium']==notes
+    panel.redo();assert w.converted is changed
+    w.export_to(tmp_path/'timing-output');wait(w)
+    assert (tmp_path/'timing-output'/'notes.mid').exists()
+    w.close()
+
+
+def test_audio_only_variations_without_authored_chart(tmp_path,app):
+    w=Window();w.library.db_path.setText(str(tmp_path/'corpus.sqlite3'))
+    w.library.scan(FIXTURE.parent);wait(w)
+    path=FIXTURE.parent/'audio'/'onset-study.wav'
+    w.audio.open_path(path);wait(w)
+    assert w.song is None and not w.audio.template.isChecked()
+    w.audio.create_draft();wait(w)
+    assert w.converted and w.report['audio']
+    w.start_variations();wait(w)
+    assert len(w.variants)==3
+    w.close()
+
+
+def test_real_media_playback_pause_and_seek(app):
+    from PySide6.QtMultimedia import QMediaPlayer
+    w=Window();panel=w.playback;panel.output.setMuted(True)
+    panel.open_audio(FIXTURE.parent/'audio'/'onset-study.wav')
+    for _ in range(200):
+        QApplication.processEvents();QTest.qWait(10)
+        if panel.player.duration():break
+    assert panel.player.duration()==9000 and panel.player.hasAudio()
+    panel.toggle()
+    for _ in range(200):
+        QApplication.processEvents();QTest.qWait(10)
+        if panel.player.position()>100:break
+    assert panel.player.position()>100 and panel.player.error()==QMediaPlayer.NoError
+    panel.toggle();assert panel.player.playbackState()==QMediaPlayer.PausedState
+    panel.player.setPosition(2500);QApplication.processEvents()
+    assert panel.player.position()==2500
+    panel.stop();assert panel.player.position()==0 and panel.player.playbackState()==QMediaPlayer.PausedState
+    panel.player.setPosition(2500);w.close()

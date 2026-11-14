@@ -40,3 +40,16 @@ package does not include Qt binaries or claim commercial-license authorization.
 PyInstaller's installed SoundFile hook was inspected: it collects the libsndfile
 shared library and COPYING notice. That source inspection does not prove a Windows
 binary build. Review the bundled dependency notices for binary redistribution.
+
+## Playback added in 0.4.0
+
+QtMultimedia QMediaPlayer/QAudioOutput are now used for playback. The installed
+PySide6 6.8.3 Linux wheel reports FFmpeg 7.1 under LGPL-2.1-or-later at runtime.
+Qt's own license and its FFmpeg third-party obligations both apply to binary builds:
+https://doc.qt.io/qt-6.8/licenses-used-in-qt.html
+https://doc.qt.io/qt-6.8/qtmultimedia-index.html#licenses-and-attributions
+No Qt/FFmpeg binaries are included in this source ZIP. A compiled distribution
+requires an audit of the actual platform backend, matching notices and corresponding
+source availability; the existing distribution-notice collector alone does not
+complete that audit. Do not describe a Windows binary as distribution-ready based
+only on a successful PyInstaller build. We use Qt APIs; no FFmpeg source was copied.

@@ -1,0 +1,22 @@
+[
+  {
+    "file": "notes(1).chart",
+    "title": "†elepa†hy [chartgen]",
+    "sha256": "df1a759e995874af1ef2b5decd2ecd5e444340f85cd8da240b7578ef937b6f6a",
+    "patterns_added": 200,
+    "cleanup_changes": 1662,
+    "medium_gems": 902,
+    "paired_exports": 4,
+    "original_unchanged": true
+  },
+  {
+    "file": "notes(2).chart",
+    "title": "Tender Surrender",
+    "sha256": "6a94307469ee720dd2fbef62cd7957e8a36659813203aa6bbca1b88d6e1bb22f",
+    "patterns_added": 228,
+    "cleanup_changes": 443,
+    "medium_gems": 1455,
+    "paired_exports": 4,
+    "original_unchanged": true
+  }
+]

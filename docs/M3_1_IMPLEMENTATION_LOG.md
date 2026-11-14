@@ -19,4 +19,5 @@ Windows: extract a fresh folder, run setup_windows.cmd, test_windows.cmd, then
 launch_windows.cmd. Scan the two song folders in Pattern Library; expect 200 and
 228 windows on a new database. Switch to Chart Converter to generate variations.
 A successful corpus scan does not mean the song is ready for conversion.
+110 automated tests passed on Linux CPython 3.11.18 before starting M4.
 Windows/real-device acceptance is still pending.

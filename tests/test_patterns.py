@@ -204,3 +204,14 @@ def test_learning_does_not_accept_invalid_notes(tmp_path):
     write_chart(Song(tracks={'Expert':[Note(0,0,-1)]}),root/'bad.chart')
     report=scan_folder(root,PatternStore(tmp_path/'db.sqlite3'))
     assert report['failed']==1 and report['patterns_added']==0
+
+
+def test_variation_style_filter(corpus):
+    _,store=corpus;category=store.browse()[0]['category']
+    result=generate_variations(load(FIXTURE),Settings(),store,category=category)
+    rows={row['id']:row for row in store.browse(limit=10000)}
+    for song,report in result.values():
+        assert report['pattern_style']==category
+        assert all(rows[m['pattern_id']]['category']==category for m in report['pattern_matches'])
+    with pytest.raises(ChartError,match='Unknown pattern style'):
+        generate_variations(load(FIXTURE),Settings(),store,category='invented')

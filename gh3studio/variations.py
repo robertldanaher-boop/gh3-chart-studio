@@ -13,7 +13,9 @@ from .validation import ensure_valid
 VARIANTS=('Rhythm Technical','Melodic Technical','Adaptive Expert Medium')
 ALGORITHM='pattern-transfer-v1'
 
-def generate_variations(song,settings,store,seed=0,cancelled=lambda:False):
+def generate_variations(song,settings,store,seed=0,cancelled=lambda:False,category=""):
+    from .patterns import CATEGORIES
+    if category and category not in CATEGORIES:raise ChartError("Unknown pattern style")
     if not isinstance(seed,int) or not 0<=seed<=2147483647: raise ChartError('Seed must be 0–2147483647')
     if store.summary()['patterns']==0: raise ChartError('Scan a chart folder before generating learned variations')
     fingerprint=store.fingerprint(cancelled)
@@ -32,8 +34,8 @@ def generate_variations(song,settings,store,seed=0,cancelled=lambda:False):
             elif variant_index==1: features.update(chord_ratio=0,movement=max(1.5,features['movement']))
             motif=json.dumps(query['tokens'],sort_keys=True)
             if motif not in memo:
-                candidates=store.similar(features,limit=6)
-                if not candidates: raise ChartError('No eligible stored patterns')
+                candidates=store.similar(features,category=category,limit=6)
+                if not candidates: raise ChartError('No patterns match the selected style. Browse Pattern Library or choose All styles.')
                 weights=[1/(1+max(0,c['distance']-candidates[0]['distance'])) for c in candidates]
                 memo[motif]=rng.choices(candidates,weights=weights,k=1)[0]
             chosen=memo[motif];donor=chosen['data']['tokens']
@@ -65,10 +67,10 @@ def generate_variations(song,settings,store,seed=0,cancelled=lambda:False):
         result.tracks['Medium']=sorted(notes)
         ensure_valid(result,True)
         report=copy.deepcopy(base_report)
-        report.update(variant=name,seed=seed,algorithm=ALGORITHM,corpus_fingerprint=fingerprint,pattern_matches=matches,
+        report.update(pattern_style=category or "All styles",variant=name,seed=seed,algorithm=ALGORITHM,corpus_fingerprint=fingerprint,pattern_matches=matches,
                       medium_events=len({n.tick for n in notes}),medium_gems=len(notes),
                       removed_gems=base_report['source_gems']-len(notes))
-        report['settings']=dict(report['settings'],variation=name,seed=seed,algorithm=ALGORITHM,corpus_fingerprint=fingerprint)
+        report['settings']=dict(report['settings'],pattern_style=category,variation=name,seed=seed,algorithm=ALGORITHM,corpus_fingerprint=fingerprint)
         # Baseline warning about removed gems may no longer describe melodic output.
         report['warnings']=[w for w in report['warnings'] if 'gems removed by density/chord settings' not in w]
         report['warnings'] += [f"{report['removed_gems']} source gems removed by settings and variation policy.",

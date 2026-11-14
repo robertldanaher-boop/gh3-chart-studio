@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.3.0 — Milestones 1–3
+# GH3 Chart Studio 0.4.0 — Playback, cleanup and timing review
 
 A Python 3.11 / PySide6 desktop converter for authored Expert or Hard guitar tracks.
 Expert Medium is written into **MediumSingle** and MIDI **PART GUITAR pitches 72–75**.
@@ -10,7 +10,7 @@ not been tested here. No prebuilt Windows EXE is included.
 ## Start on Windows 10/11 x64
 
 1. Extract the complete ZIP into a normal writable folder (not inside the ZIP viewer).
-2. Install **Python 3.11 x64**, including the Python launcher (`py`).
+2. Verify **Python 3.11 x64** with `py -3.11 --version`. If present, no reinstall is needed. The initial 3.11.0 patch is not required; retain the Python launcher (`py`).
 3. Double-click **setup_windows.cmd**. Internet is required for the first installation.
 4. Double-click **test_windows.cmd** to run the automated suite.
 5. Double-click **launch_windows.cmd**.
@@ -25,7 +25,23 @@ For your own song, import its original audio separately in TheGHOST and choose
 on folder auto-detection when both files are present. Reimporting our MIDI requires
 **Legacy MIDI / TheGHOST** mode. The default Modern mode handles pitch 116 phrases.
 
-## New in 0.3.0
+## New in 0.4.0
+
+- **Start from audio…**: no chart required. Analyze, create a four-fret draft,
+  then use **Listen & Sync** to hear the recording and review scrolling notes.
+- Playback, pause, stop, seek and volume; media-clock-driven note highway.
+- Preview a signed millisecond shift, apply to the output, undo/redo and export.
+  Tempo/meter maps remain unchanged; note/phrase/event times move with tick rounding.
+- **Review GH3 cleanup…** lists marker removals and optional sustain shortening
+  before applying an in-memory working copy. Restore Original discards cleanup.
+- Pattern import accepts marked/overlapping sources for statistical learning only.
+  Source marker metadata and overlap warnings remain visible.
+- Choose a pattern style when generating variations; browse categories in Pattern Library.
+- HOPO highlighting estimates natural eligibility; it does not force taps or emulate GH3.
+
+Read `docs/M4_WINDOWS_GUIDE.md` for the exact audio-only and cleanup workflows.
+
+## Added in 0.3.0
 
 The **Audio Analysis** tab imports WAV/FLAC/OGG/MP3, detects candidate attacks,
 estimates constant tempo, supports manual BPM and draft shifts, shows a real waveform,
@@ -53,7 +69,7 @@ This is statistical pattern retrieval, not neural training or audio analysis.
 - Real note preview, single-file drag/drop, background workers, conversion cancellation.
 - Save/load settings, diagnostic log, atomic new-folder export and read-back checks.
 
-The preview is read-only and limited to 2,000 gems. The engine uses authored chart
+The static Converter preview is read-only and limited to 2,000 gems. Listen & Sync shows the active chart against audio and supports whole-chart timing shifts, not individual note editing. The engine uses authored chart
 structure, stored patterns and the optional onset-analysis pipeline; it does not train
 a neural model or claim measured real-song musical quality.
 
@@ -97,6 +113,4 @@ claim of byte-identical executables on different Windows machines.
 - `repository.bundle`: Git history supplied with the ZIP. To restore a checkout:
   `git clone repository.bundle GH3-Chart-Studio-repo`.
 
-Recommended next step: run the Windows/TheGHOST acceptance checks on one real song,
-evaluate learned variations against a real chart, then begin Milestone 4's editor and playback. Fix import or gameplay regressions
-before expanding features. The current relay checkpoint is `HANDOFF_LATEST.md`. No Claude handoff has occurred.
+Recommended next step: Windows listening and TheGHOST acceptance using one song; then individual note/sustain editing with undo and a verified forced-HOPO export profile. The current relay checkpoint is `HANDOFF_LATEST.md`. Bob reports an attempted Claude handoff blocked by missing packages; no Claude code changes have been received.

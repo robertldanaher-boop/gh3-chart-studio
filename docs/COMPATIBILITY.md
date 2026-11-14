@@ -77,3 +77,18 @@ If validation/writing fails, no complete output folder is reported.
 Windows launch/build, TheGHOST import, Dolphin/Wii playability, subjective difficulty,
 audio sync, real-user chart corpus coverage and controller HOPO/whammy behavior.
 Source review and format checks do not replace these tests.
+
+## 0.4.0 review path
+
+Loading for review and corpus learning now tolerates sustain overlaps as warnings.
+Conversion/export still require strict validation. Review GH3 cleanup can explicitly
+remove unsupported markers/open events and shorten sustain conflicts in a copy;
+this is a reported transformation, not a compatibility-preserving interpretation.
+Natural HOPO preview is only a consecutive-different-single heuristic. TheGHOST's
+own FAQ describes legacy chart `E *` HOPO input; paired MIDI forcing equivalence
+remains unverified, so no forced/tap markers are synthesized in this release.
+https://github.com/Nanook/TheGHOST/blob/master/TheGHOSTCore/Info/FAQ.txt
+
+Whole-chart timing shifts move note/phrase endpoints and events in seconds with
+nearest-tick rounding, preserving the authored tempo/meter maps. These are explicit
+edits; the original-tick preservation promise applies only before such edits.
