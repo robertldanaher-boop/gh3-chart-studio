@@ -5,8 +5,8 @@ transcription. Audio is analyzed locally and is never re-encoded or overwritten.
 
 ## Windows workflow
 
-Run the new setup_windows.cmd first; this release adds pinned NumPy, SciPy and
-SoundFile dependencies. Then run test_windows.cmd and launch_windows.cmd.
+Run START_WINDOWS.cmd. It installs pinned dependencies, including NumPy, SciPy
+and SoundFile, then runs tests and launches the app.
 
 1. Select **Audio Analysis** and open WAV, FLAC, OGG or MP3. A single audio file can
    also be dropped onto the main window. Decode/analysis runs in a cancellable worker.

@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.4.1 — Guided audio workflow and horizontal preview
+# GH3 Chart Studio 0.4.2 — Guided audio workflow and horizontal preview
 
 A Python 3.11 / PySide6 desktop converter for authored Expert or Hard guitar tracks.
 Expert Medium is written into **MediumSingle** and MIDI **PART GUITAR pitches 72–75**.
@@ -13,16 +13,16 @@ Place START_WINDOWS.cmd in the extracted app folder beside run_app.py, then doub
 it. It verifies Python 3.11 x64, creates/uses .venv, installs pinned dependencies,
 runs the full test suite, then launches only on success. No intermediate key presses
 are required. start_windows.log records the latest attempt, including app errors.
-A failed stage stops and leaves the window open. Existing separate scripts still work.
+A failed stage stops and leaves the window open. The three former setup/test/launch scripts have been removed. build_windows.cmd remains a separate developer packaging tool.
 This CMD file was statically reviewed; Windows execution remains unverified here.
 
 ## Start on Windows 10/11 x64
 
 1. Extract the complete ZIP into a normal writable folder (not inside the ZIP viewer).
 2. Verify **Python 3.11 x64** with `py -3.11 --version`. If present, no reinstall is needed. The initial 3.11.0 patch is not required; retain the Python launcher (`py`).
-3. Double-click **setup_windows.cmd**. Internet is required for the first installation.
-4. Double-click **test_windows.cmd** to run the automated suite.
-5. Double-click **launch_windows.cmd**.
+3. Double-click **START_WINDOWS.cmd**. It installs dependencies, runs tests and opens the app automatically. Internet is required for the first installation.
+4. If a stage fails, the app does not launch; the window displays the error and start_windows.log records the details.
+5. Confirm the application title shows **0.4.2**.
 6. Open or drag in `examples/technical-study.chart`.
 7. Select Expert, leave Density at 6, and click **Convert & validate**.
 8. Review the counts/warnings and preview. Select Source to compare.
@@ -34,7 +34,11 @@ For your own song, import its original audio separately in TheGHOST and choose
 on folder auto-detection when both files are present. Reimporting our MIDI requires
 **Legacy MIDI / TheGHOST** mode. The default Modern mode handles pitch 116 phrases.
 
-## New in 0.4.1
+## New in 0.4.2
+
+One startup file, START_WINDOWS.cmd, replaces the three separate setup/test/launch scripts.
+
+## Added in 0.4.1
 
 Start audio workflow → Audio Studio: **1. Choose audio → 2. Review attacks →
 Create draft → 3. Listen / timing → 4. Export**. The entire audio path stays in

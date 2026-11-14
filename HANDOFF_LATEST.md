@@ -1,11 +1,18 @@
-# GH3 Chart Studio — 0.4.1 handoff
+# GH3 Chart Studio — 0.4.2 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_M4_1_v0_4_1.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.1 is authoritative.
+GH3_Chart_Studio_v0_4_2.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.2 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.1 update
+## Current 0.4.2 packaging update
+
+START_WINDOWS.cmd now performs setup, tests and launch. The old setup_windows.cmd,
+test_windows.cmd and launch_windows.cmd were removed at Bob’s request. The build
+script remains for developers. Launcher Windows execution is not verified. Python
+functionality is unchanged from the last 129-test run; see M4_1_TEST_RESULTS.txt.
+
+## Prior 0.4.1 update
 
 Read docs/M4_1_WINDOWS_GUIDE.md and docs/M4_1_IMPLEMENTATION_LOG.md first.
 129 tests passed; M4_1_TEST_RESULTS.txt is current. The 124-test result below is
@@ -27,7 +34,7 @@ Do not claim Claude reproduced the complete suite. Do not assume a new chat or
 network setting will enable installs; inspect the actual next environment.
 
 Run `python tools/check_environment.py` first. Full environment setup is in
-setup_windows.cmd / requirements-dev.txt. Python 3.11 x64 is the project baseline,
+START_WINDOWS.cmd / requirements-dev.txt. Python 3.11 x64 is the project baseline,
 not Python 3.11.0 specifically. Bob already has 3.11, 3.13 and 3.15 installed.
 The launcher setup chooses `py -3.11`; do not uninstall newer interpreters.
 

@@ -1,10 +1,10 @@
 # Windows 10/11 x64 acceptance test
 
 1. Install Python 3.11 x64 with the launcher. Extract the ZIP to a writable directory.
-2. Double-click setup_windows.cmd. Require a successful setup message.
-3. Double-click test_windows.cmd. Save any failure output. The automated GUI tests
+2. Double-click START_WINDOWS.cmd. Watch stages 1/3, 2/3 and 3/3.
+3. The script runs automated tests before launch. Save any failure output. The automated GUI tests
    run offscreen; they do not replace the visible checks below.
-4. Double-click launch_windows.cmd. Confirm the full window is visible at your DPI.
+4. After successful tests, the script opens the app. Confirm the full window is visible at your DPI.
 5. Drag examples/technical-study.chart into the window. Confirm the title/artist,
    Expert 38 gems and Hard 14 gems appear.
 6. Convert Expert with defaults. Expect 31 timed events, 37 Medium gems, one removed
@@ -42,7 +42,7 @@ A successful import alone does not prove in-game compatibility.
 
 ## Version 0.2.0 pattern-library acceptance
 
-Run setup_windows.cmd, test_windows.cmd and launch_windows.cmd from the new release.
+Run START_WINDOWS.cmd from the new release.
 The Linux reference has 74 passing tests. A symlink test may be skipped on Windows
 when symlink privileges are unavailable; other failures require investigation.
 
@@ -71,8 +71,8 @@ six-window check; each exported file is a separate content snapshot.
 
 ## Version 0.3.0 audio-analysis acceptance
 
-1. Extract the new release into a fresh folder. Run setup_windows.cmd to install the
-   audio dependencies, then test_windows.cmd and launch_windows.cmd.
+1. Extract the new release into a fresh folder. Run START_WINDOWS.cmd to install
+   dependencies, run tests and launch.
 2. Open Audio Analysis -> examples/audio/onset-study.wav. With defaults, expect
    15 attacks, approximately 120 BPM and a visible waveform/grid. Compare truth.json.
 3. Enter manual BPM 120 and reanalyze. Confirm the grid changes without quantizing attacks.

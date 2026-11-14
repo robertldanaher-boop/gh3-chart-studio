@@ -2,7 +2,7 @@
 
 Extract this ZIP into a new writable folder. Do not merge it into the old folder.
 Python 3.11 x64 is already installed on Bob's machine; `py -3.11 --version` confirms
-it. Run setup_windows.cmd, then test_windows.cmd, then launch_windows.cmd.
+it. Run START_WINDOWS.cmd to perform setup, tests and launch.
 No Python 3.11.0 downgrade is required. No EXE is supplied.
 
 ## Audio only — no source chart required

@@ -2,7 +2,7 @@
 
 ## Try it on Windows
 
-Use setup_windows.cmd, test_windows.cmd, then launch_windows.cmd as before.
+Double-click START_WINDOWS.cmd to set up, test and launch.
 
 1. Open **Pattern Library**. The database path is visible at the top. Choose a new
    location if desired; use the same database on subsequent sessions.
