@@ -1,0 +1,46 @@
+{
+  "errors": [],
+  "warnings": [
+    "Natural HOPO behavior may change after fret remapping. No forced HOPO or modern tap mechanics are generated.",
+    "Audio synchronization has not been measured; audio is not analyzed in Milestone 1.",
+    "TheGHOST MIDI discards sustains below 160 ticks; prefer .chart. Both importers may alter sustain lengths across tempo changes.",
+    "Legacy MIDI phrase export: Medium Star Power pitch 79. Modern shared pitch 116 is input-only.",
+    "Nonzero Offset blocks paired export. Apply timing offsets explicitly in TheGHOST.",
+    "1 gems removed by density/chord settings; see counts above.",
+    "MIDI zero-length chart gems use 1 tick note duration; MIDI imports preserve their actual duration, including 1-tick notes.",
+    "TheGHOST legacy MIDI parser discards sustains shorter than 160 ticks. Prefer notes.chart for short sustains.",
+    "TheGHOST may alter sustain lengths, especially across tempo changes. In-game verification is pending.",
+    "Audio files are not copied. Import the original audio in TheGHOST. Choose either notes.chart OR notes.mid."
+  ],
+  "settings": {
+    "source": "Expert",
+    "density": 6,
+    "chords": 4,
+    "movement": 5,
+    "max_chord": 3
+  },
+  "source_events": 31,
+  "source_gems": 38,
+  "medium_events": 31,
+  "medium_gems": 37,
+  "removed_events": 0,
+  "removed_gems": 1,
+  "timing": "Retained onsets and sustain lengths are exact integer ticks",
+  "status": "Structural checks passed; TheGHOST/Dolphin testing required",
+  "exports": {
+    "notes.chart": {
+      "reopened": true,
+      "medium_orange_gems": 0,
+      "max_tempo_boundary_drift_ms": 0.0,
+      "sha256": "883f5beed46d17a069c9326474c952e11b8d71573fc9bdb1d9167fe94b0e035f"
+    },
+    "notes.mid": {
+      "reopened": true,
+      "medium_orange_gems": 0,
+      "max_tempo_boundary_drift_ms": 0.0,
+      "sha256": "f6d72aaed387dc2dcec2076a1020a269a8f478776e90cc68b9cee6031f0a09b9"
+    }
+  },
+  "version": "0.1.0",
+  "midi_profile": "TheGHOST legacy per-difficulty phrases; Medium star power = 79"
+}
