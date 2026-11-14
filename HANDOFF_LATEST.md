@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.4.3 handoff
+# GH3 Chart Studio — 0.4.4 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_3.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.3 is authoritative.
+GH3_Chart_Studio_v0_4_4.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.4 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.3 Windows test correction
+## Current 0.4.4 update
+
+Read docs/M4_4_WINDOWS_GUIDE.md and docs/M4_4_IMPLEMENTATION_LOG.md.
+Scans auto-populate newest pattern rows and reset category filters. Audio Studio
+supports display difficulty selection and a separate Orange-only Medium copy,
+which preserves Expert/Hard and remaining G/R/Y/B lanes/timing/sustains. It does
+not silently strip markers or normalize sustains. Strict paired-export limits still
+apply; the user's marked modern charts are not claimed compatible through this
+mode. Future Medium-only cleanup/chart-only preservation must be explicit.
+Latest full local evidence is M4_4_TEST_RESULTS.txt. Native Windows rerun is pending.
+
+## Prior 0.4.3 Windows test correction
 
 Bob ran START_WINDOWS.cmd on Windows. Dependency installation succeeded and the
 launcher correctly stopped at a test failure: 127 passed, 1 failed, 1 skipped.

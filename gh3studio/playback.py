@@ -4,8 +4,8 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, QTimer, Slot
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
-from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSlider,QDoubleSpinBox,QCheckBox,QFileDialog
-from .editing import timeline,shift_timing
+from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSlider,QDoubleSpinBox,QCheckBox,QFileDialog,QComboBox
+from .editing import timeline,shift_timing,remove_orange_to_medium
 from .validation import ensure_valid
 
 class Highway(QWidget):
@@ -50,6 +50,12 @@ class PlaybackPanel(QWidget):
         layout=QVBoxLayout(self)
         hint=QLabel('Step 3 — Listen and adjust timing. Notes move left toward the white playhead. White outlines mark estimated natural HOPO candidates, not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
         hint.setWordWrap(True);layout.addWidget(hint)
+        row=QHBoxLayout();layout.addLayout(row)
+        self.chart_open=QPushButton('Open chart…');self.chart_open.clicked.connect(owner.browse);row.addWidget(self.chart_open)
+        row.addWidget(QLabel('Display difficulty'))
+        self.difficulty=QComboBox();self.difficulty.currentTextChanged.connect(self.select_difficulty);row.addWidget(self.difficulty)
+        self.orange_button=QPushButton('Remove Orange → Medium');self.orange_button.clicked.connect(self.remove_orange);row.addWidget(self.orange_button)
+        note=QLabel('Copies the selected Expert/Hard track; original difficulties stay unchanged.');note.setWordWrap(True);row.addWidget(note,1)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Choose preview audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
         self.play_button=QPushButton('Play / pause');self.play_button.clicked.connect(self.toggle);row.addWidget(self.play_button)
@@ -103,13 +109,33 @@ class PlaybackPanel(QWidget):
     def shift_changed(self,value):self.highway.shift=value/1000;self.highway.update()
     def set_chart(self,song,difficulty):
         if self.current and self.current[0] is song and self.current[1]==difficulty:return
-        self.current=(song,difficulty) if song else None
+        available=[d for d in ('Expert','Hard','Medium','Easy') if song and song.tracks.get(d)]
+        self.difficulty.blockSignals(True);self.difficulty.clear();self.difficulty.addItems(available)
+        self.difficulty.setCurrentText(difficulty if difficulty in available else (available[0] if available else ''))
+        self.difficulty.blockSignals(False)
+        self.current=(song,self.difficulty.currentText()) if song else None
         self.undo_stack=[];self.redo_stack=[];self.shift.setValue(0);self.rebuild()
+    def select_difficulty(self,difficulty):
+        if self.current and difficulty:
+            self.current=(self.current[0],difficulty);self.rebuild()
+    def remove_orange(self):
+        if self.owner.busy() or not self.current:return
+        song,difficulty=self.current
+        def ready(value):
+            self.owner.converted,self.owner.report=value
+            self.owner.variants={};self.owner.variant_choice.blockSignals(True);self.owner.variant_choice.setCurrentIndex(0);self.owner.variant_choice.blockSignals(False)
+            self.owner.refresh_preview();self.owner.log_line(str(self.owner.report))
+            self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems. Medium is ready for export checks; Expert/Hard were not edited.")
+            self.owner.audio.show_listen()
+        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty),ready)
     def rebuild(self,*args):
         self.highway.notes=timeline(*self.current,self.threshold.value()) if self.current else []
         self.highway.update();self.update_busy(self.owner.busy(),False)
     def update_busy(self,busy,cancellable):
         self.open_button.setEnabled(not busy)
+        self.chart_open.setEnabled(not busy)
+        self.difficulty.setEnabled(not busy and self.current is not None)
+        self.orange_button.setEnabled(not busy and self.current is not None and self.difficulty.currentText() in ('Expert','Hard'))
         self.apply_button.setEnabled(not busy and self.owner.converted is not None)
         self.undo_button.setEnabled(not busy and bool(self.undo_stack));self.redo_button.setEnabled(not busy and bool(self.redo_stack))
     def snapshot(self):return (self.owner.converted,copy.deepcopy(self.owner.report))

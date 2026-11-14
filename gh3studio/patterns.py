@@ -106,11 +106,11 @@ class PatternStore:
             return {'sources':db.execute('SELECT count(*) FROM sources').fetchone()[0],
                     'patterns':db.execute('SELECT count(*) FROM patterns').fetchone()[0],
                     'ratings':db.execute('SELECT count(*) FROM ratings').fetchone()[0]}
-    def browse(self,category='',limit=200):
+    def browse(self,category='',limit=200,*,newest=False):
         with closing(self.connect()) as db:
-            rows=db.execute('''SELECT p.*,s.title,coalesce(r.score,3) AS rating FROM patterns p
+            rows=db.execute(f'''SELECT p.*,s.title,coalesce(r.score,3) AS rating FROM patterns p
                 JOIN sources s ON s.id=p.source_id LEFT JOIN ratings r ON r.pattern_id=p.id
-                WHERE (?='' OR p.category=?) ORDER BY p.id LIMIT ?''',(category,category,limit)).fetchall()
+                WHERE (?='' OR p.category=?) ORDER BY p.id {'DESC' if newest else 'ASC'} LIMIT ?''',(category,category,limit)).fetchall()
             return [dict(r) for r in rows]
     def similar(self,features,category='',limit=8):
         with closing(self.connect()) as db:

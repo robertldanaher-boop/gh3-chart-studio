@@ -157,6 +157,7 @@ class Window(QMainWindow):
     @Slot(str)
     def job_failed(self,error):
         self.log_line('ERROR — '+error)
+        if hasattr(self,'playback'):self.playback.status.setText('Operation failed: '+error)
         if hasattr(self,'library'): self.library.summary.setText('Operation failed: '+error)
         if hasattr(self,'audio'): self.audio.summary.setText('Operation failed: '+error)
     @Slot()

@@ -243,3 +243,36 @@ def test_new_audio_analysis_cannot_export_previous_chart(app):
     assert w.song is source  # Still available as an optional tempo-map template.
     assert w.converted is None and not w.audio.export_button.isEnabled()
     w.close()
+
+
+def test_library_scan_populates_table_without_browse(tmp_path,app):
+    import shutil
+    root=tmp_path/'charts';root.mkdir();shutil.copyfile(FIXTURE,root/'study.chart')
+    w=Window();w.library.db_path.setText(str(tmp_path/'library.sqlite3'))
+    w.library.filter.setCurrentIndex(1);w.library.scan(root);wait(w)
+    assert w.library.last_scan['imported']==1
+    assert w.library.filter.currentIndex()==0 and w.library.table.rowCount()>0
+    assert w.library.table.item(0,1).text()
+    assert 'newest pattern rows' in w.library.summary.text()
+    w.close()
+
+
+def test_audio_difficulty_selection_orange_only_medium_export(tmp_path,app):
+    from gh3studio.chartio import write_chart,read_chart
+    from gh3studio.model import Song,Note
+    source=Song(tracks={'Expert':[Note(0,0,48),Note(0,4,48),Note(96,4),Note(192,3)],
+                       'Hard':[Note(0,1),Note(192,4)],'Easy':[Note(0,0)]})
+    path=tmp_path/'source.chart';write_chart(source,path)
+    w=Window();w.open_path(path);wait(w);w.audio.show_listen()
+    panel=w.playback;panel.difficulty.setCurrentText('Hard')
+    assert panel.current[1]=='Hard' and len(panel.highway.notes)==2
+    panel.difficulty.setCurrentText('Expert');panel.remove_orange();wait(w)
+    assert w.converted.tracks['Medium']==[Note(0,0,48),Note(192,3)]
+    assert w.converted.tracks['Expert']==source.tracks['Expert'] and w.song.tracks==source.tracks
+    assert panel.difficulty.currentText()=='Medium' and w.audio.export_button.isEnabled()
+    panel.difficulty.setCurrentText('Expert');assert len(panel.highway.notes)==4
+    w.export_to(tmp_path/'out');wait(w)
+    result=read_chart(tmp_path/'out'/'notes.chart')
+    assert result.tracks['Hard']==source.tracks['Hard'] and result.tracks['Expert']==source.tracks['Expert']
+    assert read_chart(path).tracks==source.tracks
+    w.close()

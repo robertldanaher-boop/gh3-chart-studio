@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.4.3 — Guided audio workflow and horizontal preview
+# GH3 Chart Studio 0.4.4 — Guided audio workflow and horizontal preview
 
 A Python 3.11 / PySide6 desktop converter for authored Expert or Hard guitar tracks.
 Expert Medium is written into **MediumSingle** and MIDI **PART GUITAR pitches 72–75**.
@@ -22,7 +22,7 @@ This CMD file was statically reviewed; Windows execution remains unverified here
 2. Verify **Python 3.11 x64** with `py -3.11 --version`. If present, no reinstall is needed. The initial 3.11.0 patch is not required; retain the Python launcher (`py`).
 3. Double-click **START_WINDOWS.cmd**. It installs dependencies, runs tests and opens the app automatically. Internet is required for the first installation.
 4. If a stage fails, the app does not launch; the window displays the error and start_windows.log records the details.
-5. Confirm the application title shows **0.4.3**.
+5. Confirm the application title shows **0.4.4**.
 6. Open or drag in `examples/technical-study.chart`.
 7. Select Expert, leave Density at 6, and click **Convert & validate**.
 8. Review the counts/warnings and preview. Select Source to compare.
@@ -34,7 +34,15 @@ For your own song, import its original audio separately in TheGHOST and choose
 on folder auto-detection when both files are present. Reimporting our MIDI requires
 **Legacy MIDI / TheGHOST** mode. The default Modern mode handles pitch 116 phrases.
 
-## New in 0.4.3
+## New in 0.4.4
+
+Pattern scans populate the table automatically (newest 200 patterns, all categories).
+Audio Studio's listening page now has Open chart, Display difficulty and Remove
+Orange → Medium controls. This action copies Expert/Hard into Medium, deletes only
+Orange gems, and preserves remaining notes and original difficulties. Unsupported
+mechanics are blocked rather than silently repaired. See docs/M4_4_WINDOWS_GUIDE.md.
+
+## Added in 0.4.3
 
 Fixed a Windows-only test failure caused by comparing Qt forward-slash paths
 with Windows backslash paths as raw strings. Paths now compare as filesystem paths.
@@ -55,7 +63,7 @@ matching the Converter map. Analyze an already-separated guitar file while keepi
 the original mix for playback. Built-in separation and tablature integration are
 not implemented; see docs/INSTRUMENT_AND_TAB_ROADMAP.md.
 
-Use docs/M4_1_WINDOWS_GUIDE.md for the current 129-test GUI acceptance checklist.
+Use docs/M4_4_WINDOWS_GUIDE.md for the current 134-test release; docs/M4_1_WINDOWS_GUIDE.md covers the audio workflow.
 
 ## Added in 0.4.0
 

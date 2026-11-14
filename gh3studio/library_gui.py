@@ -53,12 +53,16 @@ class LibraryPanel(QWidget):
         except Exception as e:self.owner.job_failed(str(e));return
         mode='modern' if self.owner.phrase_mode.currentIndex()==0 else 'legacy'
         self.summary.setText('Scanning… Input MIDI mode follows the Converter tab.')
-        def ready(report):
+        def ready(value):
+            report,rows=value
+            self.filter.setCurrentIndex(0);self.display_rows(rows)
             self.last_scan=report
-            self.summary.setText(f"Scan {report['state']}: {report['imported']} new, {report['duplicates']} duplicates, {report['failed']} failed; {report['summary']['patterns']} stored windows.")
+            self.summary.setText(f"Scan {report['state']}: {report['imported']} new, {report['duplicates']} duplicates, {report['failed']} failed; {report['summary']['patterns']} stored windows. Showing {len(rows)} newest pattern rows.")
             self.details.setPlainText(json.dumps(report,indent=2));self.owner.log_line(self.summary.text())
-        self.owner.run_job('Scanning local pattern library…',lambda cancel:scan_folder(path,store,mode,cancel,
-            lambda done,total,name:self.owner.worker.progress.emit(done,total,name)),ready,True)
+        def work(cancel):
+            report=scan_folder(path,store,mode,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name))
+            return report,store.browse(newest=True)
+        self.owner.run_job('Scanning local pattern library…',work,ready,True)
     def refresh(self):
         if self.owner.busy():return
         try:store=self.store()

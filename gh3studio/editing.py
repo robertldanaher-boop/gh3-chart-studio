@@ -64,3 +64,41 @@ def timeline(song,difficulty,threshold_beats=1/3):
         for n in notes:output.append((song.seconds(n.tick),song.seconds(n.tick+n.length),n.lane,candidate))
         previous=(tick,notes)
     return output
+
+
+def remove_orange_to_medium(song,source):
+    """Copy Expert/Hard to Medium, deleting ONLY Orange gems. Never remap G/R/Y/B."""
+    if source not in ('Expert','Hard'):raise ChartError('Choose Expert or Hard as the source difficulty')
+    ensure_valid(song)
+    original=song.tracks.get(source,[])
+    if not original:raise ChartError(f'No {source} notes to copy')
+    if song.modifiers.get(source):
+        raise ChartError('This source contains unsupported gameplay markers. Orange-only mode does not strip those markers or change Expert/Hard. Use a supported source or review a separate cleanup copy first.')
+    remaining=[n for n in original if n.lane!=4]
+    if not remaining:raise ChartError('Removing Orange would leave Medium empty; no output created')
+    previous_end=0
+    for tick,items in groupby(sorted(remaining),key=lambda n:n.tick):
+        group=list(items)
+        if len({n.length for n in group})>1 or tick<previous_end:
+            raise ChartError(f'Medium would contain unsupported chord/extended sustains at tick {tick}. Orange-only mode will not shorten other notes.')
+        previous_end=max(n.tick+n.length for n in group)
+    result=copy.deepcopy(song)
+    result.tracks['Medium']=copy.deepcopy(remaining)
+    result.phrases['Medium']=copy.deepcopy(song.phrases.get(source,[]))
+    result.modifiers.pop('Medium',None)
+    if any(result.modifiers.values()):
+        raise ChartError('A retained difficulty contains unsupported markers that paired MIDI export cannot preserve. Orange-only mode leaves those difficulties untouched; no output was created.')
+    report=ensure_valid(result,True)
+    removed=[n for n in original if n.lane==4]
+    report.update(operation='remove-orange-only',source_difficulty=source,source_gems=len(original),
+                  medium_gems=len(remaining),removed_orange_gems=len(removed),
+                  source_events=len({n.tick for n in original}),medium_events=len({n.tick for n in remaining}),
+                  settings={'operation':'remove-orange-only','source':source},
+                  timing='All remaining G/R/Y/B lanes, onset ticks and sustain lengths are unchanged',
+                  preserved_difficulties=[d for d in song.tracks if d!='Medium'],
+                  status='Structural checks passed; TheGHOST/Dolphin acceptance required')
+    report['warnings'] += ['Orange-only onsets disappear; chords containing Orange lose only that gem.',
+                           'Existing Medium is replaced in the output copy; Expert and Hard are unchanged.',
+                           'Natural HOPO behavior may change when Orange notes are removed. No forced/tap actions are added.',
+                           'TheGHOST may alter sustain timing; prefer .chart for short sustains. Runtime acceptance is pending.']
+    return result,report

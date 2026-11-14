@@ -121,6 +121,7 @@ class AudioPanel(QWidget):
         self.mix_button.setEnabled(not busy and self.original_audio is not None and self.path!=self.original_audio)
         if busy:self.next_step.setText('Working… wait for completion or cancel analysis.')
         elif self.owner.converted is not None and self.pages.currentWidget() is self.owner.playback:self.next_step.setText('Step 3: Listen and adjust. When satisfied, click 4. Export chart + MIDI.')
+        elif self.pages.currentWidget() is self.owner.playback and self.owner.song is not None:self.next_step.setText('Select a display difficulty. Choose preview audio to listen, or copy Expert/Hard to Medium with Remove Orange.')
         elif self.analysis is not None:self.next_step.setText('Step 2: Review attacks below. Then click Create draft from selected attacks → Listen.')
         elif self.path is not None:self.next_step.setText('Step 2: Run analysis. If BPM is unknown, set it under Optional settings and reanalyze.')
         self.compare_button.setEnabled(not busy and self.analysis is not None and self.owner.song is not None)
