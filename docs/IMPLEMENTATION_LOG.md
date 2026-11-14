@@ -16,7 +16,7 @@ Date: November 13, 2026 (America/Chicago).
 
 ## Verification evidence
 
-52 pytest cases passed on CPython 3.11.18 / Linux x64, PySide6 6.8.3, Mido 1.3.3,
+53 pytest cases passed on CPython 3.11.18 / Linux x64, PySide6 6.8.3, Mido 1.3.3,
 pytest 8.3.5. GUI tests used Qt's offscreen platform and actual QThread operations.
 See TEST_RESULTS.txt. Python compileall completed successfully.
 
@@ -66,3 +66,11 @@ First run docs/WINDOWS_TEST.md on one supported real song and fix any regression
 Then Milestone 2: recursive chart scanning, SQLite pattern storage, pattern feature
 extraction, similarity queries and three constrained variations. No neural training
 or Claude contribution is claimed. A Claude brief will be prepared only if warranted.
+
+## Final GUI regression fix
+
+An expanded test run exposed an intermittent Qt segmentation fault. Worker result
+callbacks now route through explicit queued QObject slots on the main GUI thread,
+and the GUI test QApplication lifetime is shared across tests. The final suite
+passed 53 tests. An additional 10 fresh pytest processes passed all 30 GUI tests,
+including 120 assertions that result callbacks execute on the main thread.

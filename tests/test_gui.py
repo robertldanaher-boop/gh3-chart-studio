@@ -1,4 +1,5 @@
 import os
+import pytest
 os.environ.setdefault('QT_QPA_PLATFORM','offscreen')
 from pathlib import Path
 from PySide6.QtCore import QMimeData,QUrl,QPointF,Qt
@@ -13,8 +14,14 @@ def wait(window):
         if not window.busy(): return
         QTest.qWait(10)
     raise AssertionError('GUI worker timeout')
-def test_gui_workflow(tmp_path):
-    app=QApplication.instance() or QApplication([]); window=Window(); window.show()
+@pytest.fixture(scope='module')
+def app():
+    application=QApplication.instance() or QApplication([])
+    yield application
+    application.processEvents()
+
+def test_gui_workflow(tmp_path,app):
+    window=Window(); window.show()
     mime=QMimeData(); mime.setUrls([QUrl.fromLocalFile(str(FIXTURE))])
     window.dropEvent(QDropEvent(QPointF(50,50),Qt.CopyAction,mime,Qt.LeftButton,Qt.NoModifier)); wait(window)
     assert window.song is not None
@@ -26,8 +33,17 @@ def test_gui_workflow(tmp_path):
     window.sliders['Density'].setValue(1)
     assert window.converted is None and not window.export_button.isEnabled()
     window.close()
-def test_gui_error(tmp_path):
-    app=QApplication.instance() or QApplication([]); path=tmp_path/'bad.chart'; path.write_text('bad')
+def test_gui_error(tmp_path,app):
+    path=tmp_path/'bad.chart'; path.write_text('bad')
     window=Window(); window.open_path(path); wait(window)
     assert window.song is None and not window.convert_button.isEnabled() and 'ERROR' in window.log.toPlainText()
+    window.close()
+
+def test_worker_results_delivered_on_main_thread(app):
+    from PySide6.QtCore import QThread
+    window=Window(); seen=[]
+    for i in range(12):
+        window.run_job('Thread regression',lambda cancel:42,lambda value:seen.append((value,QThread.currentThread()==app.thread())))
+        wait(window)
+    assert seen==[(42,True)]*12
     window.close()

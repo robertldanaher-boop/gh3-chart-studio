@@ -3,7 +3,7 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal, Slot
 from PySide6.QtGui import QColor, QPen, QBrush
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QComboBox, QSpinBox, QSlider, QTextEdit, QFileDialog,
@@ -103,10 +103,17 @@ class Window(QMainWindow):
     def run_job(self,label,fn,on_success,cancellable=False):
         self.cancellable=cancellable; self.log_line(label); self.progress.setRange(0,0)
         self.worker=Worker(fn,self)
-        self.worker.succeeded.connect(on_success); self.worker.failed.connect(self.job_failed)
-        self.worker.finished.connect(self.job_finished)
+        self.success_callback=on_success
+        self.worker.succeeded.connect(self.job_succeeded, Qt.QueuedConnection)
+        self.worker.failed.connect(self.job_failed, Qt.QueuedConnection)
+        self.worker.finished.connect(self.job_finished, Qt.QueuedConnection)
         self.update_buttons(); self.worker.start()
+    @Slot(object)
+    def job_succeeded(self,value):
+        self.success_callback(value)
+    @Slot(str)
     def job_failed(self,error): self.log_line('ERROR — '+error)
+    @Slot()
     def job_finished(self):
         worker=self.worker; self.worker=None; worker.deleteLater()
         self.progress.setRange(0,1); self.progress.setValue(1); self.update_buttons()
