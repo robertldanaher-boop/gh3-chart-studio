@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.4.2 — Guided audio workflow and horizontal preview
+# GH3 Chart Studio 0.4.3 — Guided audio workflow and horizontal preview
 
 A Python 3.11 / PySide6 desktop converter for authored Expert or Hard guitar tracks.
 Expert Medium is written into **MediumSingle** and MIDI **PART GUITAR pitches 72–75**.
@@ -22,7 +22,7 @@ This CMD file was statically reviewed; Windows execution remains unverified here
 2. Verify **Python 3.11 x64** with `py -3.11 --version`. If present, no reinstall is needed. The initial 3.11.0 patch is not required; retain the Python launcher (`py`).
 3. Double-click **START_WINDOWS.cmd**. It installs dependencies, runs tests and opens the app automatically. Internet is required for the first installation.
 4. If a stage fails, the app does not launch; the window displays the error and start_windows.log records the details.
-5. Confirm the application title shows **0.4.2**.
+5. Confirm the application title shows **0.4.3**.
 6. Open or drag in `examples/technical-study.chart`.
 7. Select Expert, leave Density at 6, and click **Convert & validate**.
 8. Review the counts/warnings and preview. Select Source to compare.
@@ -34,7 +34,13 @@ For your own song, import its original audio separately in TheGHOST and choose
 on folder auto-detection when both files are present. Reimporting our MIDI requires
 **Legacy MIDI / TheGHOST** mode. The default Modern mode handles pitch 116 phrases.
 
-## New in 0.4.2
+## New in 0.4.3
+
+Fixed a Windows-only test failure caused by comparing Qt forward-slash paths
+with Windows backslash paths as raw strings. Paths now compare as filesystem paths.
+No test was removed or skipped; the startup test gate remains.
+
+## Added in 0.4.2
 
 One startup file, START_WINDOWS.cmd, replaces the three separate setup/test/launch scripts.
 

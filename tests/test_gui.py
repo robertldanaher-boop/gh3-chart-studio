@@ -202,7 +202,8 @@ def test_external_stem_analyzed_original_mix_retained(tmp_path,app):
     w=Window();w.audio.open_path(original);wait(w)
     w.audio.open_stem(stem);wait(w)
     assert w.audio.analysis.source_path==str(stem.resolve())
-    assert w.playback.player.source().toLocalFile()==str(original.resolve())
+    # Qt returns forward slashes on Windows; compare filesystem paths, not text.
+    assert Path(w.playback.player.source().toLocalFile()).resolve()==original.resolve()
     w.audio.create_draft();wait(w)
     assert w.report['audio']['external_stem'] is True
     assert w.report['audio']['listening_path']==str(original)

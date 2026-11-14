@@ -1,21 +1,32 @@
-# GH3 Chart Studio — 0.4.2 handoff
+# GH3 Chart Studio — 0.4.3 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_2.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.2 is authoritative.
+GH3_Chart_Studio_v0_4_3.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.3 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.2 packaging update
+## Current 0.4.3 Windows test correction
+
+Bob ran START_WINDOWS.cmd on Windows. Dependency installation succeeded and the
+launcher correctly stopped at a test failure: 127 passed, 1 failed, 1 skipped.
+The failure compared Qt's C:/.../onset-study.wav string to pathlib's C:\...\onset-study.wav
+string. Both identify the same file. test_external_stem_analyzed_original_mix_retained
+now compares resolved Path objects, preserving the original-vs-stem check. No tests
+were disabled or skipped to work around it. The skipped test's reason is not in
+Bob's supplied log, so do not invent one. See M4_3_TEST_RESULTS.txt for the corrected
+local suite and M4_3_IMPLEMENTATION_LOG.md. Corrected Windows rerun is pending.
+
+## Prior 0.4.2 packaging update
 
 START_WINDOWS.cmd now performs setup, tests and launch. The old setup_windows.cmd,
 test_windows.cmd and launch_windows.cmd were removed at Bob’s request. The build
-script remains for developers. Launcher Windows execution is not verified. Python
+script remains for developers. The user has now verified setup and failure-stop behavior on Windows, as described above. Python
 functionality is unchanged from the last 129-test run; see M4_1_TEST_RESULTS.txt.
 
 ## Prior 0.4.1 update
 
 Read docs/M4_1_WINDOWS_GUIDE.md and docs/M4_1_IMPLEMENTATION_LOG.md first.
-129 tests passed; M4_1_TEST_RESULTS.txt is current. The 124-test result below is
+129 tests passed at that milestone; M4_1_TEST_RESULTS.txt is historical. The 124-test result below is
 historical 0.4.0 evidence. Audio Studio now contains numbered steps and embedded
 horizontal playback; there is no separate Listen & Sync tab. Creating a draft
 stays in Audio Studio. The checkbox onset model permits candidate exclusions,

@@ -1,8 +1,8 @@
-# 0.4.2 — guided Audio Studio test
+# 0.4.3 — guided Audio Studio test
 
-Extract GH3_Chart_Studio_v0_4_2.zip into a new folder. Use the installed Python
+Extract GH3_Chart_Studio_v0_4_3.zip into a new folder. Use the installed Python
 3.11 x64. Double-click START_WINDOWS.cmd; setup, the 129-test suite and launch
-run sequentially. On failure, read start_windows.log. The title must say 0.4.2. This is a source release, not an EXE.
+run sequentially. On failure, read start_windows.log. The title must say 0.4.3. This is a source release, not an EXE.
 
 1. In Chart Converter, click Start audio workflow. Choose
    examples/audio/onset-study.wav first. Analysis runs in Audio Studio.
