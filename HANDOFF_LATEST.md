@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.4.5 handoff
+# GH3 Chart Studio — 0.4.6 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_5.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.5 is authoritative.
+GH3_Chart_Studio_v0_4_6.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.6 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.5 update
+## Current 0.4.6 update
+
+Read docs/M4_6_WINDOWS_GUIDE.md, M4_6_IMPLEMENTATION_LOG.md and M4_6_TEST_RESULTS.txt.
+START_WINDOWS.cmd opens a stdlib Tk progress UI before PySide6 setup. Three stages,
+estimated percent/ETA, elapsed and idle timers, randomized greeting, live log,
+cancel/failure handling and actual Qt readiness handshake. Dependency installation
+is reused only if lock hash and exact distribution snapshot match. Full automated
+tests still run every startup. Logs: start_windows.log, start_windows.previous.log,
+startup_bootstrap.log. ETA history: startup_timings.json. Native Windows/Tk/taskkill
+acceptance remains pending. Need Bob's slow-start log before attributing the cause.
+
+## Prior 0.4.5 update
 
 Read docs/M4_5_WINDOWS_GUIDE.md, M4_5_IMPLEMENTATION_LOG.md and M4_5_TEST_RESULTS.txt.
 Orange-only now copies the actual displayed difficulty in review mode, preserving

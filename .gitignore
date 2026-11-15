@@ -5,3 +5,8 @@ build/
 dist/
 *.egg-info/
 *.spec
+
+start_windows*.log
+startup_bootstrap.log
+startup_timings.json
+.startup-ready-*

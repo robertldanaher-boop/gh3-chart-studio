@@ -309,4 +309,11 @@ class Window(QMainWindow):
 
 def main():
     app=QApplication(sys.argv); app.setOrganizationName('GH3ChartStudio'); app.setApplicationName('GH3ChartStudio'); app.setStyle('Fusion')
-    window=Window(); window.show(); sys.exit(app.exec())
+    window=Window(); window.show()
+    import os
+    from PySide6.QtCore import QTimer
+    ready=os.environ.get('GH3_STARTUP_READY')
+    if ready:
+        # Report only after the event loop has started and the window was shown.
+        QTimer.singleShot(0,lambda:Path(ready).write_text('ready',encoding='utf-8'))
+    sys.exit(app.exec())

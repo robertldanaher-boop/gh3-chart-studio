@@ -1,4 +1,6 @@
-Latest release: **0.4.5**. See [Windows test steps](docs/M4_5_WINDOWS_GUIDE.md) for exact displayed-difficulty Orange removal and chart/audio song-folder export.
+Latest release: **0.4.6**. See [startup progress and Windows testing](docs/M4_6_WINDOWS_GUIDE.md).
+
+Version **0.4.5** features: See [Windows test steps](docs/M4_5_WINDOWS_GUIDE.md) for exact displayed-difficulty Orange removal and chart/audio song-folder export.
 
 # GH3 Chart Studio 0.4.4 — Guided audio workflow and horizontal preview
 
