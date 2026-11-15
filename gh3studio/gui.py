@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt, QThread, Signal, Slot
 from PySide6.QtGui import QColor, QPen, QBrush
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QComboBox, QSpinBox, QSlider, QTextEdit, QFileDialog,
-    QGraphicsView, QGraphicsScene, QSplitter, QGroupBox, QFormLayout, QProgressBar, QTabWidget)
+    QGraphicsView, QGraphicsScene, QSplitter, QGroupBox, QFormLayout, QProgressBar, QTabWidget, QScrollArea)
 from .converter import Settings, convert
 from .service import load, export_bundle
 from .library_gui import LibraryPanel
@@ -17,6 +17,8 @@ from .cleanup_gui import CleanupDialog
 from .variations import generate_variations, VARIANTS
 from .patterns import CATEGORIES
 from . import __version__
+from .appearance import apply_style,primary
+from .welcome import WelcomePanel,show_credits
 
 class Worker(QThread):
     succeeded=Signal(object)
@@ -55,11 +57,19 @@ class Window(QMainWindow):
         super().__init__()
         self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.song=None; self.converted=None; self.report=None; self.path=None; self.worker=None
-        self.variants={}
+        self.variants={};self.goal=None;self.last_export_path=None
+        apply_style(self)
         self.setWindowTitle(f'GH3 Chart Studio {__version__} — Expert Medium')
-        self.resize(1120,800); self.setAcceptDrops(True)
-        self.tabs=QTabWidget(); self.setCentralWidget(self.tabs)
-        root=QWidget(); self.tabs.addTab(root,'Chart Converter'); layout=QVBoxLayout(root)
+        self.resize(1180,840); self.setAcceptDrops(True)
+        shell=QWidget();shell_layout=QVBoxLayout(shell);shell_layout.setContentsMargins(14,10,14,12);self.setCentralWidget(shell)
+        header=QHBoxLayout();shell_layout.addLayout(header)
+        brand=QLabel('GH3  /  CHART STUDIO');brand.setObjectName('brand');header.addWidget(brand)
+        badge=QLabel('Single-song studio  •  '+__version__);badge.setObjectName('versionBadge');header.addWidget(badge);header.addStretch()
+        self.home_button=QPushButton('Start / choose a goal');self.home_button.setObjectName('quietAction');self.home_button.clicked.connect(lambda:self.tabs.setCurrentWidget(self.welcome));header.addWidget(self.home_button)
+        credits=QPushButton('About / credits');credits.setObjectName('quietAction');credits.clicked.connect(lambda:show_credits(self));header.addWidget(credits)
+        self.tabs=QTabWidget();shell_layout.addWidget(self.tabs)
+        root=QWidget();self.converter=root; self.tabs.addTab(root,'Chart Converter');outer=QVBoxLayout(root)
+        scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll);body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body)
         title=QLabel('GH3 Chart Studio  |  Four-fret technical Medium')
         title.setStyleSheet('font-size:22px;font-weight:600;padding:8px;'); layout.addWidget(title)
         layout.addWidget(QLabel('Drop a chart, audio file or chart folder here. Originals are never overwritten.'))
@@ -70,8 +80,8 @@ class Window(QMainWindow):
         self.restore_button=QPushButton('Restore original chart'); self.restore_button.clicked.connect(self.restore_original); row.addWidget(self.restore_button)
         self.cleanup_report=None; self.original_song=None
         self.phrase_mode=QComboBox(); self.phrase_mode.addItems(['Modern MIDI (116 Star Power)','Legacy MIDI / TheGHOST'])
-        row.addWidget(self.phrase_mode)
-        self.file_label=QLabel('No chart loaded'); row.addWidget(self.file_label,1)
+        row=QHBoxLayout();layout.addLayout(row);row.addWidget(self.phrase_mode)
+        self.file_label=QLabel('No chart loaded');self.file_label.setWordWrap(True); row.addWidget(self.file_label,1)
         self.info=QLabel('Open a chart, or choose Start from audio to create a draft without a chart.'); self.info.setWordWrap(True); layout.addWidget(self.info)
         box=QGroupBox('Conversion settings'); form=QHBoxLayout(box); layout.addWidget(box)
         self.source=QComboBox(); self.source.addItems(['Expert','Hard'])
@@ -88,7 +98,7 @@ class Window(QMainWindow):
         self.source.currentTextChanged.connect(self.invalidate); self.max_chord.valueChanged.connect(self.invalidate)
         layout.addWidget(QLabel('Density 6 keeps every onset • Chords 1–2: singles, 3–4: pairs, 5–6: up to 3 • Movement 1 favors short travel'))
         row=QHBoxLayout(); layout.addLayout(row)
-        self.convert_button=QPushButton('Convert & validate'); self.convert_button.clicked.connect(self.start_convert); row.addWidget(self.convert_button)
+        self.convert_button=QPushButton('Convert and validate'); self.convert_button.clicked.connect(self.start_convert); row.addWidget(self.convert_button)
         self.export_button=QPushButton('Export song folder…'); self.export_button.clicked.connect(self.start_export); row.addWidget(self.export_button)
         self.save_settings=QPushButton('Save settings…'); self.save_settings.clicked.connect(self.save_config); row.addWidget(self.save_settings)
         self.load_settings=QPushButton('Load settings…'); self.load_settings.clicked.connect(self.load_config); row.addWidget(self.load_settings)
@@ -110,12 +120,40 @@ class Window(QMainWindow):
         self.library=LibraryPanel(self); self.tabs.addTab(self.library,'Pattern Library')
         self.playback=PlaybackPanel(self)
         self.audio=AudioPanel(self); self.tabs.addTab(self.audio,'Audio Studio')
+        self.welcome=WelcomePanel(self);self.tabs.insertTab(0,self.welcome,'Start');self.tabs.setCurrentWidget(self.welcome)
+        for button in (self.convert_button,self.export_button,self.audio.draft_button,self.audio.export_button,self.playback.orange_button):primary(button)
         self.update_buttons()
+    def start_guided(self,goal,path=None):
+        if self.busy():return False
+        if goal not in ('orange','audio','refine'):raise ValueError('Unknown workflow')
+        if path is None:
+            title='Choose a recording to chart' if goal=='audio' else 'Choose the chart to work on'
+            filters='Audio (*.wav *.flac *.ogg *.mp3)' if goal=='audio' else 'Charts (*.chart *.mid *.midi)'
+            path,_=QFileDialog.getOpenFileName(self,title,'',filters)
+        if not path:return False
+        self.goal=goal;self.audio.set_mode(goal)
+        if goal=='audio':
+            self.song=None;self.original_song=None;self.path=None;self.cleanup_report=None
+            self.converted=None;self.report=None;self.variants={};self.playback.set_chart(None,'Medium')
+            self.file_label.setText('Audio-only workflow — no chart template loaded')
+            self.tabs.setCurrentWidget(self.audio);self.audio.template.setChecked(False);self.audio.open_path(path)
+        else:
+            self.tabs.setCurrentWidget(self.audio if goal=='orange' else self.converter)
+            if goal=='orange':self.audio.show_listen()
+            self.open_path(path)
+        return True
+    def resume_workflow(self):
+        if self.goal=='refine':self.tabs.setCurrentWidget(self.converter)
+        elif self.converted is not None or (self.song is not None and self.goal!='audio'):self.audio.show_listen()
+        else:self.tabs.setCurrentWidget(self.audio)
     def log_line(self,text):
         self.log.append(datetime.now().strftime('%H:%M:%S')+'  '+str(text).replace('&','&amp;').replace('<','&lt;').replace('\n','<br>'))
     def busy(self): return self.worker is not None
     def update_buttons(self):
         busy=self.busy()
+        self.progress.setVisible(busy)
+        if hasattr(self,'audio'):self.audio.progress.setVisible(busy)
+        if self.converted is None:self.last_export_path=None
         for widget in (self.open_button,self.source,self.max_chord,self.phrase_mode,self.seed,self.pattern_style,self.variant_choice,self.save_settings,self.load_settings,*self.sliders.values()): widget.setEnabled(not busy)
         self.audio_start.setEnabled(not busy)
         self.listen_button.setEnabled(not busy and self.song is not None)
@@ -128,6 +166,7 @@ class Window(QMainWindow):
         if hasattr(self,'audio'): self.audio.update_busy(busy,getattr(self,'cancellable',False))
         if hasattr(self,'playback'): self.playback.update_busy(busy,False)
         self.cancel_button.setEnabled(busy and getattr(self,'cancellable',False))
+        if hasattr(self,'welcome'):self.welcome.update_state()
     def invalidate(self,*args):
         self.converted=None; self.report=None; self.variants={}
         self.variant_choice.blockSignals(True); self.variant_choice.setCurrentIndex(0); self.variant_choice.blockSignals(False)
@@ -168,7 +207,7 @@ class Window(QMainWindow):
         if hasattr(self,'audio'): self.audio.progress.setRange(0,1); self.audio.progress.setValue(1)
         self.update_buttons()
     def start_from_audio(self):
-        self.tabs.setCurrentWidget(self.audio); self.audio.template.setChecked(False); self.audio.browse()
+        self.start_guided('audio')
     def review_cleanup(self):
         if self.song is None or self.busy(): return
         dialog=CleanupDialog(self.song,self)
@@ -200,6 +239,8 @@ class Window(QMainWindow):
             recording=matching_audio(path,song.metadata)
             if recording:self.playback.open_audio(recording)
             else:self.log_line('No unambiguous matching audio found. Click Play preview audio to select the recording.')
+            if self.goal=='orange':self.audio.show_listen()
+            elif self.goal=='refine':self.tabs.setCurrentWidget(self.converter)
         self.run_job('Reading chart for review…',lambda cancel:load(path,mode,learning_only=True),ready)
     def start_convert(self):
         if self.song is None or self.busy(): return
@@ -226,6 +267,7 @@ class Window(QMainWindow):
     def select_variant(self,*args):
         name=self.variant_choice.currentText()
         if name in self.variants:
+            self.last_export_path=None
             self.converted,self.report=self.variants[name]
             self.refresh_preview(); self.log_line(json.dumps(self.report,indent=2)); self.update_buttons()
     def refresh_preview(self,*args):
@@ -256,7 +298,7 @@ class Window(QMainWindow):
         song=song if song is not None else self.converted
         report=report if report is not None else self.report
         def ready(details):
-            self.converted,self.report=song,report;self.refresh_preview()
+            self.converted,self.report=song,report;self.last_export_path=Path(destination);self.refresh_preview()
             if Path(self.playback.player.source().toLocalFile()).resolve()!=Path(audio).resolve():
                 self.playback.open_audio(audio)
             self.log_line('Song folder verified: '+str(destination)+'\n'+'\n'.join(details['warnings']))
@@ -308,6 +350,9 @@ class Window(QMainWindow):
         if len(paths)!=1: self.log_line('Drop one chart or a single parent folder for recursive pattern scanning.'); return
         if Path(paths[0]).is_dir():
             self.tabs.setCurrentWidget(self.library); self.library.scan(paths[0]); event.acceptProposedAction(); return
+        if self.tabs.currentWidget() is self.welcome and not Path(paths[0]).is_dir():
+            goal='audio' if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3') else 'orange'
+            self.start_guided(goal,paths[0]);event.acceptProposedAction();return
         if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3'):
             self.tabs.setCurrentWidget(self.audio); self.audio.open_path(paths[0]); event.acceptProposedAction(); return
         self.open_path(paths[0]); event.acceptProposedAction()

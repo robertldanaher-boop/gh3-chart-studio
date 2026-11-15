@@ -1,4 +1,6 @@
-Latest release: **0.4.9**. See [song identity, Hard/Expert source and HOPO review](docs/M4_9_WINDOWS_GUIDE.md). HOPO export is an experimental TheGHOST chart profile requiring in-game acceptance.
+Latest release: **0.5.0**. Start with a goal: an existing chart or a recording. See [guided Windows workflows](docs/M5_WINDOWS_GUIDE.md) and [credits](docs/CREDITS.md).
+
+Version **0.4.9** features: See [song identity, Hard/Expert source and HOPO review](docs/M4_9_WINDOWS_GUIDE.md). HOPO export is an experimental TheGHOST chart profile requiring in-game acceptance.
 
 Version **0.4.8** features: See [one-song Ogg export and Windows test steps](docs/M4_8_WINDOWS_GUIDE.md). Batch support is deferred until one song is verified end to end.
 

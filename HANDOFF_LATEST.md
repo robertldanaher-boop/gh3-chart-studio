@@ -1,11 +1,24 @@
-# GH3 Chart Studio — 0.4.9 handoff
+# GH3 Chart Studio — 0.5.0 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_9.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.9 is authoritative.
+GH3_Chart_Studio_v0_5_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.9 update
+## Current 0.5.0 update
+
+Read docs/M5_WINDOWS_GUIDE.md, M5_IMPLEMENTATION_LOG.md and M5_TEST_RESULTS.txt.
+New dark studio theme and Start screen: existing chart → Orange-only Medium;
+audio-only → review attacks → draft; advanced converter and pattern tools remain.
+Context-specific NEXT guidance, resume, small-window scrolling and export-complete
+folder action. Startup adds decorative animated equalizer, pause/resume and credits;
+its test/setup/progress gates remain. Native Windows/Tk animation still unverified.
+Credits name Nanook/TeamGHOST as compatibility references, not copied source or
+endorsement; libraries and bundled notices are separate. No new dependencies,
+no batch, no gameplay algorithm changes. Prior identity/Ogg/HOPO behavior remains.
+Next: Windows guided-workflow acceptance with one song before batch.
+
+## Prior 0.4.9 update
 
 Read docs/M4_9_WINDOWS_GUIDE.md, M4_9_IMPLEMENTATION_LOG.md and M4_9_TEST_RESULTS.txt.
 Identity preserved/reviewed in chart/ini and Artist - Title folder. Existing Ogg

@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, QTimer, Slot
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
-from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSlider,QDoubleSpinBox,QCheckBox,QFileDialog,QComboBox
+from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSlider,QDoubleSpinBox,QCheckBox,QFileDialog,QComboBox,QScrollArea
 from .editing import timeline,shift_timing,remove_orange_to_medium
 from .validation import ensure_valid
 
@@ -47,9 +47,10 @@ class PlaybackPanel(QWidget):
     def __init__(self,owner):
         super().__init__();self.owner=owner;self.current=None;self.undo_stack=[];self.redo_stack=[];self.pending_play=False;self.audio_name=""
         self.player=QMediaPlayer(self);self.output=QAudioOutput(self);self.player.setAudioOutput(self.output);self.output.setVolume(.7)
-        layout=QVBoxLayout(self)
-        hint=QLabel('Step 3 — Listen and adjust timing. Notes move left toward the white playhead. White outlines mark estimated HOPO candidates, including exported flips—not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
-        hint.setWordWrap(True);layout.addWidget(hint)
+        outer=QVBoxLayout(self);scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll)
+        body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body)
+        hint=QLabel('Listen and compare. Notes move left toward the white playhead. White outlines mark estimated HOPO candidates, including exported flips—not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
+        self.hint=hint;hint.setWordWrap(True);layout.addWidget(hint)
         row=QHBoxLayout();layout.addLayout(row)
         self.chart_open=QPushButton('Open chart…');self.chart_open.clicked.connect(owner.browse);row.addWidget(self.chart_open)
         row.addWidget(QLabel('Display / copy source'))
@@ -214,6 +215,7 @@ class PlaybackPanel(QWidget):
     def publish(self,snapshot):
         # Keep history across our own refresh; unrelated conversions clear it.
         undo,redo=self.undo_stack,self.redo_stack
+        self.owner.last_export_path=None
         self.owner.converted,self.owner.report=snapshot
         self.owner.variants={};self.owner.variant_choice.blockSignals(True);self.owner.variant_choice.setCurrentIndex(0);self.owner.variant_choice.blockSignals(False)
         self.owner.refresh_preview();self.undo_stack,self.redo_stack=undo,redo

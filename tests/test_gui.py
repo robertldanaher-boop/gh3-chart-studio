@@ -181,7 +181,7 @@ def test_guided_audio_review_excludes_attack_and_stays_in_workspace(tmp_path,app
     w=Window();w.show();audio=w.audio;w.tabs.setCurrentWidget(audio)
     audio.open_path(FIXTURE.parent/'audio'/'onset-study.wav');wait(w)
     assert w.tabs.currentWidget() is audio and audio.pages.currentWidget() is audio.analysis_page
-    assert audio.onsets.rowCount()==15 and 'Step 2' in audio.next_step.text()
+    assert audio.onsets.rowCount()==15 and 'step 2' in audio.next_step.text().lower()
     excluded=audio.analysis.onsets[0]['time']
     audio.onsets.setData(audio.onsets.index(0,0),Qt.Unchecked,Qt.CheckStateRole)
     audio.create_draft();wait(w)
@@ -227,6 +227,7 @@ def test_horizontal_preview_time_and_lane_geometry(app):
 
 def test_guided_footer_visible_at_small_window(app):
     w=Window();w.resize(1024,700);w.show();w.tabs.setCurrentWidget(w.audio);QApplication.processEvents()
+    assert w.width()<=1024 and w.height()<=700
     assert w.audio.draft_button.isVisible()
     assert w.audio.draft_button.visibleRegion().boundingRect().height()>0
     assert not w.audio.advanced.isVisible()
@@ -386,3 +387,50 @@ def test_export_identity_and_hopo_review_preserve_original(app,tmp_path):
     dialog.show();QApplication.processEvents()
     assert dialog.buttons.isVisible() and dialog.buttons.visibleRegion().boundingRect().height()>0
     dialog.close()
+
+
+def test_guided_start_cancel_keeps_current_song(app,monkeypatch):
+    from PySide6.QtWidgets import QFileDialog
+    w=Window();assert w.tabs.currentWidget() is w.welcome
+    w.open_path(FIXTURE);wait(w);original=w.song
+    monkeypatch.setattr(QFileDialog,'getOpenFileName',lambda *a,**k:('',''))
+    assert not w.start_guided('audio')
+    assert w.song is original and w.goal is None
+    w.close()
+
+
+def test_guided_orange_hard_path_and_next_step(tmp_path,app):
+    from gh3studio.model import Song,Note
+    from gh3studio.chartio import write_chart
+    song=Song(tracks={'Expert':[Note(0,0),Note(96,4)],'Hard':[Note(0,2),Note(192,4),Note(384,3)],'Medium':[Note(0,1)]})
+    chart=tmp_path/'notes.chart';write_chart(song,chart)
+    w=Window();assert w.start_guided('orange',chart);wait(w)
+    assert w.tabs.currentWidget() is w.audio and w.audio.pages.currentWidget() is w.playback
+    assert 'Choose Hard or Expert' in w.audio.next_step.text()
+    w.playback.difficulty.setCurrentText('Hard');w.playback.orange_button.click();wait(w)
+    assert w.converted.tracks['Medium']==[Note(0,2),Note(384,3)]
+    assert 'Compare the new Medium with Hard' in w.audio.next_step.text()
+    assert w.converted.tracks['Expert']==song.tracks['Expert']
+    w.close()
+
+
+def test_guided_audio_starts_without_old_chart_template(app):
+    w=Window();w.open_path(FIXTURE);wait(w);w.audio.template.setChecked(True)
+    assert w.start_guided('audio',FIXTURE.parent/'audio'/'onset-study.wav');wait(w)
+    assert w.song is None and w.original_song is None and not w.audio.template.isChecked()
+    assert w.tabs.currentWidget() is w.audio and w.audio.pages.currentWidget() is w.audio.analysis_page
+    w.audio.create_draft();wait(w)
+    assert w.converted is not None and w.audio.pages.currentWidget() is w.playback
+    w.close()
+
+
+def test_guided_refinement_and_export_completion(tmp_path,app):
+    w=Window();w.start_guided('refine',FIXTURE);wait(w)
+    assert w.tabs.currentWidget() is w.converter
+    w.start_convert();wait(w)
+    w.export_song_to(tmp_path/'out',FIXTURE.parent/'audio'/'onset-study.wav');wait(w)
+    assert w.last_export_path==tmp_path/'out'
+    assert 'EXPORT COMPLETE' in w.audio.next_step.text() and not w.audio.open_export_button.isHidden()
+    w.invalidate()
+    assert w.last_export_path is None and w.audio.open_export_button.isHidden()
+    w.close()

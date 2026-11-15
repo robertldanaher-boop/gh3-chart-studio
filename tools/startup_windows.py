@@ -1,6 +1,7 @@
 """Standard-library startup UI: available before PySide6 is installed."""
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import queue
@@ -50,18 +51,32 @@ class Startup:
         self.root=root;self.events=queue.Queue();self.cancelled=threading.Event();self.process=None
         self.started=self.step_started=time.monotonic();self.step=0;self.test_percent=None;self.last_output=self.started
         self.estimates,self.historical=load_history(root/'startup_timings.json');self.durations=[];self.done=False;self.last_percent=0
-        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — getting ready');self.ui.geometry('800x580');self.ui.minsize(640,440)
+        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — getting ready');self.ui.geometry('860x700');self.ui.minsize(690,560);self.ui.configure(bg='#101722')
+        style=ttk.Style(self.ui);style.theme_use('clam')
+        style.configure('.',background='#101722',foreground='#e5edf7',font=('Segoe UI',10))
+        style.configure('TButton',background='#263b51',foreground='#e5edf7',padding=(12,7),borderwidth=0)
+        style.map('TButton',background=[('active','#385976'),('disabled','#172535')])
+        style.configure('Horizontal.TProgressbar',background='#65dfb5',troughcolor='#203247',borderwidth=0,lightcolor='#65dfb5',darkcolor='#65dfb5')
         frame=ttk.Frame(self.ui,padding=18);frame.pack(fill='both',expand=True)
-        ttk.Label(frame,text='GH3 Chart Studio',font=('Segoe UI',19,'bold')).pack(anchor='w')
+        ttk.Label(frame,text='GH3  /  CHART STUDIO',font=('Segoe UI',21,'bold')).pack(anchor='w')
+        ttk.Label(frame,text='SETTING THE STAGE',foreground='#72dfbf',font=('Segoe UI',9,'bold')).pack(anchor='w',pady=(4,0))
+        self.motion=True;self.animation_started=time.monotonic()
+        self.visual=tk.Canvas(frame,height=78,bg='#101722',highlightthickness=0);self.visual.pack(fill='x',pady=(4,0))
         ttk.Label(frame,text=random.choice(MESSAGES),wraplength=730).pack(anchor='w',pady=(6,16))
         self.stage=ttk.Label(frame,text=STEPS[0],font=('Segoe UI',12,'bold'));self.stage.pack(anchor='w')
         self.detail=ttk.Label(frame,text='Checking Python 3.11 x64…',wraplength=730);self.detail.pack(anchor='w',pady=7)
         self.bar=ttk.Progressbar(frame,maximum=100);self.bar.pack(fill='x')
         self.clock=ttk.Label(frame);self.clock.pack(anchor='w',pady=8)
         self.activity=ttk.Label(frame,wraplength=730);self.activity.pack(anchor='w')
-        self.text=tk.Text(frame,height=17,wrap='word',state='disabled');self.text.pack(fill='both',expand=True,pady=10)
+        ttk.Label(frame,text='BACKSTAGE / LIVE DIAGNOSTICS',foreground='#a4b9d0',font=('Segoe UI',9,'bold')).pack(anchor='w',pady=(10,0))
+        log_frame=ttk.Frame(frame);log_frame.pack(fill='both',expand=True,pady=8)
+        self.text=tk.Text(log_frame,height=13,wrap='word',state='disabled',bg='#0b121c',fg='#c4d6e9',insertbackground='#e5edf7',relief='flat',font=('Consolas',9),padx=10,pady=8)
+        scrollbar=ttk.Scrollbar(log_frame,command=self.text.yview);scrollbar.pack(side='right',fill='y');self.text.configure(yscrollcommand=scrollbar.set);self.text.pack(fill='both',expand=True)
+        ttk.Label(frame,text='With thanks to open-source contributors • Nanook & TeamGHOST: compatibility references',foreground='#9fb1c6',wraplength=790,font=('Segoe UI',9)).pack(anchor='w',pady=(0,8))
         row=ttk.Frame(frame);row.pack(fill='x')
         ttk.Button(row,text='Open troubleshooting log',command=self.open_log).pack(side='left')
+        self.motion_button=ttk.Button(row,text='Pause animation',command=self.toggle_animation);self.motion_button.pack(side='left',padx=8)
+        ttk.Button(row,text='Credits',command=self.show_credits).pack(side='left')
         self.close_button=ttk.Button(row,text='Cancel startup',command=self.close);self.close_button.pack(side='right')
         self.ui.protocol('WM_DELETE_WINDOW',self.close)
         self.log_path=root/'start_windows.log'
@@ -69,7 +84,23 @@ class Startup:
         self.log_path.write_text('',encoding='utf-8')
         self.log=self.log_path.open('a',encoding='utf-8',buffering=1)
         self.write(f'Startup {time.strftime("%Y-%m-%d %H:%M:%S")} | Python {sys.version} | folder {root}')
-        threading.Thread(target=self.work,daemon=True).start();self.ui.after(100,self.poll)
+        threading.Thread(target=self.work,daemon=True).start();self.ui.after(100,self.poll);self.ui.after(80,self.animate)
+    def toggle_animation(self):
+        self.motion=not self.motion;self.motion_button.configure(text='Pause animation' if self.motion else 'Resume animation')
+    def animate(self):
+        if self.motion:
+            self.visual.delete('all');width=max(100,self.visual.winfo_width());phase=time.monotonic()-self.animation_started
+            colors=('#69e2ac','#ff7b88','#f0d779','#75b9ff')
+            for i in range(40):
+                height=9+42*(.5+.5*math.sin(phase*3+i*.57))*(.65+.35*math.sin(phase+i*.24)**2)
+                x=8+i*(width-16)/40
+                self.visual.create_rectangle(x,65-height,x+max(3,(width-16)/40-5),65,fill=colors[(i//10)%4],outline='')
+            self.visual.create_line(8,70,width-8,70,fill='#31465b')
+        if not self.done:self.ui.after(80,self.animate)
+    def show_credits(self):
+        from tkinter import messagebox
+        messagebox.showinfo('Open-source credits',
+            'With thanks to Nanook and TeamGHOST (TheGHOST), and TheNathannator and contributors (GuitarGame_ChartFormats). Their work informs our compatibility profile; their implementations are not bundled.\n\nBuilt using Python/Tkinter, PySide6/Qt, Mido, NumPy, SciPy, SoundFile/libsndfile and supporting libraries. Tests/builds use pytest and PyInstaller.\n\nFull credits, project links and license information are available under About & credits in the studio and the included licenses folder.',parent=self.ui)
     def write(self,line):
         self.log.write(f'[{duration(time.monotonic()-self.started)}] {line}\n');self.log.flush();self.events.put(('log',line))
     def command(self,args,env=None):

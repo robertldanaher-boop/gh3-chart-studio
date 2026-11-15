@@ -2,8 +2,8 @@
 import json
 from dataclasses import replace
 from pathlib import Path
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor,QPen
+from PySide6.QtCore import Qt,QUrl
+from PySide6.QtGui import QColor,QPen,QDesktopServices
 from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSpinBox,QDoubleSpinBox,
     QCheckBox,QFileDialog,QTextEdit,QGraphicsView,QGraphicsScene,QProgressBar,QSlider,
     QScrollArea,QStackedWidget,QTableView,QHeaderView,QGroupBox)
@@ -31,11 +31,12 @@ class AudioPanel(QWidget):
         super().__init__();self.owner=owner;self.path=None;self.analysis=None;self.last_diagnostics=None
         self.original_audio=None;self.last_draft_source=None
         layout=QVBoxLayout(self)
-        title=QLabel('Audio Studio — choose → review → listen → export');title.setStyleSheet('font-size:20px;font-weight:600');layout.addWidget(title)
-        self.next_step=QLabel('Step 1: Choose a recording. No chart or pattern library is required.');self.next_step.setWordWrap(True);layout.addWidget(self.next_step)
+        self.title=QLabel('Audio Studio — choose → review → listen → export');self.title.setStyleSheet('font-size:20px;font-weight:600');layout.addWidget(self.title)
+        self.next_step=QLabel('Step 1: Choose a recording. No chart or pattern library is required.');self.next_step.setWordWrap(True);self.next_step.setObjectName('nextStep');layout.addWidget(self.next_step)
+        self.open_export_button=QPushButton('Open exported song folder');self.open_export_button.clicked.connect(self.open_export_folder);self.open_export_button.hide();layout.addWidget(self.open_export_button)
         row=QHBoxLayout();layout.addLayout(row)
-        self.open_button=QPushButton('1. Choose audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
-        self.review_button=QPushButton('2. Review attacks');self.review_button.clicked.connect(self.show_analysis);row.addWidget(self.review_button)
+        self.open_button=QPushButton('1. Choose audio…');self.open_button.clicked.connect(self.choose_input);row.addWidget(self.open_button)
+        self.review_button=QPushButton('2. Review attacks');self.review_button.clicked.connect(self.review_step);row.addWidget(self.review_button)
         self.listen_button=QPushButton('3. Listen / timing');self.listen_button.clicked.connect(self.show_listen);row.addWidget(self.listen_button)
         self.export_button=QPushButton('4. Export song folder…');self.export_button.clicked.connect(owner.start_export);row.addWidget(self.export_button)
         self.file_label=QLabel('Analysis source: none');self.file_label.setWordWrap(True);layout.addWidget(self.file_label)
@@ -85,6 +86,25 @@ class AudioPanel(QWidget):
         self.cancel_button=QPushButton('Cancel');self.cancel_button.clicked.connect(owner.cancel);row.addWidget(self.cancel_button)
         self.pages.addWidget(self.analysis_page);self.pages.addWidget(owner.playback)
         self.controls=(self.open_button,self.sensitivity,self.spacing,self.bpm,self.shift,self.template,self.learned,self.attack_table,self.keep_all,self.keep_none)
+    def open_export_folder(self):
+        if self.owner.last_export_path:
+            if not QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.owner.last_export_path.resolve()))):self.owner.log_line('Could not open export folder: '+str(self.owner.last_export_path))
+    def set_mode(self,goal):
+        orange=goal=='orange'
+        self.title.setText('Four-fret Medium — keep the authored challenge' if orange else 'Audio Studio — turn a recording into a draft')
+        self.open_button.setText('1. Open chart…' if orange else '1. Choose audio…')
+        self.review_button.setText('2. Choose difficulty' if orange else '2. Review attacks')
+        self.listen_button.setText('3. Listen / compare' if orange else '3. Listen / timing')
+        self.file_label.setVisible(not orange)
+        self.owner.playback.chart_open.setVisible(goal not in ('orange','audio'))
+        if orange:self.owner.playback.hint.setText('Compare the original difficulty and the new Medium against your recording. White outlines estimate HOPO behavior; in-game verification is still required.')
+        elif goal=='audio':self.owner.playback.hint.setText('Listen to the draft against your recording. Review which attacks became notes, then adjust timing if needed. White outlines are estimated HOPO candidates.')
+    def choose_input(self):
+        if self.owner.goal=='orange':self.owner.start_guided('orange')
+        else:self.browse()
+    def review_step(self):
+        if self.owner.goal=='orange':self.show_listen();self.owner.playback.difficulty.setFocus()
+        else:self.show_analysis()
     def show_analysis(self):
         self.pages.setCurrentWidget(self.analysis_page)
         if hasattr(self,"draft_button"):self.update_busy(self.owner.busy(),getattr(self.owner,"cancellable",False))
@@ -124,11 +144,26 @@ class AudioPanel(QWidget):
         if busy:self.next_step.setText('Working… wait for completion or cancel analysis.')
         elif self.owner.converted is not None and self.pages.currentWidget() is self.owner.playback:self.next_step.setText('Step 3: Listen and adjust. When satisfied, click 4. Export song folder.')
         elif self.pages.currentWidget() is self.owner.playback and self.owner.song is not None:self.next_step.setText('Select a display difficulty. Choose preview audio to listen, or copy Expert/Hard to Medium with Remove Orange.')
-        elif self.analysis is not None:self.next_step.setText('Step 2: Review attacks below. Then click Create draft from selected attacks → Listen.')
+        elif self.analysis is not None:
+            if self.analysis.bpm is None and not self.template.isChecked():self.next_step.setText('NEXT • Tempo needs review. Open Optional settings, enter the BPM, then Reanalyze before creating a draft.')
+            else:self.next_step.setText('STEP 2 • Uncheck attacks you do not want to play. Then click Create draft from selected attacks → Listen.')
         elif self.path is not None:self.next_step.setText('Step 2: Run analysis. If BPM is unknown, set it under Optional settings and reanalyze.')
         self.compare_button.setEnabled(not busy and self.analysis is not None and self.owner.song is not None)
         self.save_button.setEnabled(not busy and self.analysis is not None)
         self.cancel_button.setEnabled(busy and cancellable)
+        if getattr(self.owner,'goal',None)=='orange':
+            self.review_button.setEnabled(not busy and self.owner.song is not None)
+            if busy:self.next_step.setText('Working on your chart… the current operation will finish before you continue.')
+            elif self.owner.converted is not None:
+                source=(self.owner.report or {}).get('source_difficulty','selected track')
+                self.next_step.setText(f'NEXT • Compare the new Medium with {source}, choose the recording and press Play. Then export: metadata and optional HOPOs are reviewed there.')
+            elif self.owner.song is not None:self.next_step.setText('NEXT • Choose Hard or Expert in Display / copy source below, then click Remove Orange → Medium. All surviving notes keep their original timing.')
+            else:self.next_step.setText('STEP 1 • Open an existing chart. We’ll help you choose its source difficulty next.')
+        elif not busy and self.owner.converted is None and self.analysis is None and self.path is None:
+            self.next_step.setText('STEP 1 • Choose a recording. You do not need an existing chart or a pattern library.')
+        exported=getattr(self.owner,'last_export_path',None)
+        self.open_export_button.setVisible(exported is not None);self.open_export_button.setEnabled(not busy)
+        if exported is not None and not busy:self.next_step.setText('EXPORT COMPLETE • Your song folder is ready for import testing. Open it below, then use notes.chart + song.ogg in TheGHOST. Originals are unchanged.')
     def invalidate(self,*args):
         self.analysis=None;self.last_diagnostics=None;self.onsets.reset_onsets([]);self.wave.scene().clear();self.summary.setText('Settings changed; reanalyze before generating.')
         if self.owner.report and 'audio' in self.owner.report:self.owner.invalidate()
