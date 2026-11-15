@@ -98,9 +98,11 @@ class AudioPanel(QWidget):
         self.owner.update_buttons()
     def audition_attack(self,index):
         if self.owner.busy() or not index.isValid():return
+        if self.owner.playback.player.source().isEmpty() and self.original_audio:
+            self.owner.playback.open_audio(self.original_audio)
         time=self.onsets.onsets[index.row()]['time']
         self.owner.playback.player.setPosition(max(0,int((time-.5)*1000)))
-        self.show_listen();self.owner.playback.player.play()
+        self.show_listen();self.owner.playback.play()
     def browse_stem(self):
         path,_=QFileDialog.getOpenFileName(self,'Choose an already-separated instrument file with the same time origin','','Audio (*.wav *.flac *.ogg *.mp3)')
         if path:self.open_stem(path)

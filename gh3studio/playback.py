@@ -45,7 +45,7 @@ class Highway(QWidget):
 
 class PlaybackPanel(QWidget):
     def __init__(self,owner):
-        super().__init__();self.owner=owner;self.current=None;self.undo_stack=[];self.redo_stack=[]
+        super().__init__();self.owner=owner;self.current=None;self.undo_stack=[];self.redo_stack=[];self.pending_play=False;self.audio_name=""
         self.player=QMediaPlayer(self);self.output=QAudioOutput(self);self.player.setAudioOutput(self.output);self.output.setVolume(.7)
         layout=QVBoxLayout(self)
         hint=QLabel('Step 3 — Listen and adjust timing. Notes move left toward the white playhead. White outlines mark estimated natural HOPO candidates, not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
@@ -59,15 +59,25 @@ class PlaybackPanel(QWidget):
         self.provenance=QLabel();layout.addWidget(self.provenance)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Choose preview audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
-        self.play_button=QPushButton('Play / pause');self.play_button.clicked.connect(self.toggle);row.addWidget(self.play_button)
+        self.play_button=QPushButton('Play preview audio');self.play_button.clicked.connect(self.toggle);row.addWidget(self.play_button)
         stop=QPushButton('Stop');stop.clicked.connect(self.stop);row.addWidget(stop)
-        self.label=QLabel('No audio selected');row.addWidget(self.label,1)
+        self.label=QLabel('No audio selected — choose the matching recording');self.label.setWordWrap(True);row.addWidget(self.label,1)
+        row=QHBoxLayout();layout.addLayout(row)
+        row.addWidget(QLabel('Audio output'))
+        self.devices=QComboBox();row.addWidget(self.devices,1)
+        self.device_monitor=QMediaDevices(self)
+        self.device_monitor.audioOutputsChanged.connect(self.refresh_devices,Qt.QueuedConnection)
+        self.devices.currentIndexChanged.connect(self.select_device)
+        self.refresh_devices()
+        self.media_status=QLabel('No recording loaded');self.media_status.setWordWrap(True);row.addWidget(self.media_status,1)
         row=QHBoxLayout();layout.addLayout(row)
         row.addWidget(QLabel('Volume'));volume=QSlider(Qt.Horizontal);volume.setRange(0,100);volume.setValue(70);volume.valueChanged.connect(lambda v:self.output.setVolume(v/100));row.addWidget(volume)
         self.seek=QSlider(Qt.Horizontal);self.seek.setRange(0,0);self.seek.sliderMoved.connect(self.player.setPosition);layout.addWidget(self.seek)
         self.player.durationChanged.connect(self.duration_changed,Qt.QueuedConnection)
         self.player.positionChanged.connect(self.position_changed,Qt.QueuedConnection)
         self.player.errorOccurred.connect(self.media_error,Qt.QueuedConnection)
+        self.player.mediaStatusChanged.connect(self.media_changed,Qt.QueuedConnection)
+        self.player.playbackStateChanged.connect(self.playback_changed,Qt.QueuedConnection)
         self.highway=Highway();layout.addWidget(self.highway,1)
         row=QHBoxLayout();layout.addLayout(row)
         self.hopo=QCheckBox('Highlight natural HOPO candidates');self.hopo.setChecked(True);self.hopo.toggled.connect(self.highlight);row.addWidget(self.hopo)
@@ -80,25 +90,71 @@ class PlaybackPanel(QWidget):
         self.status=QLabel('Timing preview uses the media playback clock. Device latency still needs listening checks.');self.status.setWordWrap(True);layout.addWidget(self.status)
         self.timer=QTimer(self);self.timer.setInterval(33);self.timer.timeout.connect(self.tick);self.timer.start()
         self.update_busy(False,False)
+    def refresh_devices(self):
+        previous=self.devices.currentData()
+        self.devices.blockSignals(True);self.devices.clear();self.devices.addItem('Windows / system default',None)
+        for device in QMediaDevices.audioOutputs():self.devices.addItem(device.description(),bytes(device.id()))
+        index=self.devices.findData(previous);self.devices.setCurrentIndex(max(0,index));self.devices.blockSignals(False)
+        self.select_device()
+    def select_device(self,*args):
+        identity=self.devices.currentData()
+        device=next((d for d in QMediaDevices.audioOutputs() if bytes(d.id())==identity),QMediaDevices.defaultAudioOutput())
+        if self.output.device().id()!=device.id():self.output.setDevice(device)
+    def clear_audio(self):
+        self.pending_play=False;self.audio_name='';self.player.pause();self.player.setSource(QUrl())
+        self.label.setText('No audio selected — click Play to choose the matching recording')
+        self.media_status.setText('No recording loaded');self.play_button.setText('Play preview audio')
     def browse(self):
-        path,_=QFileDialog.getOpenFileName(self,'Choose matching recording','','Audio (*.wav *.flac *.ogg *.mp3)')
-        if path:self.open_audio(path)
+        path,_=QFileDialog.getOpenFileName(self,'Choose matching recording','','Audio (*.wav *.flac *.ogg *.mp3 *.opus)')
+        return self.open_audio(path) if path else False
     def open_audio(self,path):
-        self.player.pause();self.player.setSource(QUrl.fromLocalFile(str(Path(path).resolve())));self.label.setText(Path(path).name)
-        if QMediaDevices.defaultAudioOutput().isNull():self.label.setText(Path(path).name+' — no audio output device detected')
+        path=Path(path).resolve()
+        if not path.is_file():
+            self.clear_audio();self.label.setText('Audio file not found: '+str(path));self.owner.log_line(self.label.text());return False
+        self.pending_play=False;self.audio_name=path.name
+        self.player.pause();self.player.setSource(QUrl.fromLocalFile(str(path)));self.label.setText(str(path))
+        self.media_status.setText('Loading recording…');self.owner.log_line('Preview audio selected: '+str(path))
+        return True
+    def play(self):
+        if self.player.source().isEmpty() and not self.browse():return
+        self.select_device()
+        if self.output.device().isNull():
+            self.media_status.setText('No audio output device detected. Connect/select speakers or headphones.')
+            self.owner.log_line(self.media_status.text())
+        status=self.player.mediaStatus()
+        if status==QMediaPlayer.InvalidMedia:
+            self.pending_play=False;self.media_error(self.player.error(),self.player.errorString());return
+        self.pending_play=status==QMediaPlayer.LoadingMedia
+        if not self.pending_play:self.player.play()
+    @Slot(QMediaPlayer.MediaStatus)
+    def media_changed(self,status):
+        if status in (QMediaPlayer.LoadedMedia,QMediaPlayer.BufferedMedia):
+            if self.pending_play:self.pending_play=False;self.player.play()
+            if not self.output.device().isNull():self.media_status.setText('Recording loaded — '+str(round(self.player.duration()/1000,1))+' seconds')
+        elif status==QMediaPlayer.StalledMedia:self.media_status.setText('Audio playback stalled; see diagnostic log.')
+        elif status==QMediaPlayer.InvalidMedia:self.media_error(self.player.error(),self.player.errorString())
+        self.owner.log_line('Preview media status: '+status.name)
+    @Slot(QMediaPlayer.PlaybackState)
+    def playback_changed(self,state):
+        self.play_button.setText('Pause preview audio' if state==QMediaPlayer.PlayingState else 'Play preview audio')
+        device=self.output.device()
+        self.owner.log_line(f'Preview {state.name}; output={device.description() or "NONE"}; volume={self.output.volume():.0%}; muted={self.output.isMuted()}')
     def stop(self):
         # Pause and rewind avoids Qt 6.8 FFmpeg stop/seek lock contention.
-        self.player.pause();self.player.setPosition(0)
+        self.pending_play=False;self.player.pause();self.player.setPosition(0)
     def shutdown(self):
         # QObject ownership releases the backend through deferred window deletion.
         self.timer.stop();self.player.pause()
     def toggle(self):
-        if self.player.playbackState()==QMediaPlayer.PlayingState:self.player.pause()
-        else:self.player.play()
+        if self.player.playbackState()==QMediaPlayer.PlayingState:self.pending_play=False;self.player.pause()
+        else:self.play()
     @Slot(int)
     def duration_changed(self,duration):self.seek.setRange(0,duration)
     @Slot(QMediaPlayer.Error,str)
-    def media_error(self,error,message):self.label.setText('Playback error: '+message)
+    def media_error(self,error,message):
+        self.pending_play=False
+        text='Playback error: '+(message or str(error))+'. Try a WAV/OGG copy and check the audio output selection.'
+        self.media_status.setText(text);self.owner.log_line(text)
     @Slot(int)
     def position_changed(self,position):
         if not self.seek.isSliderDown():self.seek.setValue(position)

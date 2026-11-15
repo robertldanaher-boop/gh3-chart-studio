@@ -187,8 +187,7 @@ class Window(QMainWindow):
     def open_path(self,path):
         if self.busy(): return
         self.song=None; self.original_song=None; self.cleanup_report=None; self.converted=None; self.report=None; self.path=None; self.variants={}
-        from PySide6.QtCore import QUrl
-        self.playback.player.pause();self.playback.player.setSource(QUrl());self.playback.label.setText('Select the matching full-mix audio')
+        self.playback.clear_audio()
         self.info.setText('Loading…'); self.preview.scene().clear(); self.playback.set_chart(None,'Medium')
         mode='modern' if self.phrase_mode.currentIndex()==0 else 'legacy'
         def ready(song):
@@ -197,6 +196,10 @@ class Window(QMainWindow):
             if available: self.source.setCurrentText(available[0])
             self.info.setText(f"{song.metadata.get('Name',Path(path).stem)} — {song.metadata.get('Artist','Unknown artist')} | PPQ {song.resolution} | "+' · '.join(f'{d}: {len(n)} gems' for d,n in song.tracks.items()))
             self.log_line('Imported. '+ ' '.join(song.warnings)); self.refresh_preview()
+            from .preview_audio import matching_audio
+            recording=matching_audio(path,song.metadata)
+            if recording:self.playback.open_audio(recording)
+            else:self.log_line('No unambiguous matching audio found. Click Play preview audio to select the recording.')
         self.run_job('Reading chart for review…',lambda cancel:load(path,mode,learning_only=True),ready)
     def start_convert(self):
         if self.song is None or self.busy(): return

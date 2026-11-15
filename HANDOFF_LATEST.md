@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.4.6 handoff
+# GH3 Chart Studio — 0.4.7 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_6.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.6 is authoritative.
+GH3_Chart_Studio_v0_4_7.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.7 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.6 update
+## Current 0.4.7 update
+
+Read docs/M4_7_WINDOWS_GUIDE.md, M4_7_IMPLEMENTATION_LOG.md and M4_7_TEST_RESULTS.txt.
+Preview no-source silent failure fixed: Play prompts for the recording. Chart loads
+safe MusicStream/unambiguous song.* audio automatically. Added output-device selector,
+visible playback errors, detailed app-log events and actual-state Play/Pause text.
+No physical audio device available locally; Windows audible playback unverified.
+Ask for Chart Converter → Save diagnostic log if still failing, plus whether the
+seek clock moves and the selected output device. The no-source issue is confirmed,
+not necessarily the sole cause of Bob's report. No Claude execution occurred.
+
+## Prior 0.4.6 update
 
 Read docs/M4_6_WINDOWS_GUIDE.md, M4_6_IMPLEMENTATION_LOG.md and M4_6_TEST_RESULTS.txt.
 START_WINDOWS.cmd opens a stdlib Tk progress UI before PySide6 setup. Three stages,

@@ -310,3 +310,44 @@ def test_failed_orange_copy_disables_stale_export(app):
     assert 'empty' in w.playback.status.text()
     assert 'OUTPUT' not in w.playback.provenance.text()
     w.close()
+
+
+def test_preview_play_without_audio_prompts_and_starts(app,monkeypatch):
+    from PySide6.QtWidgets import QFileDialog
+    from PySide6.QtMultimedia import QMediaPlayer
+    path=FIXTURE.parent/'audio'/'onset-study.wav'
+    monkeypatch.setattr(QFileDialog,'getOpenFileName',lambda *a,**k:(str(path),''))
+    w=Window();w.playback.toggle()
+    for _ in range(200):
+        QApplication.processEvents();QTest.qWait(10)
+        if w.playback.player.position()>100:break
+    assert Path(w.playback.player.source().toLocalFile()).resolve()==path.resolve()
+    assert w.playback.player.position()>100
+    assert w.playback.player.playbackState()==QMediaPlayer.PlayingState
+    assert w.playback.play_button.text()=='Pause preview audio'
+    w.close()
+
+
+def test_chart_autoloads_recording_and_missing_audio_clears_source(tmp_path,app):
+    import shutil
+    from gh3studio.chartio import write_chart
+    from gh3studio.model import Song,Note
+    folder=tmp_path/'song';folder.mkdir();chart=folder/'notes.chart'
+    write_chart(Song(tracks={'Expert':[Note(0,0)]}),chart)
+    shutil.copyfile(FIXTURE.parent/'audio'/'onset-study.wav',folder/'song.wav')
+    w=Window();w.open_path(chart);wait(w)
+    assert Path(w.playback.player.source().toLocalFile()).resolve()==(folder/'song.wav').resolve()
+    assert w.playback.devices.count()>=1
+    assert not w.playback.open_audio(folder/'missing.wav')
+    assert w.playback.player.source().isEmpty() and 'not found' in w.playback.label.text()
+    w.close()
+
+
+def test_cancel_preview_file_picker_does_not_play(app,monkeypatch):
+    from PySide6.QtWidgets import QFileDialog
+    from PySide6.QtMultimedia import QMediaPlayer
+    monkeypatch.setattr(QFileDialog,'getOpenFileName',lambda *a,**k:('',''))
+    w=Window();w.playback.toggle()
+    assert w.playback.player.source().isEmpty()
+    assert w.playback.player.playbackState()==QMediaPlayer.StoppedState
+    w.close()
