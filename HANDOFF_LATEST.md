@@ -1,11 +1,23 @@
-# GH3 Chart Studio — 0.5.2 handoff
+# GH3 Chart Studio — 0.5.3 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_5_2.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.2 is authoritative.
+GH3_Chart_Studio_v0_5_3.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.3 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.5.2 update
+## Current 0.5.3 update
+
+Audio Studio has an optional unchecked Orange sustain → Blue checkbox. Button 4
+means Blue (lane 3). Positive-length Orange notes transfer at original tick/length;
+zero-length Orange taps disappear. Simultaneous Blue uses the longer sustain with
+no duplicate gem. Later overlaps remain for explicit export review. Expert/Hard
+unchanged; report records transfers and the preview labels this mode. Chart/MIDI
+round trips and GUI wiring covered by tests. See docs/M5_3_WINDOWS_GUIDE.md,
+M5_3_IMPLEMENTATION_LOG.md and M5_3_TEST_RESULTS.txt. Native runtime still pending.
+Prior supplied-chart audit is docs/M5_2_ACCEPTANCE_AUDIT.md; it used synthetic audio
+for packaging checks, not actual song synchronization. Next: one real song test.
+
+## Prior 0.5.2 update
 
 User requested a one-time first-launch agreement, superseding the prior no-prompt decision.
 Agree saves per-user QSettings and opens studio; decline/close exits without acceptance.

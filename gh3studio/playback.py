@@ -57,6 +57,9 @@ class PlaybackPanel(QWidget):
         self.difficulty=QComboBox();self.difficulty.currentTextChanged.connect(self.select_difficulty);row.addWidget(self.difficulty)
         self.orange_button=QPushButton('Remove Orange → Medium');self.orange_button.clicked.connect(self.remove_orange);row.addWidget(self.orange_button)
         note=QLabel('Choose Hard or Expert above. Copies the displayed track minus Orange to Medium; source tracks stay unchanged.');note.setWordWrap(True);row.addWidget(note,1)
+        self.orange_sustains=QCheckBox('Move Orange sustains to Blue (button 4) before removing Orange')
+        self.orange_sustains.setToolTip('Preserves Orange sustain timing on Blue. Simultaneous Blue uses the longer sustain. Overlaps require review; Orange taps are removed.')
+        layout.addWidget(self.orange_sustains)
         self.provenance=QLabel();layout.addWidget(self.provenance)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Choose preview audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
@@ -179,15 +182,16 @@ class PlaybackPanel(QWidget):
     def remove_orange(self):
         if self.owner.busy() or not self.current:return
         song,difficulty=self.current
+        transfer_sustains=self.orange_sustains.isChecked()
         self.owner.converted=None;self.owner.report=None;self.rebuild()
-        self.status.setText(f'Creating exact Medium copy from displayed {difficulty}…')
+        self.status.setText(f'Creating Medium from displayed {difficulty}…')
         def ready(value):
             self.owner.converted,self.owner.report=value
             self.owner.variants={};self.owner.variant_choice.blockSignals(True);self.owner.variant_choice.setCurrentIndex(0);self.owner.variant_choice.blockSignals(False)
             self.owner.refresh_preview();self.owner.log_line(str(self.owner.report))
-            self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems. Medium is ready for export checks; Expert/Hard were not edited.")
+            self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems; transferred {self.owner.report.get('transferred_orange_sustains',0)} sustains to Blue. Medium is ready for export checks; Expert/Hard were not edited.")
             self.owner.audio.show_listen()
-        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty,strict=False),ready)
+        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty,strict=False,orange_sustains_to_blue=transfer_sustains),ready)
     def rebuild(self,*args):
         report=self.owner.report or {}
         if self.current:
@@ -195,7 +199,8 @@ class PlaybackPanel(QWidget):
             label=f'Displaying {diff}'
             if self.current[0] is self.owner.converted and diff=='Medium':
                 label+=f" — OUTPUT copied from {report.get('source_difficulty','generated chart')} | Orange: {sum(n.lane==4 for n in self.current[0].tracks.get(diff,[]))}"
-                if report.get('retained_notes_exact'):label+=' | all surviving notes unchanged'
+                if report.get('transferred_orange_sustains'):label+=f" | {report['transferred_orange_sustains']} Orange sustains → Blue"
+                elif report.get('retained_notes_exact'):label+=' | all surviving notes unchanged'
             else:label+=' — source track'
             self.provenance.setText(label)
         else:self.provenance.setText('No chart loaded')
@@ -205,6 +210,7 @@ class PlaybackPanel(QWidget):
         self.highway.notes=timeline(*self.current,threshold) if self.current else []
         self.highway.update();self.update_busy(self.owner.busy(),False)
     def update_busy(self,busy,cancellable):
+        self.orange_sustains.setEnabled(not busy)
         self.open_button.setEnabled(not busy)
         self.chart_open.setEnabled(not busy)
         self.difficulty.setEnabled(not busy and self.current is not None)

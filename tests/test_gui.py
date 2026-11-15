@@ -434,3 +434,18 @@ def test_guided_refinement_and_export_completion(tmp_path,app):
     w.invalidate()
     assert w.last_export_path is None and w.audio.open_export_button.isHidden()
     w.close()
+
+
+def test_orange_sustain_transfer_checkbox(tmp_path,app):
+    from gh3studio.model import Song,Note
+    from gh3studio.chartio import write_chart
+    path=tmp_path/'notes.chart'
+    write_chart(Song(tracks={'Expert':[Note(0,4,96),Note(192,0)],'Hard':[Note(0,1)]}),path)
+    w=Window();w.open_path(path);wait(w)
+    w.playback.difficulty.setCurrentText('Expert')
+    w.playback.orange_sustains.setChecked(True)
+    w.playback.remove_orange();wait(w)
+    assert w.converted.tracks['Medium']==[Note(0,3,96),Note(192,0)]
+    assert 'sustains → Blue' in w.playback.provenance.text()
+    assert w.converted.tracks['Expert']==w.song.tracks['Expert']
+    w.close()

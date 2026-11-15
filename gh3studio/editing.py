@@ -63,7 +63,7 @@ def timeline(song,difficulty,threshold_beats=1/3):
 
 
 
-def remove_orange_to_medium(song,source,*,strict=True):
+def remove_orange_to_medium(song,source,*,strict=True,orange_sustains_to_blue=False):
     """Copy the selected difficulty to Medium, deleting ONLY Orange gems. Never remap G/R/Y/B."""
     if source not in ('Expert','Hard','Medium','Easy'):raise ChartError('Choose an available source difficulty')
     ensure_valid(song,learning_only=not strict)
@@ -72,6 +72,15 @@ def remove_orange_to_medium(song,source,*,strict=True):
     if strict and song.modifiers.get(source):
         raise ChartError('This source contains unsupported gameplay markers. Orange-only mode does not strip those markers or change Expert/Hard. Use a supported source or review a separate cleanup copy first.')
     remaining=[n for n in original if n.lane!=4]
+    mapped=[n for n in original if n.lane==4 and n.length>0] if orange_sustains_to_blue else []
+    transfers=[]
+    for note in mapped:
+        existing=next((n for n in remaining if n.tick==note.tick and n.lane==3),None)
+        length=max(note.length,existing.length if existing else 0)
+        if existing:remaining.remove(existing)
+        remaining.append(Note(note.tick,3,length))
+        transfers.append(dict(tick=note.tick,orange_length=note.length,blue_length_before=existing.length if existing else None,blue_length_after=length))
+    if mapped:remaining.sort()
     if not remaining:raise ChartError('Removing Orange would leave Medium empty; no output created')
     previous_end=0
     for tick,items in groupby(sorted(remaining),key=lambda n:n.tick):
@@ -98,10 +107,17 @@ def remove_orange_to_medium(song,source,*,strict=True):
                   timing='All remaining G/R/Y/B lanes, onset ticks and sustain lengths are unchanged',
                   preserved_difficulties=[d for d in song.tracks if d!='Medium'],
                   status='Structural checks passed; TheGHOST/Dolphin acceptance required')
-    assert result.tracks['Medium']==[n for n in original if n.lane!=4]
-    report['retained_notes_exact']=True
-    if not strict:report['status']='Exact Orange-only copy created; export compatibility review required'
-    report['warnings'] += ['Orange-only onsets disappear; chords containing Orange lose only that gem.',
+    if not mapped:assert result.tracks['Medium']==[n for n in original if n.lane!=4]
+    report['retained_notes_exact']=not any(t['blue_length_before'] is not None and t['blue_length_before']!=t['blue_length_after'] for t in transfers)
+    report['orange_sustains_to_blue']=orange_sustains_to_blue
+    report['transferred_orange_sustains']=len(mapped)
+    report['sustain_transfers']=transfers
+    report['settings']['orange_sustains_to_blue']=orange_sustains_to_blue
+    if mapped:
+        report['timing']='Orange sustains moved to Blue at original ticks and lengths; simultaneous Blue sustains use the longer duration. Overlaps require export review.'
+        report['warnings'].append('Orange sustains were transferred to Blue (button 4). A simultaneous Blue note uses the longer sustain; later Blue overlaps are not silently shortened.')
+    if not strict:report['status']=('Orange sustain transfer created; export compatibility review required' if mapped else 'Exact Orange-only copy created; export compatibility review required')
+    report['warnings'] += [('Unsustained Orange onsets disappear; sustained Orange is transferred to Blue.' if mapped else 'Orange-only onsets disappear; chords containing Orange lose only that gem.'),
                            'Existing Medium is replaced in the output copy; Expert and Hard are unchanged.',
                            'Natural HOPO behavior may change when Orange notes are removed. No forced/tap actions are added.',
                            'TheGHOST may alter sustain timing; prefer .chart for short sustains. Runtime acceptance is pending.']

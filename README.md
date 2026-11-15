@@ -1,4 +1,6 @@
-Latest release: **0.5.2**. First launch now asks Agree and continue or Disagree and close. Acceptance is saved per Windows user across updates; the notice remains under About / credits. See [first-run Windows verification](docs/M5_2_WINDOWS_GUIDE.md). Start with a goal: an existing chart or a recording. See [guided Windows workflows](docs/M5_WINDOWS_GUIDE.md) and [credits](docs/CREDITS.md).
+Latest release: **0.5.3**. Optional Orange sustain transfer to Blue (button 4) before four-fret Medium creation. See [Windows steps](docs/M5_3_WINDOWS_GUIDE.md).
+
+Version **0.5.2**: First launch now asks Agree and continue or Disagree and close. Acceptance is saved per Windows user across updates; the notice remains under About / credits. See [first-run Windows verification](docs/M5_2_WINDOWS_GUIDE.md). Start with a goal: an existing chart or a recording. See [guided Windows workflows](docs/M5_WINDOWS_GUIDE.md) and [credits](docs/CREDITS.md).
 
 Version **0.4.9** features: See [song identity, Hard/Expert source and HOPO review](docs/M4_9_WINDOWS_GUIDE.md). HOPO export is an experimental TheGHOST chart profile requiring in-game acceptance.
 
