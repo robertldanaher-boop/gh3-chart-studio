@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QUrl, QTimer, Slot
 from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
-from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSlider,QDoubleSpinBox,QCheckBox,QFileDialog,QComboBox,QScrollArea
+from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSlider,QDoubleSpinBox,QCheckBox,QFileDialog,QComboBox,QScrollArea,QSpinBox
 from .editing import timeline,shift_timing,remove_orange_to_medium
 from .validation import ensure_valid
 
@@ -45,7 +45,7 @@ class Highway(QWidget):
 
 class PlaybackPanel(QWidget):
     def __init__(self,owner):
-        super().__init__();self.owner=owner;self.current=None;self.undo_stack=[];self.redo_stack=[];self.pending_play=False;self.audio_name=""
+        super().__init__();self.owner=owner;self.current=None;self.undo_stack=[];self.redo_stack=[];self.pending_play=False;self.audio_name="";self.sustain_source=None
         self.player=QMediaPlayer(self);self.output=QAudioOutput(self);self.player.setAudioOutput(self.output);self.output.setVolume(.7)
         outer=QVBoxLayout(self);scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll)
         body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body)
@@ -57,9 +57,14 @@ class PlaybackPanel(QWidget):
         self.difficulty=QComboBox();self.difficulty.currentTextChanged.connect(self.select_difficulty);row.addWidget(self.difficulty)
         self.orange_button=QPushButton('Remove Orange → Medium');self.orange_button.clicked.connect(self.remove_orange);row.addWidget(self.orange_button)
         note=QLabel('Choose Hard or Expert above. Copies the displayed track minus Orange to Medium; source tracks stay unchanged.');note.setWordWrap(True);row.addWidget(note,1)
-        self.orange_sustains=QCheckBox('Move Orange sustains to Blue (button 4) before removing Orange')
-        self.orange_sustains.setToolTip('Preserves Orange sustain timing on Blue. Simultaneous Blue uses the longer sustain. Overlaps require review; Orange taps are removed.')
+        self.orange_sustains=QCheckBox('Preserve Orange sustains on random Green / Red / Yellow / Blue frets')
+        self.orange_sustains.setToolTip('Prefers simultaneous notes, otherwise a clear random lane. Full sustain retained; unresolved conflicts require review. Orange taps are removed.')
         layout.addWidget(self.orange_sustains)
+        row=QHBoxLayout();layout.addLayout(row)
+        row.addWidget(QLabel('Sustain placement seed'))
+        self.sustain_seed=QSpinBox();self.sustain_seed.setRange(0,2147483647);row.addWidget(self.sustain_seed)
+        self.regenerate_sustains=QPushButton('Regenerate sustain placement');self.regenerate_sustains.clicked.connect(self.regenerate_sustain_placement);row.addWidget(self.regenerate_sustains)
+        row.addStretch()
         self.provenance=QLabel();layout.addWidget(self.provenance)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Choose preview audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
@@ -179,9 +184,16 @@ class PlaybackPanel(QWidget):
     def select_difficulty(self,difficulty):
         if self.current and difficulty:
             self.current=(self.current[0],difficulty);self.rebuild()
-    def remove_orange(self):
+    def regenerate_sustain_placement(self):
+        if self.owner.busy() or self.sustain_source is None:return
+        self.sustain_seed.setValue((self.sustain_seed.value()+1)%2147483648)
+        self.orange_sustains.setChecked(True)
+        self.remove_orange(source=self.sustain_source)
+    def remove_orange(self,checked=False,*,source=None):
         if self.owner.busy() or not self.current:return
-        song,difficulty=self.current
+        song,difficulty=source or self.current
+        self.sustain_source=(song,difficulty)
+        seed=self.sustain_seed.value()
         transfer_sustains=self.orange_sustains.isChecked()
         self.owner.converted=None;self.owner.report=None;self.rebuild()
         self.status.setText(f'Creating Medium from displayed {difficulty}…')
@@ -189,9 +201,9 @@ class PlaybackPanel(QWidget):
             self.owner.converted,self.owner.report=value
             self.owner.variants={};self.owner.variant_choice.blockSignals(True);self.owner.variant_choice.setCurrentIndex(0);self.owner.variant_choice.blockSignals(False)
             self.owner.refresh_preview();self.owner.log_line(str(self.owner.report))
-            self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems; transferred {self.owner.report.get('transferred_orange_sustains',0)} sustains to Blue. Medium is ready for export checks; Expert/Hard were not edited.")
+            self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems; transferred {self.owner.report.get('transferred_orange_sustains',0)} sustains across four frets. Medium is ready for export checks; Expert/Hard were not edited.")
             self.owner.audio.show_listen()
-        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty,strict=False,orange_sustains_to_blue=transfer_sustains),ready)
+        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty,strict=False,randomize_orange_sustains=transfer_sustains,sustain_seed=seed),ready)
     def rebuild(self,*args):
         report=self.owner.report or {}
         if self.current:
@@ -199,7 +211,7 @@ class PlaybackPanel(QWidget):
             label=f'Displaying {diff}'
             if self.current[0] is self.owner.converted and diff=='Medium':
                 label+=f" — OUTPUT copied from {report.get('source_difficulty','generated chart')} | Orange: {sum(n.lane==4 for n in self.current[0].tracks.get(diff,[]))}"
-                if report.get('transferred_orange_sustains'):label+=f" | {report['transferred_orange_sustains']} Orange sustains → Blue"
+                if report.get('transferred_orange_sustains'):label+=f" | {report['transferred_orange_sustains']} Orange sustains → four frets | seed {report.get('sustain_seed',0)}"
                 elif report.get('retained_notes_exact'):label+=' | all surviving notes unchanged'
             else:label+=' — source track'
             self.provenance.setText(label)
@@ -210,6 +222,8 @@ class PlaybackPanel(QWidget):
         self.highway.notes=timeline(*self.current,threshold) if self.current else []
         self.highway.update();self.update_busy(self.owner.busy(),False)
     def update_busy(self,busy,cancellable):
+        self.regenerate_sustains.setEnabled(not busy and self.sustain_source is not None and self.current is not None and self.current[0] is self.owner.converted and bool((self.owner.report or {}).get('transferred_orange_sustains')))
+        self.sustain_seed.setEnabled(not busy)
         self.orange_sustains.setEnabled(not busy)
         self.open_button.setEnabled(not busy)
         self.chart_open.setEnabled(not busy)

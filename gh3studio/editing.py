@@ -1,6 +1,7 @@
 """Explicit, reviewable working-copy repairs and timing edits."""
 import copy
 import math
+import random
 from itertools import groupby
 from .model import Note, Phrase, ChartError
 from .validation import ensure_valid
@@ -63,8 +64,8 @@ def timeline(song,difficulty,threshold_beats=1/3):
 
 
 
-def remove_orange_to_medium(song,source,*,strict=True,orange_sustains_to_blue=False):
-    """Copy the selected difficulty to Medium, deleting ONLY Orange gems. Never remap G/R/Y/B."""
+def remove_orange_to_medium(song,source,*,strict=True,orange_sustains_to_blue=False,randomize_orange_sustains=False,sustain_seed=0):
+    """Copy a source to Medium; optionally preserve Orange sustains on four frets."""
     if source not in ('Expert','Hard','Medium','Easy'):raise ChartError('Choose an available source difficulty')
     ensure_valid(song,learning_only=not strict)
     original=song.tracks.get(source,[])
@@ -72,14 +73,31 @@ def remove_orange_to_medium(song,source,*,strict=True,orange_sustains_to_blue=Fa
     if strict and song.modifiers.get(source):
         raise ChartError('This source contains unsupported gameplay markers. Orange-only mode does not strip those markers or change Expert/Hard. Use a supported source or review a separate cleanup copy first.')
     remaining=[n for n in original if n.lane!=4]
-    mapped=[n for n in original if n.lane==4 and n.length>0] if orange_sustains_to_blue else []
+    mapped=[n for n in original if n.lane==4 and n.length>0] if (orange_sustains_to_blue or randomize_orange_sustains) else []
     transfers=[]
-    for note in mapped:
-        existing=next((n for n in remaining if n.tick==note.tick and n.lane==3),None)
+    rng=random.Random(sustain_seed)
+    for note in sorted(mapped):
+        simultaneous={n.lane:n for n in remaining if n.tick==note.tick}
+        def conflicts(lane):
+            existing=simultaneous.get(lane)
+            end=note.tick+max(note.length,existing.length if existing else 0)
+            return any(n.lane==lane and n.tick!=note.tick and
+                       ((n.tick<note.tick and n.tick+n.length>note.tick) or
+                        note.tick<n.tick<end) for n in remaining)
+        clear=[lane for lane in range(4) if not conflicts(lane)]
+        if randomize_orange_sustains:
+            candidates=[lane for lane in clear if lane in simultaneous] or clear
+            if not candidates:candidates=sorted(simultaneous) or list(range(4))
+            lane=rng.choice(candidates)
+        else:lane=3
+        conflict=conflicts(lane)
+        existing=simultaneous.get(lane)
         length=max(note.length,existing.length if existing else 0)
         if existing:remaining.remove(existing)
-        remaining.append(Note(note.tick,3,length))
-        transfers.append(dict(tick=note.tick,orange_length=note.length,blue_length_before=existing.length if existing else None,blue_length_after=length))
+        remaining.append(Note(note.tick,lane,length))
+        transfers.append(dict(tick=note.tick,lane=lane,orange_length=note.length,
+                              previous_length=existing.length if existing else None,
+                              result_length=length,conflict=conflict))
     if mapped:remaining.sort()
     if not remaining:raise ChartError('Removing Orange would leave Medium empty; no output created')
     previous_end=0
@@ -108,16 +126,19 @@ def remove_orange_to_medium(song,source,*,strict=True,orange_sustains_to_blue=Fa
                   preserved_difficulties=[d for d in song.tracks if d!='Medium'],
                   status='Structural checks passed; TheGHOST/Dolphin acceptance required')
     if not mapped:assert result.tracks['Medium']==[n for n in original if n.lane!=4]
-    report['retained_notes_exact']=not any(t['blue_length_before'] is not None and t['blue_length_before']!=t['blue_length_after'] for t in transfers)
+    report['retained_notes_exact']=not any(t['previous_length'] is not None and t['previous_length']!=t['result_length'] for t in transfers)
     report['orange_sustains_to_blue']=orange_sustains_to_blue
     report['transferred_orange_sustains']=len(mapped)
     report['sustain_transfers']=transfers
-    report['settings']['orange_sustains_to_blue']=orange_sustains_to_blue
+    report['settings'].update(orange_sustains_to_blue=orange_sustains_to_blue,
+                              randomize_orange_sustains=randomize_orange_sustains,sustain_seed=sustain_seed)
+    report['sustain_seed']=sustain_seed
+    report['sustain_lane_conflicts']=sum(t['conflict'] for t in transfers)
     if mapped:
-        report['timing']='Orange sustains moved to Blue at original ticks and lengths; simultaneous Blue sustains use the longer duration. Overlaps require export review.'
-        report['warnings'].append('Orange sustains were transferred to Blue (button 4). A simultaneous Blue note uses the longer sustain; later Blue overlaps are not silently shortened.')
+        report['timing']='Orange sustains transferred at original ticks without shortening; simultaneous notes use the longer duration. Overlaps require export review.'
+        report['warnings'].append('Orange sustain placement is recorded in sustain_transfers. Existing simultaneous notes may be extended. Lane conflicts and cross-lane/chord sustain compatibility require export review; no sustain was silently shortened.')
     if not strict:report['status']=('Orange sustain transfer created; export compatibility review required' if mapped else 'Exact Orange-only copy created; export compatibility review required')
-    report['warnings'] += [('Unsustained Orange onsets disappear; sustained Orange is transferred to Blue.' if mapped else 'Orange-only onsets disappear; chords containing Orange lose only that gem.'),
+    report['warnings'] += [('Unsustained Orange onsets disappear; sustained Orange is transferred to a playable fret.' if mapped else 'Orange-only onsets disappear; chords containing Orange lose only that gem.'),
                            'Existing Medium is replaced in the output copy; Expert and Hard are unchanged.',
                            'Natural HOPO behavior may change when Orange notes are removed. No forced/tap actions are added.',
                            'TheGHOST may alter sustain timing; prefer .chart for short sustains. Runtime acceptance is pending.']

@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.5.3 handoff
+# GH3 Chart Studio — 0.5.4 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_5_3.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.3 is authoritative.
+GH3_Chart_Studio_v0_5_4.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.4 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.5.3 update
+## Current 0.5.4 update
+
+Random four-fret sustain preservation replaces Blue-only in the GUI. Prefer clear
+simultaneous frets; else choose a clear lane. If none is clear preserve full length
+and record conflict; no silent trimming. Seed and placements are exported in report.
+Regenerate increments seed and uses the original selected track, not processed Medium.
+194 tests passed incl seeded placement, conflicts, chart/MIDI round trips and GUI
+regeneration. See docs/M5_4_WINDOWS_GUIDE.md, M5_4_IMPLEMENTATION_LOG.md and
+M5_4_TEST_RESULTS.txt. Cross-lane/gameplay acceptance remains pending. Next real-song
+Windows/importer/game acceptance before batch. No actual Claude handoff occurred.
+
+## Prior 0.5.3 update
 
 Audio Studio has an optional unchecked Orange sustain → Blue checkbox. Button 4
 means Blue (lane 3). Positive-length Orange notes transfer at original tick/length;

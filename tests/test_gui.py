@@ -446,6 +446,11 @@ def test_orange_sustain_transfer_checkbox(tmp_path,app):
     w.playback.orange_sustains.setChecked(True)
     w.playback.remove_orange();wait(w)
     assert w.converted.tracks['Medium']==[Note(0,3,96),Note(192,0)]
-    assert 'sustains → Blue' in w.playback.provenance.text()
+    assert 'sustains → four frets' in w.playback.provenance.text()
+    w.playback.regenerate_sustains.click();wait(w)
+    assert w.report['transferred_orange_sustains']==1
+    assert w.report['source_difficulty']=='Expert'
+    assert w.report['sustain_seed']==1
+    assert len(w.converted.tracks['Medium'])==2
     assert w.converted.tracks['Expert']==w.song.tracks['Expert']
     w.close()
