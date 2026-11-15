@@ -1,7 +1,9 @@
 """Goal-based entry points and credits for a single-song workflow."""
+import sys
+from pathlib import Path
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor,QPainter,QPen
-from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QFrame,QScrollArea,QDialog,QTextBrowser,QDialogButtonBox
+from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QFrame,QScrollArea,QDialog,QTextBrowser,QDialogButtonBox,QTabWidget
 from .appearance import primary
 from . import __version__
 
@@ -77,7 +79,24 @@ class WelcomePanel(QWidget):
         elif self.owner.audio.path:self.current.setText('Current recording: '+self.owner.audio.path.name)
 
 
+def legal_notice_text():
+    root=Path(sys._MEIPASS) if getattr(sys,'frozen',False) else Path(__file__).resolve().parents[1]
+    notice=(root/'docs'/'LICENSE_AND_DISCLAIMER.md').read_text(encoding='utf-8')
+    license_text=(root/'LICENSE').read_text(encoding='utf-8')
+    return notice+'\n\n# Full MIT License\n\n'+license_text
+
+
+class AboutDialog(QDialog):
+    def __init__(self,parent=None):
+        super().__init__(parent);self.setWindowTitle('About, credits & license — GH3 Chart Studio '+__version__);self.resize(760,680)
+        layout=QVBoxLayout(self);self.tabs=QTabWidget();layout.addWidget(self.tabs)
+        credits=QTextBrowser();credits.setOpenExternalLinks(True);credits.setHtml(CREDITS_HTML);self.tabs.addTab(credits,'Credits')
+        self.legal=QTextBrowser()
+        try:self.legal.setMarkdown(legal_notice_text())
+        except OSError as exc:self.legal.setPlainText('License documents could not be loaded. Extract the complete package, including LICENSE and docs/LICENSE_AND_DISCLAIMER.md.\n'+str(exc))
+        self.tabs.addTab(self.legal,'License && disclaimer')
+        buttons=QDialogButtonBox(QDialogButtonBox.Close);buttons.rejected.connect(self.reject);layout.addWidget(buttons)
+
+
 def show_credits(parent):
-    dialog=QDialog(parent);dialog.setWindowTitle('About & credits — GH3 Chart Studio '+__version__);dialog.resize(720,650)
-    layout=QVBoxLayout(dialog);browser=QTextBrowser();browser.setOpenExternalLinks(True);browser.setHtml(CREDITS_HTML);layout.addWidget(browser)
-    buttons=QDialogButtonBox(QDialogButtonBox.Close);buttons.rejected.connect(dialog.reject);layout.addWidget(buttons);dialog.exec();dialog.deleteLater()
+    dialog=AboutDialog(parent);dialog.exec();dialog.deleteLater()

@@ -9,7 +9,7 @@ if errorlevel 1 goto fail
 set QT_QPA_PLATFORM=
 .venv\Scripts\python.exe tools\collect_licenses.py
 if errorlevel 1 goto fail
-.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean --onedir --windowed --name GH3ChartStudio --add-data "docs;docs" --add-data "licenses;licenses" --add-data "examples;examples" run_app.py
+.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean --onedir --windowed --name GH3ChartStudio --add-data "LICENSE;." --add-data "docs;docs" --add-data "licenses;licenses" --add-data "examples;examples" run_app.py
 if errorlevel 1 goto fail
 echo Built dist\GH3ChartStudio\GH3ChartStudio.exe. Keep the entire folder together.
 echo This build still needs the manual acceptance test in docs\WINDOWS_TEST.md.

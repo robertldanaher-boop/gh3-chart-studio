@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.5.0 handoff
+# GH3 Chart Studio — 0.5.1 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_5_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.0 is authoritative.
+GH3_Chart_Studio_v0_5_1.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.1 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.5.0 update
+## Current 0.5.1 update
+
+About / credits has Credits and License & disclaimer tabs, including full MIT text.
+No startup acceptance or additional EULA. Documentation accurately identifies
+synthetic fixtures, user content rights, independence and compatibility limits.
+PyInstaller data now includes root LICENSE; no actual Windows build performed.
+177 tests passed; source/simulated frozen path and offscreen dialog manually verified.
+Read docs/M5_1_WINDOWS_GUIDE.md, M5_1_IMPLEMENTATION_LOG.md and M5_1_TEST_RESULTS.txt.
+No signing, Defender acceptance or legal enforceability/compliance certification.
+Next: one-song Windows/importer/game acceptance before batch.
+
+## Prior 0.5.0 update
 
 Read docs/M5_WINDOWS_GUIDE.md, M5_IMPLEMENTATION_LOG.md and M5_TEST_RESULTS.txt.
 New dark studio theme and Start screen: existing chart → Orange-only Medium;
