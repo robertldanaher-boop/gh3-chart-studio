@@ -364,7 +364,22 @@ class Window(QMainWindow):
 
 def main():
     app=QApplication(sys.argv); app.setOrganizationName('GH3ChartStudio'); app.setApplicationName('GH3ChartStudio'); app.setStyle('Fusion')
-    window=Window(); window.show()
+    from .first_run import FirstRunDialog, has_accepted
+    from PySide6.QtCore import QSettings
+    settings=QSettings('GH3ChartStudio','GH3ChartStudio')
+    # A visible first-run dialog counts as ready: never time out while reading.
+    app.setQuitOnLastWindowClosed(False)
+    windows=[]
+    def open_studio():
+        window=Window(); windows.append(window); window.show()
+        app.setQuitOnLastWindowClosed(True)
+    if has_accepted(settings):
+        open_studio()
+    else:
+        gate=FirstRunDialog(settings); windows.append(gate)
+        gate.accepted.connect(open_studio)
+        gate.rejected.connect(app.quit)
+        gate.show()
     import os
     from PySide6.QtCore import QTimer
     ready=os.environ.get('GH3_STARTUP_READY')

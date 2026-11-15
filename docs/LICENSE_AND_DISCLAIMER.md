@@ -1,6 +1,6 @@
 # License & disclaimer
 
-GH3 Chart Studio is an independent community software project. Its original code is distributed under the MIT License, reproduced below in the application's About window and included as LICENSE in the distribution.
+GH3 Chart Studio is an independent community software project. It supports Wii chart workflows and exports that may also be used with other compatible open-source chart-based rhythm games. Each game or importer may interpret formats and gameplay mechanics differently; compatibility must be verified for the chosen target. Its original code is distributed under the MIT License, reproduced below in the application's About window and included as LICENSE in the distribution.
 
 ## No warranty; limitations of liability
 
@@ -28,4 +28,4 @@ Dependencies retain their own licenses, notices and user rights. This notice and
 
 Credits alone do not establish full distribution compliance. A distributor must satisfy all applicable source-availability, relinking, installation-information and other license obligations for the actual binaries distributed. The supplied Windows build instructions are not a legal compliance certification.
 
-This is a software notice accompanying the existing license, not an additional click-through EULA. No separate acceptance dialog is required by this application.
+On first launch, select Agree and continue to acknowledge this notice and the accompanying license, or Disagree and close to exit without opening the studio. Closing this dialog also exits without recording acceptance. Acceptance is stored locally for the current Windows user and retained across application updates. This acknowledgement does not replace the MIT License or the licenses and rights of third-party components. The notice remains available under About / credits.

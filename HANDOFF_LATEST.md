@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.5.1 handoff
+# GH3 Chart Studio — 0.5.2 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_5_1.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.1 is authoritative.
+GH3_Chart_Studio_v0_5_2.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.2 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.5.1 update
+## Current 0.5.2 update
+
+User requested a one-time first-launch agreement, superseding the prior no-prompt decision.
+Agree saves per-user QSettings and opens studio; decline/close exits without acceptance.
+Normal upgrades retain acceptance. Notice covers Wii and other compatible open-source
+chart-based games without promising compatibility. Ready handshake includes the visible
+agreement so startup never times out while reading. Missing notice disables Agree;
+settings write errors keep the gate open. Source setup installs dependencies/tests before
+first launch; this is not an installer EULA. No Windows/native build certification.
+See docs/M5_2_WINDOWS_GUIDE.md, M5_2_IMPLEMENTATION_LOG.md and M5_2_TEST_RESULTS.txt.
+
+## Prior 0.5.1 update
 
 About / credits has Credits and License & disclaimer tabs, including full MIT text.
 No startup acceptance or additional EULA. Documentation accurately identifies
