@@ -246,8 +246,10 @@ class Window(QMainWindow):
         if not parent:return
         import copy
         report=copy.deepcopy(self.report);report['medium_export_cleanup']=review
+        if review.get('hopo_assistance'):report['hopo_assistance']=review['hopo_assistance']
         if any(c['action']=='shorten sustain' for c in review['changes']):report['retained_notes_exact']=False
-        name=(self.path.stem if self.path else 'Song')+'_Medium_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        from .song_identity import export_folder_name
+        name=export_folder_name(prepared.metadata)
         self.export_song_to(Path(parent)/name,audio,prepared,report)
     def export_song_to(self,destination,audio,song=None,report=None):
         from .song_export import export_song_folder
@@ -259,6 +261,9 @@ class Window(QMainWindow):
                 self.playback.open_audio(audio)
             self.log_line('Song folder verified: '+str(destination)+'\n'+'\n'.join(details['warnings']))
             self.playback.status.setText('Exported song folder: '+str(destination))
+            if report.get('hopo_assistance'):
+                self.playback.threshold.setValue(1/2.95)
+                self.playback.status.setText('Exported with HOPO assistance. Set TheGHOST HOPO measure to 2.95 and verify in-game. '+str(report['hopo_assistance']['estimated_hopo_percent'])+'% estimated HOPO events.')
         self.run_job('Exporting chart, full-mix audio and song.ini…',lambda cancel:export_song_folder(song,report,destination,audio,self.path),ready)
     def export_to(self,destination):
         self.run_job('Writing and reopening both exports…',lambda cancel:export_bundle(self.converted,self.report,destination,self.path),

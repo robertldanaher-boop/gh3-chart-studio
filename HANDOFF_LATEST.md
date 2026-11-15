@@ -1,11 +1,26 @@
-# GH3 Chart Studio — 0.4.8 handoff
+# GH3 Chart Studio — 0.4.9 handoff
 
-Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_8.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.8 is authoritative.
+Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
+GH3_Chart_Studio_v0_4_9.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.9 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.8 update
+## Current 0.4.9 update
+
+Read docs/M4_9_WINDOWS_GUIDE.md, M4_9_IMPLEMENTATION_LOG.md and M4_9_TEST_RESULTS.txt.
+Identity preserved/reviewed in chart/ini and Artist - Title folder. Existing Ogg
+copied with original tags; new encodes tagged, mismatches reported. Extra ini fields
+retained. Hard/Expert selection remains the displayed source before Orange copy.
+Optional experimental TheGHOST chart HOPO profile in export review: half/one-beat
+changing-single runs, no note thinning or timing edits. Set importer HOPO measure
+2.95; N5 is a flip, not unconditional HOPO/tap. Visible estimate/count and exact
+notes retained. Dense repeated/chord charts may not reach a majority. Actual game
+acceptance required; metadata and HOPO/source tests do not prove Wii behavior.
+User reported startup-log lock, then identified an older app running and asked to
+disregard. No startup changes made. No batch or actual Claude execution. Next: one
+song acceptance using actual recording and TheGHOST/game before batch development.
+
+## Prior 0.4.8 update
 
 Read docs/M4_8_WINDOWS_GUIDE.md, M4_8_IMPLEMENTATION_LOG.md and M4_8_TEST_RESULTS.txt.
 User requires song.ogg output and wants one song verified BEFORE batch development.

@@ -1,3 +1,7 @@
+## Current 0.4.9 additions
+
+The song-folder .chart path now accepts validated N5/E* HOPO flips and offers an explicit experimental assistance profile targeting TheGHOST measure 2.95. The paired MIDI path remains strict. See M4_9_WINDOWS_GUIDE.md and M4_9_IMPLEMENTATION_LOG.md for scope, references and limitations; earlier milestone limitations below describe prior behavior. Source tracks remain unmodified.
+
 # Supported interchange profile and evidence
 
 ## Grounded source review

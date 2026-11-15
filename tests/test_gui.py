@@ -369,3 +369,20 @@ def test_export_audio_path_changes_do_not_repeat_chart_cleanup(app,monkeypatch):
     dialog.audio.setText('')
     assert len(calls)==1 and not dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
     dialog.close()
+
+
+def test_export_identity_and_hopo_review_preserve_original(app,tmp_path):
+    from gh3studio.model import Song,Note
+    from gh3studio.song_export_gui import SongExportDialog
+    from PySide6.QtWidgets import QDialogButtonBox
+    song=Song(metadata={'Name':'Original','Artist':'Artist'},tracks={'Medium':[Note(0,0),Note(96,1)]})
+    dialog=SongExportDialog(song,str(FIXTURE.parent/'audio'/'onset-study.wav'))
+    dialog.identity_fields['Name'].setText('Reviewed title')
+    dialog.hopo.setChecked(True)
+    assert dialog.prepared.metadata['Name']=='Reviewed title' and song.metadata['Name']=='Original'
+    assert dialog.prepared.modifiers['Medium']==[(96,'N 5 0')]
+    assert dialog.review['hopo_assistance']['estimated_hopo_events']==1
+    assert dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
+    dialog.show();QApplication.processEvents()
+    assert dialog.buttons.isVisible() and dialog.buttons.visibleRegion().boundingRect().height()>0
+    dialog.close()

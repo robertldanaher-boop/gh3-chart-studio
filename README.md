@@ -1,4 +1,6 @@
-Latest release: **0.4.8**. See [one-song Ogg export and Windows test steps](docs/M4_8_WINDOWS_GUIDE.md). Batch support is deferred until one song is verified end to end.
+Latest release: **0.4.9**. See [song identity, Hard/Expert source and HOPO review](docs/M4_9_WINDOWS_GUIDE.md). HOPO export is an experimental TheGHOST chart profile requiring in-game acceptance.
+
+Version **0.4.8** features: See [one-song Ogg export and Windows test steps](docs/M4_8_WINDOWS_GUIDE.md). Batch support is deferred until one song is verified end to end.
 
 Version **0.4.7** features: See [preview audio testing and troubleshooting](docs/M4_7_WINDOWS_GUIDE.md).
 

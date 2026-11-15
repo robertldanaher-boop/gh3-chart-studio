@@ -21,7 +21,9 @@ def load(path, phrase_mode='modern', *, learning_only=False):
         parser=configparser.ConfigParser(interpolation=None,strict=False)
         parser.read(ini,encoding='utf-8-sig')
         if parser.has_section('song'):
-            for src,dst in {'name':'Name','artist':'Artist','album':'Album','year':'Year','genre':'Genre','charter':'Charter'}.items():
+            from .song_identity import FIELDS
+            song.ini_metadata=dict(parser.items('song'))
+            for dst,src in FIELDS.items():
                 if parser.has_option('song',src): song.metadata[dst]=parser.get('song',src)
             if parser.has_option('song','delay'):
                 song.metadata['SongIniDelay']=parser.get('song','delay')

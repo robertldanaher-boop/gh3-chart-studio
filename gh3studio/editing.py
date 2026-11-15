@@ -56,14 +56,11 @@ def shift_timing(song, milliseconds):
 
 def timeline(song,difficulty,threshold_beats=1/3):
     """Conservative natural-HOPO candidates, not a GH3 engine simulation."""
-    output=[];previous=None
-    for tick,items in groupby(sorted(song.tracks.get(difficulty,[])),key=lambda n:n.tick):
-        notes=list(items)
-        candidate=bool(previous and len(notes)==1 and len(previous[1])==1 and
-                       notes[0].lane!=previous[1][0].lane and 0<tick-previous[0]<=song.resolution*threshold_beats)
-        for n in notes:output.append((song.seconds(n.tick),song.seconds(n.tick+n.length),n.lane,candidate))
-        previous=(tick,notes)
-    return output
+    from .hopo import effective_states
+    states=effective_states(song,difficulty,1/threshold_beats)
+    return [(song.seconds(n.tick),song.seconds(n.tick+n.length),n.lane,states.get(n.tick,False))
+            for n in sorted(song.tracks.get(difficulty,[]))]
+
 
 
 def remove_orange_to_medium(song,source,*,strict=True):

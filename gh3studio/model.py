@@ -28,6 +28,7 @@ class Song:
     phrases: dict[str, list[Phrase]] = field(default_factory=dict)
     modifiers: dict[str, list[tuple[int, str]]] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    ini_metadata: dict[str, str] = field(default_factory=dict)
 
     def seconds(self, tick: int) -> float:
         result = Fraction(0)

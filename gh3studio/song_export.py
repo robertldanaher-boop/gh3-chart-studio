@@ -8,6 +8,8 @@ import tempfile
 from itertools import groupby
 from pathlib import Path
 from .audio_export import export_ogg
+from .song_identity import FIELDS
+from .hopo import is_flip
 from .chartio import read_chart, write_chart
 from .editing import prepare_cleanup
 from .validation import validate
@@ -20,7 +22,14 @@ def prepare_medium(song, strip_markers=False, trim_sustains=False):
     isolated.phrases={'Medium':copy.deepcopy(song.phrases.get('Medium',[]))}
     isolated.modifiers={'Medium':copy.deepcopy(song.modifiers.get('Medium',[]))}
     isolated,review=prepare_cleanup(isolated,strip_markers,trim_sustains)
+    markers=isolated.modifiers.get('Medium',[])
+    isolated.modifiers['Medium']=[(t,m) for t,m in markers if not is_flip(m)]
     errors=validate(isolated,True)['errors']
+    isolated.modifiers['Medium']=markers
+    note_ticks={n.tick for n in isolated.tracks['Medium']}
+    flip_ticks=[t for t,m in markers if is_flip(m)]
+    if any(t not in note_ticks for t in flip_ticks):errors.append('Medium HOPO marker has no playable note')
+    if len(flip_ticks)!=len(set(flip_ticks)):errors.append('Duplicate Medium HOPO flip markers')
     previous_end=0
     for tick,group in groupby(sorted(isolated.tracks['Medium']),key=lambda n:n.tick):
         notes=list(group)
@@ -46,7 +55,7 @@ def export_song_folder(song, report, destination, audio_path, source_path=None):
     destination.parent.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix='.gh3-song-',dir=destination.parent))
     try:
-        audio_details=export_ogg(audio_path,stage/'song.ogg')
+        audio_details=export_ogg(audio_path,stage/'song.ogg',song.metadata)
         frames,rate,channels=(audio_details[k] for k in ('frames','sample_rate','channels'))
         output=copy.deepcopy(song)
         for key in ('GuitarStream','BassStream','RhythmStream'):output.metadata.pop(key,None)
@@ -63,24 +72,30 @@ def export_song_folder(song, report, destination, audio_path, source_path=None):
         drift=max(abs(reopened.seconds(t)-song.seconds(t)) for t in probes)
         if [t for t,_ in reopened.tempos]!=[t for t,_ in song.tempos] or drift>.001:raise ChartError('Tempo read-back mismatch')
         ini=configparser.ConfigParser(interpolation=None)
-        ini['song']={k.lower():str(v) for k,v in song.metadata.items() if k in ('Name','Artist','Album','Year','Genre','Charter')}
+        ini['song']=dict(song.ini_metadata)
+        ini['song'].update({key:str(song.metadata[field]) for field,key in FIELDS.items() if field in song.metadata})
         ini['song'].update({'song_length':str(round(frames/rate*1000)),'delay':'0'})
         with (stage/'song.ini').open('w',encoding='utf-8') as f:ini.write(f)
         warnings=['Medium structural checks passed; Windows/TheGHOST/Wii runtime acceptance remains untested.',
                   'Expert, Hard and Easy are retained as authored, including their markers and any source sustain issues.',
                   'Audio is the selected full mix as Ogg Vorbis. Existing Vorbis is copied unchanged; other formats undergo lossy encoding without resampling or timing shifts.',
                   'Import notes.chart and song.ogg in TheGHOST. Do not substitute a MIDI file from another export.']
-        details=dict(report,audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
+        details=dict(report,song_identity={field:song.metadata.get(field,'') for field in FIELDS},source_ini_metadata=dict(song.ini_metadata),audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
         def digest(path):
             h=hashlib.sha256()
             with Path(path).open('rb') as f:
                 for block in iter(lambda:f.read(1024*1024),b''):h.update(block)
             return h.hexdigest()
+        for field in FIELDS:
+            if field in song.metadata and reopened.metadata.get(field)!=song.metadata[field]:raise ChartError('Chart metadata read-back mismatch: '+field)
+        ini_check=configparser.ConfigParser(interpolation=None);ini_check.read(stage/'song.ini',encoding='utf-8')
+        if dict(ini_check['song'])!=dict(ini['song']):raise ChartError('song.ini metadata read-back mismatch')
+        details['warnings']+=audio_details['metadata_warnings']
         details['files_sha256']={p.name:digest(p) for p in stage.iterdir() if p.is_file()}
         details['audio_source_sha256']=digest(audio_path)
         if source_path:details['source_sha256']=digest(source_path)
         (stage/'validation.json').write_text(json.dumps(details,indent=2),encoding='utf-8')
-        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. No separate guitar/bass stems are fabricated.\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
+        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. No separate guitar/bass stems are fabricated.\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nIf HOPO assistance was enabled, set TheGHOST HOPO measure to 2.95.\nHOPO flips depend on this setting; HOPOs still require a starting/recovery strum.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
         stage.rename(destination)
         return details
     except Exception:

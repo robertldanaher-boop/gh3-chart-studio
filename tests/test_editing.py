@@ -34,9 +34,9 @@ def test_shift_across_tempo_boundary_preserves_elapsed_duration(tmp_path):
 def test_invalid_shift_rejected(shift):
     with pytest.raises(ChartError):shift_timing(Song(tracks={'Medium':[Note(0,0)]}),shift)
 
-def test_hopo_candidates_no_strum_promise_and_chords_excluded():
+def test_hopo_candidates_follow_importer_chord_and_lane_overlap_rules():
     song=Song(tracks={'Medium':[Note(0,3),Note(48,2),Note(96,3),Note(144,3),Note(192,0),Note(192,1),Note(240,2)]})
-    assert [n[3] for n in timeline(song,'Medium')]==[False,True,True,False,False,False,False]
+    assert [n[3] for n in timeline(song,'Medium')]==[False,True,True,False,False,False,True]
     assert not any(n[3] for n in timeline(song,'Medium',.1))
 
 

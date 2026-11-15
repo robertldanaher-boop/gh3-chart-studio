@@ -48,14 +48,14 @@ class PlaybackPanel(QWidget):
         super().__init__();self.owner=owner;self.current=None;self.undo_stack=[];self.redo_stack=[];self.pending_play=False;self.audio_name=""
         self.player=QMediaPlayer(self);self.output=QAudioOutput(self);self.player.setAudioOutput(self.output);self.output.setVolume(.7)
         layout=QVBoxLayout(self)
-        hint=QLabel('Step 3 — Listen and adjust timing. Notes move left toward the white playhead. White outlines mark estimated natural HOPO candidates, not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
+        hint=QLabel('Step 3 — Listen and adjust timing. Notes move left toward the white playhead. White outlines mark estimated HOPO candidates, including exported flips—not guaranteed no-strum notes.\nNo chart is needed to play audio. Create an audio draft or convert a chart to preview and export notes.')
         hint.setWordWrap(True);layout.addWidget(hint)
         row=QHBoxLayout();layout.addLayout(row)
         self.chart_open=QPushButton('Open chart…');self.chart_open.clicked.connect(owner.browse);row.addWidget(self.chart_open)
-        row.addWidget(QLabel('Display difficulty'))
+        row.addWidget(QLabel('Display / copy source'))
         self.difficulty=QComboBox();self.difficulty.currentTextChanged.connect(self.select_difficulty);row.addWidget(self.difficulty)
         self.orange_button=QPushButton('Remove Orange → Medium');self.orange_button.clicked.connect(self.remove_orange);row.addWidget(self.orange_button)
-        note=QLabel('Copies the displayed track, removing only Orange gems. Replaces output Medium.');note.setWordWrap(True);row.addWidget(note,1)
+        note=QLabel('Choose Hard or Expert above. Copies the displayed track minus Orange to Medium; source tracks stay unchanged.');note.setWordWrap(True);row.addWidget(note,1)
         self.provenance=QLabel();layout.addWidget(self.provenance)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Choose preview audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
@@ -80,7 +80,7 @@ class PlaybackPanel(QWidget):
         self.player.playbackStateChanged.connect(self.playback_changed,Qt.QueuedConnection)
         self.highway=Highway();layout.addWidget(self.highway,1)
         row=QHBoxLayout();layout.addLayout(row)
-        self.hopo=QCheckBox('Highlight natural HOPO candidates');self.hopo.setChecked(True);self.hopo.toggled.connect(self.highlight);row.addWidget(self.hopo)
+        self.hopo=QCheckBox('Highlight estimated HOPOs');self.hopo.setChecked(True);self.hopo.toggled.connect(self.highlight);row.addWidget(self.hopo)
         row.addWidget(QLabel('Candidate gap ≤ beats'));self.threshold=QDoubleSpinBox();self.threshold.setDecimals(4);self.threshold.setRange(.01,1);self.threshold.setValue(1/3);self.threshold.valueChanged.connect(self.rebuild);row.addWidget(self.threshold)
         row=QHBoxLayout();layout.addLayout(row)
         row.addWidget(QLabel('Preview shift (ms; + = notes later)'));self.shift=QDoubleSpinBox();self.shift.setRange(-10000,10000);self.shift.setDecimals(1);self.shift.valueChanged.connect(self.shift_changed);row.addWidget(self.shift)
@@ -198,7 +198,10 @@ class PlaybackPanel(QWidget):
             else:label+=' — source track'
             self.provenance.setText(label)
         else:self.provenance.setText('No chart loaded')
-        self.highway.notes=timeline(*self.current,self.threshold.value()) if self.current else []
+        profile=(self.owner.report or {}).get('hopo_assistance') if self.current and self.current[0] is self.owner.converted and self.current[1]=='Medium' else None
+        self.threshold.setEnabled(not bool(profile))
+        threshold=1/profile['importer_hopo_measure'] if profile else self.threshold.value()
+        self.highway.notes=timeline(*self.current,threshold) if self.current else []
         self.highway.update();self.update_busy(self.owner.busy(),False)
     def update_busy(self,busy,cancellable):
         self.open_button.setEnabled(not busy)

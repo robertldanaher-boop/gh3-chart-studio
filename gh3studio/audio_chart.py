@@ -30,7 +30,10 @@ def make_draft(analysis,shift_ms=0,template=None,store=None,seed=0,cancelled=lam
         if float(template.metadata.get('Offset','0'))!=0:raise ChartError('Template Offset must be zero; apply an explicit chart shift instead')
         song=copy.deepcopy(template)
     else:
-        song=Song(resolution=960,metadata={'Name':Path(analysis.source_path).stem+' - Audio Draft','Artist':'Unknown','Offset':'0'},
+        from .song_identity import fill_from_audio
+        identity=fill_from_audio({},analysis.source_path)
+        identity.setdefault('Name',Path(analysis.source_path).stem+' - Audio Draft');identity.setdefault('Artist','Unknown');identity['Offset']='0'
+        song=Song(resolution=960,metadata=identity,
                   tempos=[(0,Fraction(60000000)/Fraction(str(analysis.bpm)))])
     clock=TempoClock(song)
     values=np.array([o['centroid_hz'] for o in analysis.onsets]);bounds=np.quantile(values,[.25,.5,.75])
