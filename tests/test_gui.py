@@ -297,7 +297,8 @@ def test_marked_display_copy_replaces_old_medium_and_folder_export(tmp_path,app)
     assert dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
     w.export_song_to(tmp_path/'out',audio,dialog.prepared,dict(w.report,medium_export_cleanup=dialog.review));wait(w)
     assert read_chart(tmp_path/'out'/'notes.chart').tracks['Expert']==song.tracks['Expert']
-    assert (tmp_path/'out'/'song.wav').is_file()
+    assert (tmp_path/'out'/'song.ogg').is_file()
+    assert Path(w.playback.player.source().toLocalFile()).resolve()==audio.resolve()
     dialog.close();w.close()
 
 
@@ -351,3 +352,20 @@ def test_cancel_preview_file_picker_does_not_play(app,monkeypatch):
     assert w.playback.player.source().isEmpty()
     assert w.playback.player.playbackState()==QMediaPlayer.StoppedState
     w.close()
+
+
+def test_export_audio_path_changes_do_not_repeat_chart_cleanup(app,monkeypatch):
+    from gh3studio.model import Song,Note
+    import gh3studio.song_export_gui as module
+    from PySide6.QtWidgets import QDialogButtonBox
+    original=module.prepare_medium;calls=[]
+    def tracked(*args,**kwargs):
+        calls.append(1);return original(*args,**kwargs)
+    monkeypatch.setattr(module,'prepare_medium',tracked)
+    dialog=module.SongExportDialog(Song(tracks={'Medium':[Note(0,0)]}))
+    assert len(calls)==1
+    dialog.audio.setText(str(FIXTURE.parent/'audio'/'onset-study.wav'))
+    assert len(calls)==1 and dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
+    dialog.audio.setText('')
+    assert len(calls)==1 and not dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
+    dialog.close()

@@ -32,11 +32,11 @@ def test_song_folder_and_medium_only_review(tmp_path):
     assert prepared.tracks['Hard']==song.tracks['Hard']
     audio=tmp_path/'mix.wav';sf.write(audio,np.zeros((4410,2)),44100)
     dest=tmp_path/'song';details=export_song_folder(prepared,dict(report,medium_export_cleanup=review),dest,audio)
-    assert {'notes.chart','song.wav','song.ini','validation.json','settings.json','IMPORT_README.txt'}=={p.name for p in dest.iterdir()}
+    assert {'notes.chart','song.ogg','song.ini','validation.json','IMPORT_README.txt'}=={p.name for p in dest.iterdir()}
     reopened=read_chart(dest/'notes.chart')
     assert reopened.tracks==prepared.tracks
     for diff in prepared.tracks:assert reopened.modifiers.get(diff,[])==prepared.modifiers.get(diff,[])
-    assert sf.info(dest/'song.wav').frames==4410
+    assert sf.info(dest/'song.ogg').frames==4410
     assert details['folder_checks']['medium_orange_gems']==0
     assert 'name = A song' in (dest/'song.ini').read_text()
     with pytest.raises(ChartError,match='already exists'):export_song_folder(prepared,report,dest,audio)

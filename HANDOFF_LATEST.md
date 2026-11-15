@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.4.7 handoff
+# GH3 Chart Studio — 0.4.8 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_7.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.7 is authoritative.
+GH3_Chart_Studio_v0_4_8.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.8 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.7 update
+## Current 0.4.8 update
+
+Read docs/M4_8_WINDOWS_GUIDE.md, M4_8_IMPLEMENTATION_LOG.md and M4_8_TEST_RESULTS.txt.
+User requires song.ogg output and wants one song verified BEFORE batch development.
+Folder has notes.chart, song.ogg (Vorbis), song.ini, validation.json, IMPORT_README.txt.
+Existing Ogg Vorbis copied byte-identically; other formats encoded without resampling.
+Output fully decoded and checked. No WAV duplicate or redundant settings.json;
+settings retained in validation.json. Export uses preview audio selection by default.
+Native Windows/TheGHOST/Wii acceptance remains pending. Batch intentionally deferred.
+No new dependency or Claude execution. Need actual one-song import/playback result.
+
+## Prior 0.4.7 update
 
 Read docs/M4_7_WINDOWS_GUIDE.md, M4_7_IMPLEMENTATION_LOG.md and M4_7_TEST_RESULTS.txt.
 Preview no-source silent failure fixed: Play prompts for the recording. Chart loads

@@ -1,4 +1,6 @@
-Latest release: **0.4.7**. See [preview audio testing and troubleshooting](docs/M4_7_WINDOWS_GUIDE.md).
+Latest release: **0.4.8**. See [one-song Ogg export and Windows test steps](docs/M4_8_WINDOWS_GUIDE.md). Batch support is deferred until one song is verified end to end.
+
+Version **0.4.7** features: See [preview audio testing and troubleshooting](docs/M4_7_WINDOWS_GUIDE.md).
 
 Version **0.4.6** features: See [startup progress and Windows testing](docs/M4_6_WINDOWS_GUIDE.md).
 

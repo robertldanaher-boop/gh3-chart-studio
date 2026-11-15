@@ -255,6 +255,8 @@ class Window(QMainWindow):
         report=report if report is not None else self.report
         def ready(details):
             self.converted,self.report=song,report;self.refresh_preview()
+            if Path(self.playback.player.source().toLocalFile()).resolve()!=Path(audio).resolve():
+                self.playback.open_audio(audio)
             self.log_line('Song folder verified: '+str(destination)+'\n'+'\n'.join(details['warnings']))
             self.playback.status.setText('Exported song folder: '+str(destination))
         self.run_job('Exporting chart, full-mix audio and song.ini…',lambda cancel:export_song_folder(song,report,destination,audio,self.path),ready)

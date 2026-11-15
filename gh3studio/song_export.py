@@ -7,8 +7,7 @@ import shutil
 import tempfile
 from itertools import groupby
 from pathlib import Path
-import numpy as np
-import soundfile as sf
+from .audio_export import export_ogg
 from .chartio import read_chart, write_chart
 from .editing import prepare_cleanup
 from .validation import validate
@@ -47,18 +46,11 @@ def export_song_folder(song, report, destination, audio_path, source_path=None):
     destination.parent.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix='.gh3-song-',dir=destination.parent))
     try:
-        with sf.SoundFile(audio_path) as source:
-            if source.channels not in (1,2) or source.frames<=0:raise ChartError('Audio must be nonempty mono or stereo')
-            frames,rate,channels=source.frames,source.samplerate,source.channels
-            with sf.SoundFile(stage/'song.wav','w',samplerate=rate,channels=channels,subtype='PCM_16') as target:
-                for block in source.blocks(blocksize=65536,dtype='float32',always_2d=True):
-                    if not np.isfinite(block).all():raise ChartError('Audio contains nonfinite samples')
-                    target.write(block)
-        info=sf.info(stage/'song.wav')
-        if (info.frames,info.samplerate,info.channels)!=(frames,rate,channels):raise ChartError('Audio read-back mismatch')
+        audio_details=export_ogg(audio_path,stage/'song.ogg')
+        frames,rate,channels=(audio_details[k] for k in ('frames','sample_rate','channels'))
         output=copy.deepcopy(song)
         for key in ('GuitarStream','BassStream','RhythmStream'):output.metadata.pop(key,None)
-        output.metadata['MusicStream']='song.wav'
+        output.metadata['MusicStream']='song.ogg'
         write_chart(output,stage/'notes.chart');reopened=read_chart(stage/'notes.chart')
         if reopened.tracks!=song.tracks or reopened.events!=song.events or reopened.signatures!=song.signatures:
             raise ChartError('Chart note/timing read-back mismatch')
@@ -76,9 +68,9 @@ def export_song_folder(song, report, destination, audio_path, source_path=None):
         with (stage/'song.ini').open('w',encoding='utf-8') as f:ini.write(f)
         warnings=['Medium structural checks passed; Windows/TheGHOST/Wii runtime acceptance remains untested.',
                   'Expert, Hard and Easy are retained as authored, including their markers and any source sustain issues.',
-                  'Audio is the selected full mix, converted to PCM16 WAV without resampling or timing shifts.',
-                  'Import notes.chart and song.wav in TheGHOST. Do not substitute a MIDI file from another export.']
-        details=dict(report,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
+                  'Audio is the selected full mix as Ogg Vorbis. Existing Vorbis is copied unchanged; other formats undergo lossy encoding without resampling or timing shifts.',
+                  'Import notes.chart and song.ogg in TheGHOST. Do not substitute a MIDI file from another export.']
+        details=dict(report,audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
         def digest(path):
             h=hashlib.sha256()
             with Path(path).open('rb') as f:
@@ -88,8 +80,7 @@ def export_song_folder(song, report, destination, audio_path, source_path=None):
         details['audio_source_sha256']=digest(audio_path)
         if source_path:details['source_sha256']=digest(source_path)
         (stage/'validation.json').write_text(json.dumps(details,indent=2),encoding='utf-8')
-        (stage/'settings.json').write_text(json.dumps(report.get('settings',{}),indent=2),encoding='utf-8')
-        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.wav as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. No separate guitar/bass stems are fabricated.\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
+        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. No separate guitar/bass stems are fabricated.\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
         stage.rename(destination)
         return details
     except Exception:
