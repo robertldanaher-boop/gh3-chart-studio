@@ -276,3 +276,37 @@ def test_audio_difficulty_selection_orange_only_medium_export(tmp_path,app):
     assert result.tracks['Hard']==source.tracks['Hard'] and result.tracks['Expert']==source.tracks['Expert']
     assert read_chart(path).tracks==source.tracks
     w.close()
+
+
+def test_marked_display_copy_replaces_old_medium_and_folder_export(tmp_path,app):
+    from gh3studio.chartio import write_chart,read_chart
+    from gh3studio.model import Song,Note
+    from gh3studio.song_export_gui import SongExportDialog
+    from PySide6.QtWidgets import QDialogButtonBox
+    song=Song(tracks={'Expert':[Note(0,1),Note(96,4),Note(192,3)],'Hard':[Note(0,2)],'Medium':[Note(0,0)]},modifiers={'Expert':[(0,'N 6 0')]})
+    path=tmp_path/'source.chart';write_chart(song,path)
+    w=Window();w.open_path(path);wait(w);w.playback.remove_orange();wait(w)
+    assert w.converted.tracks['Medium']==[Note(0,1),Note(192,3)]
+    assert 'OUTPUT copied from Expert' in w.playback.provenance.text()
+    w.playback.difficulty.setCurrentText('Expert');w.playback.difficulty.setCurrentText('Medium')
+    assert [n[2] for n in w.playback.highway.notes]==[1,3]
+    audio=FIXTURE.parent/'audio'/'onset-study.wav'
+    dialog=SongExportDialog(w.converted,str(audio),w)
+    assert not dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
+    dialog.markers.setChecked(True)
+    assert dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
+    w.export_song_to(tmp_path/'out',audio,dialog.prepared,dict(w.report,medium_export_cleanup=dialog.review));wait(w)
+    assert read_chart(tmp_path/'out'/'notes.chart').tracks['Expert']==song.tracks['Expert']
+    assert (tmp_path/'out'/'song.wav').is_file()
+    dialog.close();w.close()
+
+
+def test_failed_orange_copy_disables_stale_export(app):
+    from gh3studio.model import Song,Note
+    w=Window();w.song=Song(tracks={'Expert':[Note(0,4)],'Medium':[Note(0,1)]})
+    w.converted=w.song;w.report={'source_difficulty':'Hard'};w.refresh_preview()
+    w.playback.difficulty.setCurrentText('Expert');w.playback.remove_orange();wait(w)
+    assert w.converted is None and not w.audio.export_button.isEnabled()
+    assert 'empty' in w.playback.status.text()
+    assert 'OUTPUT' not in w.playback.provenance.text()
+    w.close()

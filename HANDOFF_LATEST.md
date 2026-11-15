@@ -1,11 +1,25 @@
-# GH3 Chart Studio — 0.4.4 handoff
+# GH3 Chart Studio — 0.4.5 handoff
 
 Prepared November 14, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_4_4.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.4 is authoritative.
+GH3_Chart_Studio_v0_4_5.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.4.5 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.4.4 update
+## Current 0.4.5 update
+
+Read docs/M4_5_WINDOWS_GUIDE.md, M4_5_IMPLEMENTATION_LOG.md and M4_5_TEST_RESULTS.txt.
+Orange-only now copies the actual displayed difficulty in review mode, preserving
+all surviving note triples exactly even on marked charts. Output provenance is
+visible. Old Medium is replaced in the output; other difficulties stay intact.
+Song-folder export adds notes.chart, PCM16 song.wav, song.ini and diagnostics.
+An explicit dialog reviews Medium-only marker removal/sustain normalization;
+these changes are never silently part of Orange removal. Source markers retain
+lengths in chart read/write. Nonzero Offset/ini delay blocks folder export.
+Actual supplied charts passed copy/export checks using synthetic audio; actual
+recordings, native Windows and TheGHOST/Wii remain untested. No Claude execution
+has occurred in this workspace. Membership quota cannot be monitored here.
+
+## Prior 0.4.4 update
 
 Read docs/M4_4_WINDOWS_GUIDE.md and docs/M4_4_IMPLEMENTATION_LOG.md.
 Scans auto-populate newest pattern rows and reset category filters. Audio Studio

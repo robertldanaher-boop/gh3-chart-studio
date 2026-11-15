@@ -173,13 +173,11 @@ def test_shape_markers_are_retained_without_discarding_difficulty(tmp_path,marke
     from gh3studio.chartio import write_chart
     song=Song(tracks={'Expert':[Note(0,0),Note(192,1)]},modifiers={'Expert':[(0,marker)]})
     root=tmp_path/'charts';root.mkdir();path=root/'notes.chart';write_chart(song,path)
-    if marker.startswith('N '):
-        path.write_text(path.read_text().replace('= '+marker+'\n','= '+marker+' 0\n'))
     original=path.read_bytes();store=PatternStore(tmp_path/'db.sqlite3')
     report=scan_folder(root,store)
     assert report['imported']==1 and report['failed']==0
     payload=json.loads(store.browse()[0]['payload'])
-    assert payload['source_markers']==[[0,marker]]
+    assert payload['source_markers']==[[0,marker+' 0' if marker.startswith('N ') else marker]]
     assert 'shape-only' in report['files'][0]['detail']
     assert path.read_bytes()==original
 

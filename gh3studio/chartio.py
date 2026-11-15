@@ -69,7 +69,7 @@ def read_chart(path):
                 elif typ == 'N':
                     lane, length = map(int, parts)
                     if 0 <= lane <= 4: song.tracks[difficulty].append(Note(tick, lane, length))
-                    else: song.modifiers.setdefault(difficulty, []).append((tick, f'N {lane}'))
+                    else: song.modifiers.setdefault(difficulty, []).append((tick, f'N {lane} {length}'))
                 elif typ == 'S':
                     kind, length = map(int, parts)
                     if kind not in (0, 1, 2): raise ChartError(f'Unsupported phrase S {kind}')
@@ -104,6 +104,6 @@ def write_chart(song, path):
     for diff, notes in song.tracks.items():
         entries = [(p.tick,0,f'S {p.kind} {p.length}') for p in song.phrases.get(diff,[])]
         entries += [(n.tick,1+n.lane,f'N {n.lane} {n.length}') for n in notes]
-        entries += [(t,9,v) for t,v in song.modifiers.get(diff,[])]
+        entries += [(t,9,v+' 0' if v.startswith('N ') and len(v.split())==2 else v) for t,v in song.modifiers.get(diff,[])]
         section(diff+'Single', entries)
     Path(path).write_text('\n'.join(lines)+'\n', encoding='utf-8')

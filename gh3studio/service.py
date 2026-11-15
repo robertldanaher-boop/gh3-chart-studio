@@ -24,6 +24,7 @@ def load(path, phrase_mode='modern', *, learning_only=False):
             for src,dst in {'name':'Name','artist':'Artist','album':'Album','year':'Year','genre':'Genre','charter':'Charter'}.items():
                 if parser.has_option('song',src): song.metadata[dst]=parser.get('song',src)
             if parser.has_option('song','delay'):
+                song.metadata['SongIniDelay']=parser.get('song','delay')
                 song.warnings.append('song.ini delay found: set the same delay in TheGHOST; no automatic offset is applied')
     checks=ensure_valid(song,learning_only=learning_only)
     if learning_only:

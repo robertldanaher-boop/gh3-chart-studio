@@ -55,7 +55,8 @@ class PlaybackPanel(QWidget):
         row.addWidget(QLabel('Display difficulty'))
         self.difficulty=QComboBox();self.difficulty.currentTextChanged.connect(self.select_difficulty);row.addWidget(self.difficulty)
         self.orange_button=QPushButton('Remove Orange → Medium');self.orange_button.clicked.connect(self.remove_orange);row.addWidget(self.orange_button)
-        note=QLabel('Copies the selected Expert/Hard track; original difficulties stay unchanged.');note.setWordWrap(True);row.addWidget(note,1)
+        note=QLabel('Copies the displayed track, removing only Orange gems. Replaces output Medium.');note.setWordWrap(True);row.addWidget(note,1)
+        self.provenance=QLabel();layout.addWidget(self.provenance)
         row=QHBoxLayout();layout.addLayout(row)
         self.open_button=QPushButton('Choose preview audio…');self.open_button.clicked.connect(self.browse);row.addWidget(self.open_button)
         self.play_button=QPushButton('Play / pause');self.play_button.clicked.connect(self.toggle);row.addWidget(self.play_button)
@@ -121,21 +122,33 @@ class PlaybackPanel(QWidget):
     def remove_orange(self):
         if self.owner.busy() or not self.current:return
         song,difficulty=self.current
+        self.owner.converted=None;self.owner.report=None;self.rebuild()
+        self.status.setText(f'Creating exact Medium copy from displayed {difficulty}…')
         def ready(value):
             self.owner.converted,self.owner.report=value
             self.owner.variants={};self.owner.variant_choice.blockSignals(True);self.owner.variant_choice.setCurrentIndex(0);self.owner.variant_choice.blockSignals(False)
             self.owner.refresh_preview();self.owner.log_line(str(self.owner.report))
             self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems. Medium is ready for export checks; Expert/Hard were not edited.")
             self.owner.audio.show_listen()
-        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty),ready)
+        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty,strict=False),ready)
     def rebuild(self,*args):
+        report=self.owner.report or {}
+        if self.current:
+            diff=self.current[1]
+            label=f'Displaying {diff}'
+            if self.current[0] is self.owner.converted and diff=='Medium':
+                label+=f" — OUTPUT copied from {report.get('source_difficulty','generated chart')} | Orange: {sum(n.lane==4 for n in self.current[0].tracks.get(diff,[]))}"
+                if report.get('retained_notes_exact'):label+=' | all surviving notes unchanged'
+            else:label+=' — source track'
+            self.provenance.setText(label)
+        else:self.provenance.setText('No chart loaded')
         self.highway.notes=timeline(*self.current,self.threshold.value()) if self.current else []
         self.highway.update();self.update_busy(self.owner.busy(),False)
     def update_busy(self,busy,cancellable):
         self.open_button.setEnabled(not busy)
         self.chart_open.setEnabled(not busy)
         self.difficulty.setEnabled(not busy and self.current is not None)
-        self.orange_button.setEnabled(not busy and self.current is not None and self.difficulty.currentText() in ('Expert','Hard'))
+        self.orange_button.setEnabled(not busy and self.current is not None and self.difficulty.currentText() in ('Expert','Hard','Medium','Easy'))
         self.apply_button.setEnabled(not busy and self.owner.converted is not None)
         self.undo_button.setEnabled(not busy and bool(self.undo_stack));self.redo_button.setEnabled(not busy and bool(self.redo_stack))
     def snapshot(self):return (self.owner.converted,copy.deepcopy(self.owner.report))

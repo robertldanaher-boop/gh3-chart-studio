@@ -14,7 +14,7 @@ from .service import load
 SCHEMA_VERSION = 1
 APPLICATION_ID = 0x47483343
 WINDOW_BEATS = 8
-EXTRACTION_VERSION = b"shape-learning-v2"
+EXTRACTION_VERSION = b"shape-learning-v3"
 SHAPE_ONLY_MARKERS = {"N 5", "N 6", "E solo", "E soloend", 'E "solo"', 'E "soloend"'}
 CATEGORIES = ('Steady rhythm','Fast rhythm','Repeating riff','Technical run','Alternating chord pattern','Sustained passage','Mixed passage')
 
@@ -179,11 +179,11 @@ def scan_folder(root,store,phrase_mode='modern',cancelled=lambda:False,progress=
                         else:
                             song=load(path,phrase_mode,learning_only=True);patterns=[];skipped=[]
                             for diff in ('Easy','Medium','Hard','Expert'):
-                                if any(m not in SHAPE_ONLY_MARKERS for _,m in song.modifiers.get(diff,[])):
+                                if any(m not in SHAPE_ONLY_MARKERS and not (len(m.split())==3 and ' '.join(m.split()[:2]) in ('N 5','N 6')) for _,m in song.modifiers.get(diff,[])):
                                     skipped.append(diff);continue
                                 patterns.extend((diff,p) for p in extract(song,diff,cancelled))
                             if not patterns:
-                                reasons={d:sorted({m for _,m in song.modifiers.get(d,[]) if m not in SHAPE_ONLY_MARKERS}) for d in skipped}
+                                reasons={d:sorted({m for _,m in song.modifiers.get(d,[]) if m not in SHAPE_ONLY_MARKERS and not (len(m.split())==3 and ' '.join(m.split()[:2]) in ('N 5','N 6'))}) for d in skipped}
                                 raise ChartError(f'No supported playable guitar patterns; unsupported markers by difficulty: {reasons}; playable gems: '+str({d:len(n) for d,n in song.tracks.items()}))
                             db.execute('INSERT INTO sources VALUES(?,?,?)',(identity,song.metadata.get('Name',path.stem),json.dumps(song.metadata)))
                             for diff,p in patterns:

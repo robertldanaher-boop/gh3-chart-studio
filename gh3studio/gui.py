@@ -89,7 +89,7 @@ class Window(QMainWindow):
         layout.addWidget(QLabel('Density 6 keeps every onset • Chords 1–2: singles, 3–4: pairs, 5–6: up to 3 • Movement 1 favors short travel'))
         row=QHBoxLayout(); layout.addLayout(row)
         self.convert_button=QPushButton('Convert & validate'); self.convert_button.clicked.connect(self.start_convert); row.addWidget(self.convert_button)
-        self.export_button=QPushButton('Export .chart + MIDI…'); self.export_button.clicked.connect(self.start_export); row.addWidget(self.export_button)
+        self.export_button=QPushButton('Export song folder…'); self.export_button.clicked.connect(self.start_export); row.addWidget(self.export_button)
         self.save_settings=QPushButton('Save settings…'); self.save_settings.clicked.connect(self.save_config); row.addWidget(self.save_settings)
         self.load_settings=QPushButton('Load settings…'); self.load_settings.clicked.connect(self.load_config); row.addWidget(self.load_settings)
         self.listen_button=QPushButton('Listen / timing…');self.listen_button.clicked.connect(lambda:self.audio.show_listen());row.addWidget(self.listen_button)
@@ -187,6 +187,8 @@ class Window(QMainWindow):
     def open_path(self,path):
         if self.busy(): return
         self.song=None; self.original_song=None; self.cleanup_report=None; self.converted=None; self.report=None; self.path=None; self.variants={}
+        from PySide6.QtCore import QUrl
+        self.playback.player.pause();self.playback.player.setSource(QUrl());self.playback.label.setText('Select the matching full-mix audio')
         self.info.setText('Loading…'); self.preview.scene().clear(); self.playback.set_chart(None,'Medium')
         mode='modern' if self.phrase_mode.currentIndex()==0 else 'legacy'
         def ready(song):
@@ -232,10 +234,27 @@ class Window(QMainWindow):
             self.playback.set_chart(self.converted or self.song,'Medium' if self.converted else self.source.currentText())
     def start_export(self):
         if self.converted is None or self.busy(): return
-        parent=QFileDialog.getExistingDirectory(self,'Choose parent folder for a NEW export folder')
-        if not parent: return
-        name=self.path.stem+'_ExpertMedium_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')
-        self.export_to(Path(parent)/name)
+        from .song_export_gui import SongExportDialog
+        dialog=SongExportDialog(self.converted,self.playback.player.source().toLocalFile(),self)
+        if not dialog.exec():dialog.deleteLater();return
+        prepared,review,audio=dialog.prepared,dialog.review,dialog.audio.text()
+        dialog.deleteLater()
+        parent=QFileDialog.getExistingDirectory(self,'Choose parent folder for a NEW song folder')
+        if not parent:return
+        import copy
+        report=copy.deepcopy(self.report);report['medium_export_cleanup']=review
+        if any(c['action']=='shorten sustain' for c in review['changes']):report['retained_notes_exact']=False
+        name=(self.path.stem if self.path else 'Song')+'_Medium_'+datetime.now().strftime('%Y%m%d_%H%M%S_%f')
+        self.export_song_to(Path(parent)/name,audio,prepared,report)
+    def export_song_to(self,destination,audio,song=None,report=None):
+        from .song_export import export_song_folder
+        song=song if song is not None else self.converted
+        report=report if report is not None else self.report
+        def ready(details):
+            self.converted,self.report=song,report;self.refresh_preview()
+            self.log_line('Song folder verified: '+str(destination)+'\n'+'\n'.join(details['warnings']))
+            self.playback.status.setText('Exported song folder: '+str(destination))
+        self.run_job('Exporting chart, full-mix audio and song.ini…',lambda cancel:export_song_folder(song,report,destination,audio,self.path),ready)
     def export_to(self,destination):
         self.run_job('Writing and reopening both exports…',lambda cancel:export_bundle(self.converted,self.report,destination,self.path),
                      lambda details:self.log_line('Export verified: '+str(destination)+'\n'+ '\n'.join(details['warnings'])))

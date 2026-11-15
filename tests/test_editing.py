@@ -68,6 +68,6 @@ def test_orange_only_does_not_silently_repair_or_empty_source():
     with pytest.raises(ChartError,match='empty'):remove_orange_to_medium(song,'Expert')
     song.tracks['Expert']=[Note(0,0),Note(96,4)];song.modifiers={'Expert':[(0,'N 6')]}
     with pytest.raises(ChartError,match='unsupported gameplay'):remove_orange_to_medium(song,'Expert')
-    with pytest.raises(ChartError,match='Choose Expert or Hard'):remove_orange_to_medium(song,'Easy')
+    with pytest.raises(ChartError,match='available source'):remove_orange_to_medium(song,'Invalid')
     song.modifiers={'Hard':[(0,'N 6')]}
     with pytest.raises(ChartError,match='retained difficulty'):remove_orange_to_medium(song,'Expert')
