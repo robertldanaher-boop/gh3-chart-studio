@@ -1,4 +1,6 @@
-Latest release: **0.5.4**. Orange sustains can transfer randomly to Green, Red, Yellow or Blue, with a repeatable seed and Regenerate control. See [Windows steps](docs/M5_4_WINDOWS_GUIDE.md).
+Latest release: **0.5.5**. Fixes minimum-width constraints in Audio Studio and the hidden Pattern Library tab. Startup tests remain required. See [Windows retest steps](docs/M5_5_WINDOWS_GUIDE.md).
+
+Version **0.5.4**: Orange sustains can transfer randomly to Green, Red, Yellow or Blue, with a repeatable seed and Regenerate control. See [Windows steps](docs/M5_4_WINDOWS_GUIDE.md).
 
 Version **0.5.3**: Optional Orange sustain transfer to Blue (button 4) before four-fret Medium creation. See [Windows steps](docs/M5_3_WINDOWS_GUIDE.md).
 

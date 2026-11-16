@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.5.4 handoff
+# GH3 Chart Studio — 0.5.5 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_5_4.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.4 is authoritative.
+GH3_Chart_Studio_v0_5_5.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.5 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.5.4 update
+## Current 0.5.5 update
+
+User Windows startup failed compact-window test: width1282 instead of1024; 192
+passed,1 skipped. Python now installed for BobD; do not reuse Robert paths.
+Split Audio Studio workflow and footer rows, hidden Pattern Library action rows;
+header/title wrap. Large-text Linux reproduction exposed hidden-tab width1046;
+fixed result1024x700 with footer visible. 195 tests passed incl added 18px variant.
+No bypass or chart/audio changes. Read docs/M5_5_WINDOWS_GUIDE.md,
+M5_5_IMPLEMENTATION_LOG.md and M5_5_TEST_RESULTS.txt. Native Windows fix pending
+user retest. Next: Windows startup then actual one-song/importer/game acceptance.
+
+## Prior 0.5.4 update
 
 Random four-fret sustain preservation replaces Blue-only in the GUI. Prefer clear
 simultaneous frets; else choose a clear lane. If none is clear preserve full length

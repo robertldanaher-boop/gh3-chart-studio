@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from PySide6.QtCore import QStandardPaths
 from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QLineEdit,
-    QFileDialog,QComboBox,QTableWidget,QTableWidgetItem,QSpinBox,QHeaderView,QTextEdit)
+    QFileDialog,QComboBox,QTableWidget,QTableWidgetItem,QSpinBox,QHeaderView,QTextEdit,QGridLayout)
 from .patterns import PatternStore,scan_folder,extract,CATEGORIES
 
 class LibraryPanel(QWidget):
@@ -17,11 +17,11 @@ class LibraryPanel(QWidget):
         local=QStandardPaths.writableLocation(QStandardPaths.AppLocalDataLocation)
         self.db_path=QLineEdit(str(Path(local)/'GH3ChartStudio'/'patterns.sqlite3'));row.addWidget(self.db_path,1)
         self.choose_db=QPushButton('Choose database…');self.choose_db.clicked.connect(self.browse_db);row.addWidget(self.choose_db)
-        row=QHBoxLayout();layout.addLayout(row)
-        self.scan_button=QPushButton('Scan chart folder…');self.scan_button.clicked.connect(self.choose_folder);row.addWidget(self.scan_button)
-        self.filter=QComboBox();self.filter.addItems(['All categories',*CATEGORIES]);row.addWidget(self.filter)
-        self.refresh_button=QPushButton('Browse patterns');self.refresh_button.clicked.connect(self.refresh);row.addWidget(self.refresh_button)
-        self.similar_button=QPushButton('Find matches for open chart');self.similar_button.clicked.connect(self.find_matches);row.addWidget(self.similar_button)
+        actions=QGridLayout();layout.addLayout(actions)
+        self.scan_button=QPushButton('Scan chart folder…');self.scan_button.clicked.connect(self.choose_folder);actions.addWidget(self.scan_button,0,0)
+        self.filter=QComboBox();self.filter.addItems(['All categories',*CATEGORIES]);actions.addWidget(self.filter,0,1)
+        self.refresh_button=QPushButton('Browse patterns');self.refresh_button.clicked.connect(self.refresh);actions.addWidget(self.refresh_button,1,0)
+        self.similar_button=QPushButton('Find matches for open chart');self.similar_button.clicked.connect(self.find_matches);actions.addWidget(self.similar_button,1,1)
         self.summary=QLabel('Choose a folder to build your library. Tables show at most 200 rows.');self.summary.setWordWrap(True);layout.addWidget(self.summary)
         self.table=QTableWidget(0,8);self.table.setHorizontalHeaderLabels(['ID','Song','Difficulty','Category','Events','Gems','Events/beat','Rating'])
         self.table.setSelectionBehavior(QTableWidget.SelectRows);self.table.setSelectionMode(QTableWidget.SingleSelection)
@@ -31,6 +31,7 @@ class LibraryPanel(QWidget):
         row.addWidget(QLabel('Selected pattern preference:'))
         self.rating=QSpinBox();self.rating.setRange(1,5);self.rating.setValue(3);row.addWidget(self.rating)
         self.rate_button=QPushButton('Save rating');self.rate_button.clicked.connect(self.save_rating);row.addWidget(self.rate_button)
+        row=QHBoxLayout();layout.addLayout(row)
         self.report_button=QPushButton('Save scan report…');self.report_button.clicked.connect(self.save_report);row.addWidget(self.report_button)
         self.cancel_button=QPushButton('Cancel operation');self.cancel_button.clicked.connect(owner.cancel);row.addWidget(self.cancel_button)
         self.details=QTextEdit();self.details.setReadOnly(True);self.details.setMaximumHeight(180);layout.addWidget(self.details)

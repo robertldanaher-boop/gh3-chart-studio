@@ -225,8 +225,11 @@ def test_horizontal_preview_time_and_lane_geometry(app):
     w.close()
 
 
-def test_guided_footer_visible_at_small_window(app):
-    w=Window();w.resize(1024,700);w.show();w.tabs.setCurrentWidget(w.audio);QApplication.processEvents()
+@pytest.mark.parametrize('large_text',[False,True])
+def test_guided_footer_visible_at_small_window(app,large_text):
+    w=Window()
+    if large_text:w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
+    w.resize(1024,700);w.show();w.tabs.setCurrentWidget(w.audio);QApplication.processEvents()
     assert w.width()<=1024 and w.height()<=700
     assert w.audio.draft_button.isVisible()
     assert w.audio.draft_button.visibleRegion().boundingRect().height()>0

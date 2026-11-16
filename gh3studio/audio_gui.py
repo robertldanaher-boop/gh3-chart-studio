@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt,QUrl
 from PySide6.QtGui import QColor,QPen,QDesktopServices
 from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSpinBox,QDoubleSpinBox,
     QCheckBox,QFileDialog,QTextEdit,QGraphicsView,QGraphicsScene,QProgressBar,QSlider,
-    QScrollArea,QStackedWidget,QTableView,QHeaderView,QGroupBox)
+    QScrollArea,QStackedWidget,QTableView,QHeaderView,QGroupBox,QGridLayout)
 from .audio_analysis import AudioSettings,analyze_audio
 from .audio_chart import make_draft,alignment_report
 from .onset_review import OnsetModel
@@ -31,14 +31,14 @@ class AudioPanel(QWidget):
         super().__init__();self.owner=owner;self.path=None;self.analysis=None;self.last_diagnostics=None
         self.original_audio=None;self.last_draft_source=None
         layout=QVBoxLayout(self)
-        self.title=QLabel('Audio Studio — choose → review → listen → export');self.title.setStyleSheet('font-size:20px;font-weight:600');layout.addWidget(self.title)
+        self.title=QLabel('Audio Studio — choose → review → listen → export');self.title.setStyleSheet('font-size:20px;font-weight:600');self.title.setWordWrap(True);layout.addWidget(self.title)
         self.next_step=QLabel('Step 1: Choose a recording. No chart or pattern library is required.');self.next_step.setWordWrap(True);self.next_step.setObjectName('nextStep');layout.addWidget(self.next_step)
         self.open_export_button=QPushButton('Open exported song folder');self.open_export_button.clicked.connect(self.open_export_folder);self.open_export_button.hide();layout.addWidget(self.open_export_button)
-        row=QHBoxLayout();layout.addLayout(row)
-        self.open_button=QPushButton('1. Choose audio…');self.open_button.clicked.connect(self.choose_input);row.addWidget(self.open_button)
-        self.review_button=QPushButton('2. Review attacks');self.review_button.clicked.connect(self.review_step);row.addWidget(self.review_button)
-        self.listen_button=QPushButton('3. Listen / timing');self.listen_button.clicked.connect(self.show_listen);row.addWidget(self.listen_button)
-        self.export_button=QPushButton('4. Export song folder…');self.export_button.clicked.connect(owner.start_export);row.addWidget(self.export_button)
+        steps=QGridLayout();layout.addLayout(steps)
+        self.open_button=QPushButton('1. Choose audio…');self.open_button.clicked.connect(self.choose_input);steps.addWidget(self.open_button,0,0)
+        self.review_button=QPushButton('2. Review attacks');self.review_button.clicked.connect(self.review_step);steps.addWidget(self.review_button,0,1)
+        self.listen_button=QPushButton('3. Listen / timing');self.listen_button.clicked.connect(self.show_listen);steps.addWidget(self.listen_button,1,0)
+        self.export_button=QPushButton('4. Export song folder…');self.export_button.clicked.connect(owner.start_export);steps.addWidget(self.export_button,1,1)
         self.file_label=QLabel('Analysis source: none');self.file_label.setWordWrap(True);layout.addWidget(self.file_label)
         self.progress=QProgressBar();self.progress.setRange(0,1);layout.addWidget(self.progress)
         self.pages=QStackedWidget();layout.addWidget(self.pages,1)
@@ -81,8 +81,8 @@ class AudioPanel(QWidget):
         self.save_button=QPushButton('Save analysis / diagnostics…');self.save_button.clicked.connect(self.save_report);advanced.addWidget(self.save_button)
         self.details=QTextEdit();self.details.setReadOnly(True);self.details.setMaximumHeight(140);advanced.addWidget(self.details)
         row=QHBoxLayout();page_layout.addLayout(row)
-        self.analyze_button=QPushButton('Reanalyze with current settings');self.analyze_button.clicked.connect(self.start_analysis);row.addWidget(self.analyze_button)
-        self.draft_button=QPushButton('Create draft from selected attacks → Listen');self.draft_button.clicked.connect(self.create_draft);row.addWidget(self.draft_button,1)
+        self.analyze_button=QPushButton('Reanalyze audio');self.analyze_button.clicked.connect(self.start_analysis);row.addWidget(self.analyze_button)
+        self.draft_button=QPushButton('Create draft → Listen');self.draft_button.setToolTip('Create a chart draft from the selected attacks, then listen and review.');self.draft_button.clicked.connect(self.create_draft);page_layout.addWidget(self.draft_button)
         self.cancel_button=QPushButton('Cancel');self.cancel_button.clicked.connect(owner.cancel);row.addWidget(self.cancel_button)
         self.pages.addWidget(self.analysis_page);self.pages.addWidget(owner.playback)
         self.controls=(self.open_button,self.sensitivity,self.spacing,self.bpm,self.shift,self.template,self.learned,self.attack_table,self.keep_all,self.keep_none)
