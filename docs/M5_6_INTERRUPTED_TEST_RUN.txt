@@ -1,0 +1,42 @@
+........................................................................ [ 36%]
+........................................Timeout (0:00:20)!
+Thread 0x00007fb0195496c0 (most recent call first):
+  <no Python frame>
+
+Thread 0x00007fb0622a7740 (most recent call first):
+  File "/workspace/scratch/3330ef718b66/gh3-chart-studio/gh3studio/audio_gui.py", line 109 in show_analysis
+  File "/workspace/scratch/3330ef718b66/gh3-chart-studio/gh3studio/audio_gui.py", line 177 in open_path
+  File "/workspace/scratch/3330ef718b66/gh3-chart-studio/gh3studio/audio_gui.py", line 134 in restore_mix
+  File "/workspace/scratch/3330ef718b66/gh3-chart-studio/tests/test_gui.py", line 210 in test_external_stem_analyzed_original_mix_retained
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/python.py", line 159 in pytest_pyfunc_call
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/python.py", line 1627 in runtest
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 174 in pytest_runtest_call
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 242 in <lambda>
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 341 in from_call
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 241 in call_and_report
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 132 in runtestprotocol
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 113 in pytest_runtest_protocol
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/main.py", line 362 in pytest_runtestloop
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/main.py", line 337 in _main
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/main.py", line 283 in wrap_session
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/main.py", line 330 in pytest_cmdline_main
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_execution.py", line 147 in _multicall
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 183 in _hookexec
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pluggy/_caller.py", line 197 in __call__
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 175 in main
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 201 in console_main
+  File "/workspace/scratch/3330ef718b66/.venv/lib/python3.11/site-packages/pytest/__main__.py", line 9 in <module>
+  File "<frozen runpy>", line 88 in _run_code
+  File "<frozen runpy>", line 198 in _run_module_as_main

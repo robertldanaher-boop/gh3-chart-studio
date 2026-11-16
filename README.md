@@ -1,4 +1,6 @@
-Latest release: **0.5.5**. Fixes minimum-width constraints in Audio Studio and the hidden Pattern Library tab. Startup tests remain required. See [Windows retest steps](docs/M5_5_WINDOWS_GUIDE.md).
+Latest release: **0.5.6**. START_WINDOWS.cmd now detects a usable runtime and downloads/installs signed Python 3.11 x64 when missing, then installs app dependencies, tests and launches. See [first-run setup and limits](docs/M5_6_WINDOWS_GUIDE.md).
+
+Version **0.5.5**: Fixes minimum-width constraints in Audio Studio and the hidden Pattern Library tab. Startup tests remain required. See [Windows retest steps](docs/M5_5_WINDOWS_GUIDE.md).
 
 Version **0.5.4**: Orange sustains can transfer randomly to Green, Red, Yellow or Blue, with a repeatable seed and Regenerate control. See [Windows steps](docs/M5_4_WINDOWS_GUIDE.md).
 
@@ -37,7 +39,7 @@ This CMD file was statically reviewed; Windows execution remains unverified here
 ## Start on Windows 10/11 x64
 
 1. Extract the complete ZIP into a normal writable folder (not inside the ZIP viewer).
-2. Verify **Python 3.11 x64** with `py -3.11 --version`. If present, no reinstall is needed. The initial 3.11.0 patch is not required; retain the Python launcher (`py`).
+2. Python 3.11 x64 is detected automatically. Missing runtimes trigger the signed installer download; internet is required. See the 0.5.6 guide for repair limitations.
 3. Double-click **START_WINDOWS.cmd**. It installs dependencies, runs tests and opens the app automatically. Internet is required for the first installation.
 4. If a stage fails, the app does not launch; the window displays the error and start_windows.log records the details.
 5. Confirm the application title shows **0.4.4**.

@@ -1,11 +1,25 @@
-# GH3 Chart Studio — 0.5.5 handoff
+# GH3 Chart Studio — 0.5.6 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_5_5.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.5 is authoritative.
+GH3_Chart_Studio_v0_5_6.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.6 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.5.5 update
+## Current 0.5.6 update
+
+START_WINDOWS.cmd probes Python3.11 x64/Tk/venv/ensurepip directly and via py.
+Missing usable runtime calls tools/install_python_windows.cmd: python.org signed
+3.11.9 installer, verified PSF Authenticode, per-user passive setup with pip/Tk,
+no PATH/elevation/policy changes. Existing usable newer3.11 reused. Application
+bootstrap then ensures pip, installs pinned hashed requirements as needed, tests
+and launches. Errors logged. Fallback3.11.9 is not latest security patch; newer
+broken installations can require matching-installer repair. Windows bootstrap is
+statically reviewed but NOT executed/verified here. Read docs/M5_6_WINDOWS_GUIDE.md
+and M5_6_IMPLEMENTATION_LOG.md. 197 tests passed in22.11s on fresh run; one
+earlier run hung in existing external-stem GUI test (trace retained). Next:
+clean-machine Windows setup acceptance.
+
+## Prior 0.5.5 update
 
 User Windows startup failed compact-window test: width1282 instead of1024; 192
 passed,1 skipped. Python now installed for BobD; do not reuse Robert paths.

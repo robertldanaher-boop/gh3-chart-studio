@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 import queue
 import threading
 import time
@@ -40,7 +41,8 @@ def worker(tmp_path):
 
 
 @pytest.mark.parametrize('cached',[False,True])
-def test_worker_setup_tests_and_ready_handshake(tmp_path,cached):
+@pytest.mark.parametrize('pip_present',[False,True])
+def test_worker_setup_tests_and_ready_handshake(tmp_path,cached,pip_present):
     obj=worker(tmp_path);python=tmp_path/'.venv'/'Scripts'/'python.exe'
     if cached:(python.parent.parent/'startup_dependencies.json').write_text(json.dumps({'key':cache_key(tmp_path,python),'packages':'packages'}))
     class Process:
@@ -48,8 +50,9 @@ def test_worker_setup_tests_and_ready_handshake(tmp_path,cached):
             assert 'QT_QPA_PLATFORM' not in kw['env']
             Path(kw['env']['GH3_STARTUP_READY']).write_text('ready')
         def poll(self):return None
-    with patch('tools.startup_windows.subprocess.check_output',return_value='packages'),patch('tools.startup_windows.subprocess.Popen',Process):obj.work()
+    with patch('tools.startup_windows.subprocess.run',return_value=SimpleNamespace(returncode=0 if pip_present else 1)),patch('tools.startup_windows.subprocess.check_output',return_value='packages'),patch('tools.startup_windows.subprocess.Popen',Process):obj.work()
     commands=[args for args,_ in obj.commands]
+    assert any('ensurepip' in args for args in commands)==(not pip_present)
     assert any('pytest' in args for args in commands)
     assert any('install' in args for args in commands)==(not cached)
     test_env=next(env for args,env in obj.commands if 'pytest' in args)
@@ -65,7 +68,7 @@ def test_failed_tests_never_launch(tmp_path):
     def command(args,env=None):
         if 'pytest' in args:raise RuntimeError('test failed')
     obj.command=command
-    with patch('tools.startup_windows.subprocess.check_output',return_value='packages'),patch('tools.startup_windows.subprocess.Popen') as popen:obj.work()
+    with patch('tools.startup_windows.subprocess.run',return_value=SimpleNamespace(returncode=0)),patch('tools.startup_windows.subprocess.check_output',return_value='packages'),patch('tools.startup_windows.subprocess.Popen') as popen:obj.work()
     popen.assert_not_called()
     assert ('failed',None) in list(obj.events.queue)
     assert not (tmp_path/'startup_timings.json').exists()

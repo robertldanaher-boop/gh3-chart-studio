@@ -3,19 +3,46 @@ setlocal
 pushd "%~dp0"
 if errorlevel 1 goto folder_fail
 if not exist tools\startup_windows.py goto missing_files
+>startup_bootstrap.log echo GH3 Chart Studio runtime check - %date% %time%
+echo Checking Python 3.11 x64 and Tcl/Tk...
+set "GH3_PYTHON="
+call :probe "%CD%\.venv\Scripts\python.exe"
+if defined GH3_PYTHON goto launch
+call :probe "%LocalAppData%\Programs\Python\Python311\python.exe"
+if defined GH3_PYTHON goto launch
+call :probe "%ProgramFiles%\Python311\python.exe"
+if defined GH3_PYTHON goto launch
+for /f "delims=" %%P in ('py -3.11 -c "import sys;print(sys.executable)" 2^>nul') do call :probe "%%P"
+if defined GH3_PYTHON goto launch
+echo Python 3.11 with working Tcl/Tk was not found.
+echo Downloading and installing the official Python runtime for this user...
+call tools\install_python_windows.cmd 2>> startup_bootstrap.log
+if errorlevel 1 goto bootstrap_fail
+call :probe "%LocalAppData%\Programs\Python\Python311\python.exe"
+if not defined GH3_PYTHON goto runtime_fail
+:launch
 echo Opening GH3 Chart Studio startup progress...
-py -3.11 tools\startup_windows.py 2> startup_bootstrap.log
+"%GH3_PYTHON%" tools\startup_windows.py 2>> startup_bootstrap.log
 if errorlevel 1 goto bootstrap_fail
 popd
 exit /b 0
+:probe
+if defined GH3_PYTHON exit /b 0
+if not exist "%~1" exit /b 0
+"%~1" -c "import sys,struct,tkinter,venv,ensurepip; assert sys.version_info[:2]==(3,11) and struct.calcsize('P')==8; t=tkinter.Tk(); t.withdraw(); t.destroy()" >>startup_bootstrap.log 2>&1
+if not errorlevel 1 set "GH3_PYTHON=%~1"
+exit /b 0
+:runtime_fail
+echo ERROR: Python installation finished but the runtime check still failed.
+echo If a newer Python 3.11 installation needs repair, use its installer to add Tcl/Tk.
+goto bootstrap_fail
 :missing_files
 echo ERROR: Extract the entire ZIP. tools\startup_windows.py is missing.
 goto fail
 :bootstrap_fail
-echo ERROR: Could not run the startup window. Python 3.11 x64 with tkinter is required.
-echo Run py -0p to check Python. Re-run the Python installer to add Tcl/Tk if needed.
+echo ERROR: Setup or startup failed. Details follow:
 type startup_bootstrap.log
-echo Save startup_bootstrap.log and start_windows.log for troubleshooting.
+echo Save startup_bootstrap.log, python_install.log if present, and start_windows.log.
 :fail
 pause
 popd

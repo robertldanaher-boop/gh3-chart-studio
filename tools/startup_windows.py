@@ -120,6 +120,9 @@ class Startup:
             python=self.root/'.venv'/'Scripts'/'python.exe';start=time.monotonic()
             if not python.exists():self.command([sys.executable,'-u','-m','venv',str(self.root/'.venv')])
             self.command([str(python),'-c',"import sys,struct; assert sys.version_info[:2]==(3,11) and struct.calcsize('P')==8, 'Existing environment must use Python 3.11 x64'"])
+            # A copied or partly installed environment may have lost pip.
+            pip_check=subprocess.run([str(python),'-m','pip','--version'],cwd=self.root,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+            if pip_check.returncode:self.command([str(python),'-m','ensurepip','--upgrade'])
             # Exact installed-version probe avoids pip/network work on unchanged installations.
             probe="import importlib.metadata as m,json; print(json.dumps(sorted((d.metadata['Name'].lower().replace('_','-'),d.version) for d in m.distributions())))"
             snapshot=subprocess.check_output([str(python),'-c',probe],cwd=self.root,text=True,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0)).strip()
