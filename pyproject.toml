@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gh3-chart-studio"
-version = "0.6.1"
+version = "0.6.2"
 description = "Authored-chart to four-fret Medium converter"
 requires-python = ">=3.11,<3.12"
 dependencies = ["PySide6==6.8.3", "mido==1.3.3", "numpy==2.2.4", "scipy==1.15.2", "soundfile==0.13.1"]

@@ -74,10 +74,16 @@ class CleanerPanel(QWidget):
         self.details.setPlainText('\n'.join(lines))
     def recheck(self,index,**overrides):
         if self.owner.busy():return
-        row=self.rows[index];path=overrides.pop('path',row['path']);audio=overrides.pop('audio',row['audio'] or None);metadata=overrides.pop('metadata',row['metadata'])
+        row=self.rows[index];path=overrides.pop('path',row['path']);audio=overrides.pop('audio',row['audio'] or None);metadata=overrides.pop('metadata',{k:v for k,v in row['metadata'].items() if k in FIELDS})
         self.approve.setChecked(False)
+        if metadata is not None:
+            row['metadata'].update(metadata)
+            self.table.item(index,1).setText(row['metadata'].get('Name',''))
+            self.table.item(index,2).setText(row['metadata'].get('Artist',''))
+            self.show_details()
         def ready(value):
-            self.rows[index]=value;self.render();self.table.selectRow(index)
+            self.rows[index]=value;self.render();self.table.selectRow(index);self.show_details()
+            self.status.setText('Edits retained in this review. '+('Chart still needs correction: '+ '; '.join(value['errors']) if value['errors'] else 'Ready for review and export.')+' Export writes these edits to a new folder; originals stay unchanged.')
         self.owner.run_job('Rechecking selected song…',lambda cancel:inspect_chart(path,audio,metadata),ready)
     def edit_metadata(self):
         index=self.selected()
@@ -96,7 +102,7 @@ class CleanerPanel(QWidget):
         index=self.selected()
         if index is None:return
         path,_=QFileDialog.getOpenFileName(self,'Choose chart for this song',self.rows[index]['path'],'Charts (*.chart *.mid *.midi)')
-        if path:self.recheck(index,path=path,metadata=None,audio=None)
+        if path:self.recheck(index,path=path,audio=None)
     def browse_export(self):
         if not self.approve.isChecked():self.status.setText('Review changes, verify metadata/audio, then tick the review checkbox.');return
         path=QFileDialog.getExistingDirectory(self,'Choose output parent outside the scanned source directory')

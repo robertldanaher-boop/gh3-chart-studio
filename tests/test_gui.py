@@ -499,3 +499,29 @@ def test_wide_hidden_library_controls_scroll_instead_of_widening_window(app):
     assert scroll.horizontalScrollBar().maximum()>0
     assert w.width()<=1024
     w.close()
+
+
+def test_cleaner_metadata_dialog_retains_edits_on_invalid_chart(tmp_path,app,monkeypatch):
+    from test_cleaner import fixture
+    from PySide6.QtWidgets import QDialog,QLineEdit
+    source=tmp_path/'songs';path=fixture(source/'one')
+    path.write_text('invalid chart syntax',encoding='utf-8')
+    w=Window();w.start_guided('clean',str(source));wait(w)
+    assert w.cleaner.rows[0]['errors']
+    def edit(dialog):
+        fields=dialog.findChildren(QLineEdit)
+        fields[0].setText('Corrected † title');fields[1].setText('Correct artist');fields[2].setText('Album')
+        return QDialog.Accepted
+    monkeypatch.setattr(QDialog,'exec',edit)
+    w.cleaner.edit_metadata();wait(w)
+    assert w.cleaner.table.item(0,1).text()=='Corrected † title'
+    assert 'Name: Corrected † title' in w.cleaner.details.toPlainText()
+    assert 'still needs correction' in w.cleaner.status.text()
+    def reopen(dialog):
+        fields=dialog.findChildren(QLineEdit)
+        assert [e.text() for e in fields[:3]]==['Corrected † title','Correct artist','Album']
+        return QDialog.Rejected
+    monkeypatch.setattr(QDialog,'exec',reopen)
+    w.cleaner.edit_metadata()
+    assert path.read_text(encoding='utf-8')=='invalid chart syntax'
+    w.close()

@@ -23,19 +23,15 @@ def fingerprint(path):
 
 def inspect_chart(path,audio=None,metadata=None):
     path=Path(path).resolve()
-    row={'path':str(path),'errors':[],'warnings':[],'changes':[],'metadata':{},'audio':'','song':None,'hashes':{}}
+    row={'path':str(path),'errors':[],'warnings':[],'changes':[],'metadata':{k:v for k,v in (metadata or {}).items() if k in FIELDS},'audio':str(audio) if audio else '','song':None,'hashes':{}}
     try:
         song=load(path,learning_only=True,cleanup=True)
-        if not any(song.tracks.values()):raise ChartError('No supported playable guitar notes')
-        if any(d!=4 for _,_,d in song.signatures):raise ChartError('Non-/4 time signature needs manual review for TheGHOST; tempo/meter will not be guessed')
-        if float(song.metadata.get('Offset','0')) or float(song.metadata.get('SongIniDelay','0')):
-            raise ChartError('Nonzero Offset or song.ini delay needs manual synchronization review')
         chosen=Path(audio).resolve() if audio else matching_audio(path,song.metadata)
         if chosen is None:
             choices=[p for p in path.parent.iterdir() if p.is_file() and p.suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus') and p.stem.lower() not in ('guitar','rhythm','bass','drums','vocals','preview')]
             if len(choices)==1:chosen=choices[0]
         row['metadata']=fill_from_audio(song.metadata,chosen)
-        if metadata is not None:row['metadata'].update(metadata)
+        if metadata is not None:row['metadata'].update({k:v for k,v in metadata.items() if k in FIELDS})
         song.metadata.update(row['metadata'])
         for field in ('Name','Artist'):
             if song.metadata.get(field,'').strip().lower() in ('','unknown','unknown artist','untitled','untitled song'):
@@ -51,6 +47,10 @@ def inspect_chart(path,audio=None,metadata=None):
                     row['audio_format']=f.format+'/'+f.subtype
                 row['hashes'][str(chosen)]=fingerprint(chosen)
             except Exception as exc:row['errors'].append('Audio: '+str(exc))
+        if not any(song.tracks.values()):raise ChartError('No supported playable guitar notes')
+        if any(d!=4 for _,_,d in song.signatures):raise ChartError('Non-/4 time signature needs manual review for TheGHOST; tempo/meter will not be guessed')
+        if float(song.metadata.get('Offset','0')) or float(song.metadata.get('SongIniDelay','0')):
+            raise ChartError('Nonzero Offset or song.ini delay needs manual synchronization review')
         # Medium must never export Orange; preserve its sustains using seeded four-fret placement.
         if any(n.lane==4 for n in song.tracks.get('Medium',[])):
             song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=True,sustain_seed=0)

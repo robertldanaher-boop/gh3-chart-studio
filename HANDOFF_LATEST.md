@@ -1,11 +1,22 @@
-# GH3 Chart Studio — 0.6.1 handoff
+# GH3 Chart Studio — 0.6.2 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_6_1.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.1 is authoritative.
+GH3_Chart_Studio_v0_6_2.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.2 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.6.1 update
+## Current 0.6.2 update
+
+Fixed manual metadata disappearing after OK when chart recheck failed before
+identity was populated. Preserve editable fields before parsing; table/editor retain
+values even on error. Status distinguishes retained edits from remaining blockers.
+Rechecks cannot carry stale offset/resolution metadata over corrected source files.
+Tests cover malformed/offset charts, GUI OK/reopen, and stale timing fields.
+See docs/M6_2_WINDOWS_GUIDE.md, M6_2_IMPLEMENTATION_LOG.md and M6_2_TEST_RESULTS.txt.
+Edits are session-only until export; original files untouched. Native Windows/user
+song confirmation pending. Next edit/reopen/export acceptance and remaining errors.
+
+## Prior 0.6.1 update
 
 User Windows failure: UTF-8 test read used platform default; larger-text window
 was1227px. Explicit UTF-8 reads/writes in cleaner tests; shorter cleaner footer

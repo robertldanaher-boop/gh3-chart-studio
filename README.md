@@ -1,4 +1,6 @@
-Latest release: **0.6.1**. Corrects Windows-default-encoding test reads and further isolates wide GUI controls. See [Windows retest steps](docs/M6_1_WINDOWS_GUIDE.md).
+Latest release: **0.6.2**. Cleaner metadata edits survive chart validation errors and stay visible when reopening the editor. See [Windows retest](docs/M6_2_WINDOWS_GUIDE.md).
+
+Version **0.6.1**: Corrects Windows-default-encoding test reads and further isolates wide GUI controls. See [Windows retest steps](docs/M6_1_WINDOWS_GUIDE.md).
 
 Version **0.6.0**: New **Clean charts for GH3** goal: scan a song folder or collection, review cleanup and metadata, then export new chart/Ogg/song.ini folders. See [Windows workflow and limits](docs/M6_WINDOWS_GUIDE.md).
 

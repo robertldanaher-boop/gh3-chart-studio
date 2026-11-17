@@ -92,3 +92,26 @@ def test_ogg_tags_reconciled_in_clean_export(tmp_path):
     with sf.SoundFile(Path(results[0]['folder'])/'song.ogg') as stream:
         assert stream.copy_metadata()['title']=='Song †'
         assert stream.copy_metadata()['artist']=='Artist'
+
+
+@pytest.mark.parametrize('broken',[False,True])
+def test_metadata_edits_survive_chart_errors(tmp_path,broken):
+    path=fixture(tmp_path/'source',{'Name':'Old title','Artist':'Old artist','Offset':'0.1'})
+    if broken:path.write_text('invalid chart syntax',encoding='utf-8')
+    edits={'Name':'Corrected † title','Artist':'Correct artist','Album':'Album','Year':'1999','Charter':''}
+    row=inspect_chart(path,path.parent/'song.wav',edits)
+    assert row['errors'] and row['song'] is None
+    assert all(row['metadata'][k]==v for k,v in edits.items())
+    assert row['audio']==str(path.parent/'song.wav')
+    again=inspect_chart(path,row['audio'],row['metadata'])
+    assert all(again['metadata'][k]==v for k,v in edits.items())
+
+
+def test_metadata_recheck_does_not_restore_stale_timing_fields(tmp_path):
+    path=fixture(tmp_path/'source',{'Name':'Song','Artist':'Artist','Offset':'0.1'})
+    old=inspect_chart(path)
+    song=read_chart(path);song.metadata['Offset']='0';write_chart(song,path)
+    fixed=inspect_chart(path,metadata=dict(old['metadata'],Name='Corrected'))
+    assert not fixed['errors']
+    assert fixed['song'].metadata['Offset']=='0'
+    assert fixed['metadata']['Name']=='Corrected'
