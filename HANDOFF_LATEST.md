@@ -7,12 +7,15 @@ The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
 ## Current 0.6.4 update
 
+Includes Save scan report (all discovered blockers) and per-run cleanup.log
+(timestamped per-song outcomes, error traceback and completion/cancel counts).
+
 True Select all plus ready-only option, visible blocked-song errors and exact
 failure reasons in cleanup_summary.json. Start now runs directly using visible
 output parent (defaults beside source); separate Change output folder opens picker.
 Preflight destination check and cleaner goal routing expose errors/progress.
 Mixed selected rows export valid songs while recording blocked rows as failures.
-215 tests passed in 22.38s; 1024x700 offscreen screenshot inspected.
+215 tests passed in 21.92s; 1024x700 offscreen screenshot inspected.
 Native Windows and user's 54-song collection not tested. The 10 blocked errors
 have not been provided; do not claim they are resolved. See docs/M6_4_WINDOWS_GUIDE.md,
 M6_4_IMPLEMENTATION_LOG.md and M6_4_TEST_RESULTS.txt. Next collect actual error

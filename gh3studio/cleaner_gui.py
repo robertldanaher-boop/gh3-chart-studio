@@ -27,6 +27,7 @@ class CleanerPanel(QWidget):
         self.metadata_button=QPushButton('Edit selected metadata…');self.metadata_button.clicked.connect(self.edit_metadata);row.addWidget(self.metadata_button)
         self.audio_button=QPushButton('Select matching audio…');self.audio_button.clicked.connect(self.choose_audio);row.addWidget(self.audio_button)
         self.chart_button=QPushButton('Select chart…');self.chart_button.clicked.connect(self.choose_chart);row.addWidget(self.chart_button)
+        self.save_report=QPushButton('Save scan report…');self.save_report.clicked.connect(self.save_scan_report);layout.addWidget(self.save_report)
         self.details=QTextEdit();self.details.setReadOnly(True);self.details.setMinimumHeight(130);layout.addWidget(self.details)
         self.approve=QCheckBox('Apply the reviewed cleanup changes');self.approve.setToolTip('I reviewed changes and verified the metadata and matching audio.');outer.insertWidget(2,self.approve)
         warning=QLabel('Title and artist are required. Other missing fields are flagged, never invented. Existing Ogg may be re-encoded if its tags need correction. GH3 runtime compatibility still needs importer/game testing.');warning.setWordWrap(True);outer.addWidget(warning)
@@ -128,6 +129,21 @@ class CleanerPanel(QWidget):
         if index is None:return
         path,_=QFileDialog.getOpenFileName(self,'Choose chart for this song',self.rows[index]['path'],'Charts (*.chart *.mid *.midi)')
         if path:self.recheck(index,path=path,audio=None)
+    def save_scan_report(self):
+        path,_=QFileDialog.getSaveFileName(self,'Save scan diagnostics','GH3_scan_report.txt','Text (*.txt)')
+        if not path:return
+        from datetime import datetime
+        lines=['GH3 Chart Studio scan report',datetime.now().astimezone().isoformat(),
+               'Source: '+str(self.root),self.selection_summary.text()]
+        for row in self.rows:
+            lines+=['',row['path'],'Title: '+row['metadata'].get('Name',''),
+                    'Artist: '+row['metadata'].get('Artist',''),'Audio: '+row['audio']]
+            lines+=['ERROR: '+e for e in row['errors']]+['WARNING: '+w for w in row['warnings']]
+            if not row['errors']:lines.append('READY')
+        try:
+            Path(path).write_text('\n'.join(lines)+'\n',encoding='utf-8')
+            self.status.setText('Scan report saved: '+path)
+        except OSError as exc:self.status.setText('Could not save scan report: '+str(exc))
     def choose_output(self):
         path=QFileDialog.getExistingDirectory(self,'Choose where cleaned song folders will be saved',self.output_path.text())
         if path:self.output_path.setText(path)
@@ -149,11 +165,11 @@ class CleanerPanel(QWidget):
         self.owner.goal='clean'
         self.status.setText(f'Starting cleanup of {len(selected)} checked songs. Output: {path}')
         def ready(results):
-            self.last_output=Path(path) if any(r['status']=='exported' for r in results) else None;self.status.setText(f'Export finished: {sum(r["status"]=="exported" for r in results)} exported, {sum(r["status"]=="failed" for r in results)} failed; {len(selected)-len(results)} unprocessed. See cleanup_summary.json.');self.details.setPlainText(json.dumps(results,indent=2));self.approve.setChecked(False)
+            self.last_output=Path(path) if any(r['status']=='exported' for r in results) else None;self.status.setText(f'Export finished: {sum(r["status"]=="exported" for r in results)} exported, {sum(r["status"]=="failed" for r in results)} failed; {len(selected)-len(results)} unprocessed. See cleanup.log and cleanup_summary.json.');self.details.setPlainText(json.dumps(results,indent=2));self.approve.setChecked(False)
         self.owner.run_job('Cleaning and exporting song folders…',lambda cancel:export_cleaned(selected,path,self.root,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name)),ready,True)
     def open_folder(self):
         if self.last_output:QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.last_output)))
     def update_busy(self,busy,cancellable):
-        for widget in (self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button,self.select_all,self.select_ready,self.select_none,self.output_path,self.output_button):widget.setEnabled(not busy)
+        for widget in (self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button,self.select_all,self.select_ready,self.select_none,self.output_path,self.output_button,self.save_report):widget.setEnabled(not busy)
         self.cancel_button.setEnabled(busy and cancellable)
         self.open_output.setEnabled(not busy and self.last_output is not None)

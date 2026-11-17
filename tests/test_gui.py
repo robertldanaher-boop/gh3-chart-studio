@@ -549,7 +549,7 @@ def test_cleaner_bulk_selection_and_visible_start(tmp_path,app,monkeypatch):
     w.close()
 
 
-def test_cleaner_select_all_reports_blocked_and_exports_valid(tmp_path,app):
+def test_cleaner_select_all_reports_blocked_and_exports_valid(tmp_path,app,monkeypatch):
     from test_cleaner import fixture
     import json
     source=tmp_path/'songs';fixture(source/'good')
@@ -568,4 +568,11 @@ def test_cleaner_select_all_reports_blocked_and_exports_valid(tmp_path,app):
     assert sorted(r['status'] for r in results)==['exported','failed']
     assert next(r['error'] for r in results if r['status']=='failed')=='; '.join(next(r['errors'] for r in panel.rows if r['errors']))
     assert '1 exported, 1 failed' in panel.status.text()
+    log=(panel.last_output/'cleanup.log').read_text(encoding='utf-8')
+    assert 'START |' in log and 'EXPORTED |' in log and 'FAILED |' in log and 'FINISHED |' in log
+    from PySide6.QtWidgets import QFileDialog
+    report=tmp_path/'scan.txt'
+    monkeypatch.setattr(QFileDialog,'getSaveFileName',lambda *a,**kw:(str(report),'Text (*.txt)'))
+    panel.save_report.click()
+    assert 'ERROR:' in report.read_text(encoding='utf-8') and 'READY' in report.read_text(encoding='utf-8')
     w.close()

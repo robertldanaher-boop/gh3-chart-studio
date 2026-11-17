@@ -2,6 +2,8 @@
 import copy
 import hashlib
 import json
+import traceback
+from datetime import datetime
 from pathlib import Path
 import re
 import soundfile as sf
@@ -101,9 +103,15 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
     if dest==root or dest.is_relative_to(root):raise ChartError('Choose an output directory outside the scanned source tree')
     if dest.exists():raise ChartError('Choose a new output folder; existing folders are never overwritten')
     dest.mkdir(parents=True)
+    log_path=dest/'cleanup.log'
+    def log(message):
+        with log_path.open('a',encoding='utf-8') as stream:
+            stream.write(datetime.now().astimezone().isoformat(timespec='seconds')+' '+message+'\n')
+    log(f'START | source={root} | output={dest} | requested={len(rows)}')
     results=[]
     for index,row in enumerate(rows,1):
         if cancel():break
+        log(f'SONG {index}/{len(rows)} | '+row['path'])
         progress(index-1,len(rows),row['path'])
         result={'source':row['path']}
         try:
@@ -115,8 +123,11 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             report={'operation':'clean-all-guitar-difficulties','cleanup_changes':row['changes'],'warnings':row['warnings'],'source_hashes':row['hashes']}
             export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True)
             result.update(status='exported',folder=str(folder))
-        except Exception as exc:result.update(status='failed',error=str(exc))
+        except Exception as exc:
+            result.update(status='failed',error=str(exc));log('FAILED | '+str(exc)+'\n'+traceback.format_exc())
+        else:log('EXPORTED | '+str(folder))
         results.append(result)
         (dest/'cleanup_summary.json').write_text(json.dumps({'results':results,'requested':len(rows),'processed':len(results)},indent=2),encoding='utf-8')
     (dest/'cleanup_summary.json').write_text(json.dumps({'results':results,'requested':len(rows),'processed':len(results),'cancelled':bool(cancel())},indent=2),encoding='utf-8')
+    log(f'FINISHED | exported={sum(r["status"]=="exported" for r in results)} | failed={sum(r["status"]=="failed" for r in results)} | unprocessed={len(rows)-len(results)} | cancelled={bool(cancel())}')
     return results
