@@ -3,13 +3,14 @@ import json
 from pathlib import Path
 from PySide6.QtCore import QStandardPaths
 from PySide6.QtWidgets import (QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QLineEdit,
-    QFileDialog,QComboBox,QTableWidget,QTableWidgetItem,QSpinBox,QHeaderView,QTextEdit,QGridLayout)
+    QFileDialog,QComboBox,QTableWidget,QTableWidgetItem,QSpinBox,QHeaderView,QTextEdit,QGridLayout,QScrollArea)
 from .patterns import PatternStore,scan_folder,extract,CATEGORIES
 
 class LibraryPanel(QWidget):
     def __init__(self,owner):
         super().__init__();self.owner=owner;self.rows=[];self.last_scan=None
-        layout=QVBoxLayout(self)
+        outer=QVBoxLayout(self);scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll)
+        body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body)
         title=QLabel('Local Pattern Learning');title.setStyleSheet('font-size:22px;font-weight:600');layout.addWidget(title)
         hint=QLabel('Scan authored charts, inspect extracted patterns, and rate useful examples.\nAll chart data and ratings remain on this computer. This is statistical pattern retrieval, not neural training.\nAfter scanning, switch to Chart Converter, open a supported chart, and select Generate 3 learned variations.\nLearning accepts source tap/HOPO markers and sustain overlaps as metadata; conversion remains strict.')
         hint.setWordWrap(True);layout.addWidget(hint)

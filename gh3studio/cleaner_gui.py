@@ -28,9 +28,9 @@ class CleanerPanel(QWidget):
         self.audio_button=QPushButton('Select matching audio…');self.audio_button.clicked.connect(self.choose_audio);row.addWidget(self.audio_button)
         self.chart_button=QPushButton('Select chart…');self.chart_button.clicked.connect(self.choose_chart);row.addWidget(self.chart_button)
         self.details=QTextEdit();self.details.setReadOnly(True);self.details.setMinimumHeight(130);layout.addWidget(self.details)
-        self.approve=QCheckBox('I reviewed changes and verified the metadata and matching audio.');outer.addWidget(self.approve)
+        self.approve=QCheckBox('Review complete');self.approve.setToolTip('I reviewed changes and verified the metadata and matching audio.');outer.addWidget(self.approve)
         warning=QLabel('Title and artist are required. Other missing fields are flagged, never invented. Existing Ogg may be re-encoded if its tags need correction. GH3 runtime compatibility still needs importer/game testing.');warning.setWordWrap(True);outer.addWidget(warning)
-        self.export_button=QPushButton('3. Export checked songs to new folders…');primary(self.export_button);self.export_button.clicked.connect(self.browse_export);outer.addWidget(self.export_button)
+        self.export_button=QPushButton('3. Export checked songs…');primary(self.export_button);self.export_button.clicked.connect(self.browse_export);outer.addWidget(self.export_button)
         self.open_output=QPushButton('Open last export folder');self.open_output.clicked.connect(self.open_folder);outer.addWidget(self.open_output)
     def browse(self):
         path=QFileDialog.getExistingDirectory(self,'Choose a song folder or parent directory')

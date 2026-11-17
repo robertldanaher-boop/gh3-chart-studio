@@ -33,7 +33,7 @@ def test_recursive_export_all_difficulties_without_inventing_medium(tmp_path):
         assert not any(song.modifiers.values())
         assert song.tempos==read_chart(path).tempos
         assert sf.info(folder/'song.ogg').subtype=='VORBIS'
-        assert 'name = Song †' in (folder/'song.ini').read_text()
+        assert 'name = Song †' in (folder/'song.ini').read_text(encoding='utf-8')
     assert before=={str(p):fingerprint(p) for p in source.rglob('*') if p.is_file()}
 
 
@@ -47,8 +47,8 @@ def test_missing_metadata_and_audio_block_until_corrected(tmp_path):
 
 def test_medium_orange_sustain_preserved_and_unsupported_phrase_removed(tmp_path):
     path=fixture(tmp_path/'source',tracks={'Medium':[Note(0,4,96),Note(192,0)]})
-    text=path.read_text().replace('[MediumSingle]\n{','[MediumSingle]\n{\n  0 = S 99 48')
-    path.write_text(text)
+    text=path.read_text(encoding='utf-8').replace('[MediumSingle]\n{','[MediumSingle]\n{\n  0 = S 99 48')
+    path.write_text(text,encoding='utf-8')
     with pytest.raises(ChartError):read_chart(path)
     row=inspect_chart(path);assert not row['errors']
     assert len(row['song'].tracks['Medium'])==2
@@ -59,7 +59,7 @@ def test_medium_orange_sustain_preserved_and_unsupported_phrase_removed(tmp_path
 
 def test_source_change_and_per_song_failure_do_not_overwrite(tmp_path):
     source=tmp_path/'source';one=fixture(source/'one');fixture(source/'two')
-    rows=scan_charts(source);one.write_text(one.read_text()+'\n')
+    rows=scan_charts(source);one.write_text(one.read_text(encoding='utf-8')+'\n',encoding='utf-8')
     dest=tmp_path/'output';results=export_cleaned(rows,dest,source)
     assert [r['status'] for r in results]==['failed','exported']
     assert 'changed' in results[0]['error']
@@ -69,11 +69,11 @@ def test_source_change_and_per_song_failure_do_not_overwrite(tmp_path):
 
 def test_ambiguous_chart_and_cancel(tmp_path):
     path=fixture(tmp_path/'source');path.rename(path.parent/'a.chart')
-    (path.parent/'b.chart').write_text((path.parent/'a.chart').read_text())
+    (path.parent/'b.chart').write_text((path.parent/'a.chart').read_text(encoding='utf-8'),encoding='utf-8')
     assert 'Multiple' in scan_charts(path.parent)[0]['errors'][0]
     assert scan_charts(path.parent,lambda:True)==[]
     results=export_cleaned([],tmp_path/'out',path.parent,lambda:True)
-    assert results==[] and json.loads((tmp_path/'out'/'cleanup_summary.json').read_text())['cancelled']
+    assert results==[] and json.loads((tmp_path/'out'/'cleanup_summary.json').read_text(encoding='utf-8'))['cancelled']
 
 
 def test_offset_and_nonstandard_meter_block(tmp_path):

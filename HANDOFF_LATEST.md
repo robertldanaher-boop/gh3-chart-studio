@@ -1,11 +1,21 @@
-# GH3 Chart Studio — 0.6.0 handoff
+# GH3 Chart Studio — 0.6.1 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_6_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.0 is authoritative.
+GH3_Chart_Studio_v0_6_1.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.1 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.6.0 update
+## Current 0.6.1 update
+
+User Windows failure: UTF-8 test read used platform default; larger-text window
+was1227px. Explicit UTF-8 reads/writes in cleaner tests; shorter cleaner footer
+labels, separate header action row, scrollable Pattern Library content and tabs.
+New wide-hidden-control regression; previous strict size checks retained.
+Read docs/M6_1_WINDOWS_GUIDE.md, M6_1_IMPLEMENTATION_LOG.md and M6_1_TEST_RESULTS.txt.
+No gameplay/cleanup algorithm changes. Exact native Windows acceptance pending;
+next user startup retest then one-song import/game acceptance.
+
+## Prior 0.6.0 update
 
 New Clean charts goal/tab supports folder drop, recursive song collection review,
 metadata/audio correction, conservative all-guitar-difficulty cleanup and Ogg folders.

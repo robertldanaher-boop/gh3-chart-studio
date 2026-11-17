@@ -486,3 +486,16 @@ def test_folder_drop_on_start_routes_to_cleaner(tmp_path,app):
     w.resize(1024,700);app.processEvents()
     assert w.cleaner.export_button.visibleRegion().boundingRect().height()>0
     w.close()
+
+
+def test_wide_hidden_library_controls_scroll_instead_of_widening_window(app):
+    from PySide6.QtWidgets import QScrollArea
+    w=Window()
+    w.library.similar_button.setText('Find matches with unusually wide Windows font metrics ' * 5)
+    w.resize(1024,700);w.show();w.tabs.setCurrentWidget(w.audio);app.processEvents()
+    assert w.width()<=1024
+    w.tabs.setCurrentWidget(w.library);app.processEvents()
+    scroll=w.library.findChild(QScrollArea)
+    assert scroll.horizontalScrollBar().maximum()>0
+    assert w.width()<=1024
+    w.close()
