@@ -28,8 +28,10 @@ def inspect_chart(path,audio=None,metadata=None):
         song=load(path,learning_only=True,cleanup=True)
         chosen=Path(audio).resolve() if audio else matching_audio(path,song.metadata)
         if chosen is None:
-            choices=[p for p in path.parent.iterdir() if p.is_file() and p.suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus') and p.stem.lower() not in ('guitar','rhythm','bass','drums','vocals','preview')]
-            if len(choices)==1:chosen=choices[0]
+            choices=[p for p in path.parent.iterdir() if p.is_file() and p.suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus') and p.stem.lower() not in ('preview','song_preview')]
+            if len(choices)==1:
+                chosen=choices[0]
+                row['warnings'].append('Automatically matched the only non-preview audio in this song folder: '+chosen.name+'. Verify it contains the full song, not an isolated instrument.')
         row['metadata']=fill_from_audio(song.metadata,chosen)
         if metadata is not None:row['metadata'].update({k:v for k,v in metadata.items() if k in FIELDS})
         song.metadata.update(row['metadata'])

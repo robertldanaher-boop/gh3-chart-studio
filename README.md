@@ -1,4 +1,6 @@
-Latest release: **0.6.2**. Cleaner metadata edits survive chart validation errors and stay visible when reopening the editor. See [Windows retest](docs/M6_2_WINDOWS_GUIDE.md).
+Latest release: **0.6.3**. Cleaner has visible **START CLEANING**, **Select all ready**, a selection count, and automatic same-folder audio matching for a single non-preview recording. See [Windows steps and limitations](docs/M6_3_WINDOWS_GUIDE.md).
+
+Version **0.6.2**: Cleaner metadata edits survive chart validation errors and stay visible when reopening the editor. See [Windows retest](docs/M6_2_WINDOWS_GUIDE.md).
 
 Version **0.6.1**: Corrects Windows-default-encoding test reads and further isolates wide GUI controls. See [Windows retest steps](docs/M6_1_WINDOWS_GUIDE.md).
 

@@ -1,11 +1,24 @@
-# GH3 Chart Studio — 0.6.2 handoff
+# GH3 Chart Studio — 0.6.3 handoff
 
-Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_6_2.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.2 is authoritative.
+Prepared November 17, 2026 for Bob Danaher. Give the next assistant this file and
+GH3_Chart_Studio_v0_6_3.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.3 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.6.2 update
+## Current 0.6.3 update
+
+Cleaner bulk selection (ready rows only), checked/error counts, fixed top START
+CLEANING and approval controls. Start explains unmet prerequisites. Results opens
+only after successful export. Metadata rechecks preserve unchecked selections.
+A sole non-preview audio file beside a chart is now automatically matched even
+when called guitar.wav/ogg, with a warning to verify it contains the full mix.
+Multiple unidentified files still require review; no automatic stem mixing.
+214 tests passed in 21.54s; offscreen 1024x700 screenshot inspected. Native Windows
+and game acceptance pending. See docs/M6_3_WINDOWS_GUIDE.md,
+M6_3_IMPLEMENTATION_LOG.md and M6_3_TEST_RESULTS.txt. Next: one packaged song
+end-to-end acceptance, then a small recursive collection. No Claude handoff occurred.
+
+## Prior 0.6.2 update
 
 Fixed manual metadata disappearing after OK when chart recheck failed before
 identity was populated. Preserve editable fields before parsing; table/editor retain

@@ -16,10 +16,10 @@ class CleanerPanel(QWidget):
         body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body)
         title=QLabel('Clean charts for GH3');title.setWordWrap(True);title.setStyleSheet('font-size:22px;font-weight:600');layout.addWidget(title)
         hint=QLabel('1. Scan a song folder or parent directory → 2. Review changes and metadata → 3. Export new folders.\nCleans every guitar difficulty: removes forced/tap/open-note markers, repairs sustains and removes Orange from Medium. Other instruments, stems and artwork are omitted. Originals stay untouched.');hint.setWordWrap(True);layout.addWidget(hint)
-        row=QHBoxLayout();layout.addLayout(row)
+        row=QHBoxLayout();outer.insertLayout(0,row)
         self.scan_button=QPushButton('1. Choose folder to scan…');self.scan_button.clicked.connect(self.browse);row.addWidget(self.scan_button)
         self.cancel_button=QPushButton('Cancel');self.cancel_button.clicked.connect(owner.cancel);row.addWidget(self.cancel_button)
-        self.status=QLabel('Drop a folder here or choose one above.');self.status.setWordWrap(True);layout.addWidget(self.status)
+        self.status=QLabel('Drop a folder here or choose one above.');self.status.setWordWrap(True);outer.insertWidget(1,self.status)
         self.table=QTableWidget(0,5);self.table.setHorizontalHeaderLabels(['Export','Song','Artist','Review','Source'])
         self.table.horizontalHeader().setStretchLastSection(True);self.table.setSelectionBehavior(QTableWidget.SelectRows);self.table.setSelectionMode(QTableWidget.SingleSelection);self.table.setEditTriggers(QTableWidget.NoEditTriggers)
         self.table.currentCellChanged.connect(self.show_details);layout.addWidget(self.table)
@@ -28,10 +28,26 @@ class CleanerPanel(QWidget):
         self.audio_button=QPushButton('Select matching audio…');self.audio_button.clicked.connect(self.choose_audio);row.addWidget(self.audio_button)
         self.chart_button=QPushButton('Select chart…');self.chart_button.clicked.connect(self.choose_chart);row.addWidget(self.chart_button)
         self.details=QTextEdit();self.details.setReadOnly(True);self.details.setMinimumHeight(130);layout.addWidget(self.details)
-        self.approve=QCheckBox('Review complete');self.approve.setToolTip('I reviewed changes and verified the metadata and matching audio.');outer.addWidget(self.approve)
+        self.approve=QCheckBox('Apply the reviewed cleanup changes');self.approve.setToolTip('I reviewed changes and verified the metadata and matching audio.');outer.insertWidget(2,self.approve)
         warning=QLabel('Title and artist are required. Other missing fields are flagged, never invented. Existing Ogg may be re-encoded if its tags need correction. GH3 runtime compatibility still needs importer/game testing.');warning.setWordWrap(True);outer.addWidget(warning)
-        self.export_button=QPushButton('3. Export checked songs…');primary(self.export_button);self.export_button.clicked.connect(self.browse_export);outer.addWidget(self.export_button)
-        self.open_output=QPushButton('Open last export folder');self.open_output.clicked.connect(self.open_folder);outer.addWidget(self.open_output)
+        self.export_button=QPushButton('START CLEANING checked songs…');primary(self.export_button);self.export_button.clicked.connect(self.browse_export);outer.insertWidget(3,self.export_button)
+        self.open_output=QPushButton('Open results folder (after cleaning)');self.open_output.clicked.connect(self.open_folder);outer.addWidget(self.open_output)
+        bulk=QHBoxLayout();outer.insertLayout(2,bulk)
+        self.select_all=QPushButton('Select all ready');self.select_all.clicked.connect(lambda:self.set_checked(True));bulk.addWidget(self.select_all)
+        self.select_none=QPushButton('Clear selection');self.select_none.clicked.connect(lambda:self.set_checked(False));bulk.addWidget(self.select_none)
+        self.selection_summary=QLabel();self.selection_summary.setWordWrap(True);bulk.addWidget(self.selection_summary,1)
+        self.table.itemChanged.connect(self.selection_changed)
+        self.selection_changed()
+    def selection_changed(self,*args):
+        checked=sum(self.table.item(i,0) is not None and self.table.item(i,0).checkState()==Qt.Checked for i in range(len(self.rows)))
+        blocked=sum(bool(r['errors']) for r in self.rows)
+        self.selection_summary.setText(f'{checked} checked • {blocked} need correction')
+    def set_checked(self,checked):
+        if self.owner.busy():return
+        self.table.blockSignals(True)
+        for i,row in enumerate(self.rows):self.table.item(i,0).setCheckState(Qt.Checked if checked and not row['errors'] else Qt.Unchecked)
+        self.table.blockSignals(False);self.approve.setChecked(False);self.selection_changed()
+        self.status.setText('Ready songs selected. Review changes, tick Apply the reviewed cleanup changes, then click START CLEANING.' if checked else 'Selection cleared.')
     def browse(self):
         path=QFileDialog.getExistingDirectory(self,'Choose a song folder or parent directory')
         if path:self.scan(path)
@@ -42,15 +58,18 @@ class CleanerPanel(QWidget):
     def scanned(self,rows):
         self.rows=rows;self.render()
         self.status.setText(f'{len(rows)} song folders found; {sum(not r["errors"] for r in rows)} ready for review. Select each row to inspect changes. Cancelled scans may show partial results.')
-    def render(self):
+    def render(self,preserve_selection=False):
+        previous={self.rows[i]['path']:self.table.item(i,0).checkState() for i in range(min(len(self.rows),self.table.rowCount())) if self.table.item(i,0)} if preserve_selection else {}
+        self.table.blockSignals(True)
         self.table.setRowCount(0)
         for index,row in enumerate(self.rows):
             self.table.insertRow(index)
-            check=QTableWidgetItem();check.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable|Qt.ItemIsUserCheckable);check.setCheckState(Qt.Unchecked if row['errors'] else Qt.Checked);self.table.setItem(index,0,check)
+            check=QTableWidgetItem();check.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable|Qt.ItemIsUserCheckable);check.setCheckState(Qt.Unchecked if row['errors'] else previous.get(row['path'],Qt.Checked));self.table.setItem(index,0,check)
             values=[row['metadata'].get('Name',''),row['metadata'].get('Artist',''),'Needs correction' if row['errors'] else f'{len(row["changes"])} changes',row['path']]
             for col,value in enumerate(values,1):self.table.setItem(index,col,QTableWidgetItem(value))
+        self.table.blockSignals(False)
         if self.rows:self.table.selectRow(0)
-        self.show_details()
+        self.show_details();self.selection_changed()
     def selected(self):
         index=self.table.currentRow()
         return index if 0<=index<len(self.rows) else None
@@ -82,7 +101,7 @@ class CleanerPanel(QWidget):
             self.table.item(index,2).setText(row['metadata'].get('Artist',''))
             self.show_details()
         def ready(value):
-            self.rows[index]=value;self.render();self.table.selectRow(index);self.show_details()
+            self.rows[index]=value;self.render(preserve_selection=True);self.table.selectRow(index);self.show_details()
             self.status.setText('Edits retained in this review. '+('Chart still needs correction: '+ '; '.join(value['errors']) if value['errors'] else 'Ready for review and export.')+' Export writes these edits to a new folder; originals stay unchanged.')
         self.owner.run_job('Rechecking selected song…',lambda cancel:inspect_chart(path,audio,metadata),ready)
     def edit_metadata(self):
@@ -104,7 +123,9 @@ class CleanerPanel(QWidget):
         path,_=QFileDialog.getOpenFileName(self,'Choose chart for this song',self.rows[index]['path'],'Charts (*.chart *.mid *.midi)')
         if path:self.recheck(index,path=path,audio=None)
     def browse_export(self):
-        if not self.approve.isChecked():self.status.setText('Review changes, verify metadata/audio, then tick the review checkbox.');return
+        if not self.rows:self.status.setText('Choose a folder to scan first.');return
+        if not any(self.table.item(i,0).checkState()==Qt.Checked for i in range(len(self.rows))):self.status.setText('No songs checked. Use Select all ready; rows with errors need correction first.');return
+        if not self.approve.isChecked():self.status.setText('Tick Apply the reviewed cleanup changes, then click START CLEANING to choose the output location.');return
         path=QFileDialog.getExistingDirectory(self,'Choose output parent outside the scanned source directory')
         if path:
             from datetime import datetime
@@ -114,11 +135,11 @@ class CleanerPanel(QWidget):
         selected=[row for i,row in enumerate(self.rows) if self.table.item(i,0).checkState()==Qt.Checked]
         if not selected or any(r['errors'] for r in selected):self.status.setText('Check at least one song and resolve errors on every checked row.');return
         def ready(results):
-            self.last_output=Path(path);self.status.setText(f'Export finished: {sum(r["status"]=="exported" for r in results)} exported, {sum(r["status"]=="failed" for r in results)} failed; {len(selected)-len(results)} unprocessed. See cleanup_summary.json.');self.details.setPlainText(json.dumps(results,indent=2));self.approve.setChecked(False)
+            self.last_output=Path(path) if any(r['status']=='exported' for r in results) else None;self.status.setText(f'Export finished: {sum(r["status"]=="exported" for r in results)} exported, {sum(r["status"]=="failed" for r in results)} failed; {len(selected)-len(results)} unprocessed. See cleanup_summary.json.');self.details.setPlainText(json.dumps(results,indent=2));self.approve.setChecked(False)
         self.owner.run_job('Cleaning and exporting song folders…',lambda cancel:export_cleaned(selected,path,self.root,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name)),ready,True)
     def open_folder(self):
         if self.last_output:QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.last_output)))
     def update_busy(self,busy,cancellable):
-        for widget in (self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button):widget.setEnabled(not busy)
+        for widget in (self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button,self.select_all,self.select_none):widget.setEnabled(not busy)
         self.cancel_button.setEnabled(busy and cancellable)
         self.open_output.setEnabled(not busy and self.last_output is not None)

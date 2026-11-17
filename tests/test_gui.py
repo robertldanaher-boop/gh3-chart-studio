@@ -525,3 +525,24 @@ def test_cleaner_metadata_dialog_retains_edits_on_invalid_chart(tmp_path,app,mon
     w.cleaner.edit_metadata()
     assert path.read_text(encoding='utf-8')=='invalid chart syntax'
     w.close()
+
+
+def test_cleaner_bulk_selection_and_visible_start(tmp_path,app,monkeypatch):
+    from test_cleaner import fixture
+    from PySide6.QtWidgets import QFileDialog
+    source=tmp_path/'songs';fixture(source/'one');fixture(source/'two')
+    bad=fixture(source/'bad');bad.write_text('broken',encoding='utf-8')
+    w=Window();w.resize(1024,700);w.show();w.start_guided('clean',str(source));wait(w)
+    panel=w.cleaner
+    panel.select_none.click()
+    assert all(panel.table.item(i,0).checkState()==Qt.Unchecked for i in range(3))
+    panel.select_all.click()
+    assert sum(panel.table.item(i,0).checkState()==Qt.Checked for i in range(3))==2
+    assert '2 checked' in panel.selection_summary.text()
+    assert panel.export_button.visibleRegion().boundingRect().height()>0
+    assert not panel.open_output.isEnabled()
+    panel.approve.setChecked(True)
+    monkeypatch.setattr(QFileDialog,'getExistingDirectory',lambda *args,**kwargs:str(tmp_path))
+    panel.export_button.click();wait(w)
+    assert panel.last_output is not None and panel.open_output.isEnabled()
+    w.close()

@@ -39,9 +39,9 @@ def test_recursive_export_all_difficulties_without_inventing_medium(tmp_path):
 
 def test_missing_metadata_and_audio_block_until_corrected(tmp_path):
     path=fixture(tmp_path/'source',{'Name':'unknown','Artist':'unknown'})
-    (path.parent/'song.wav').rename(path.parent/'guitar.wav')
+    (path.parent/'song.wav').rename(path.parent/'preview.wav')
     row=inspect_chart(path);assert len(row['errors'])==3
-    fixed=inspect_chart(path,path.parent/'guitar.wav',{'Name':'Verified title','Artist':'Verified artist'})
+    fixed=inspect_chart(path,path.parent/'preview.wav',{'Name':'Verified title','Artist':'Verified artist'})
     assert not fixed['errors'] and fixed['song'].metadata['Name']=='Verified title'
 
 
@@ -115,3 +115,21 @@ def test_metadata_recheck_does_not_restore_stale_timing_fields(tmp_path):
     assert not fixed['errors']
     assert fixed['song'].metadata['Offset']=='0'
     assert fixed['metadata']['Name']=='Corrected'
+
+
+def test_single_packaged_audio_named_guitar_auto_matches(tmp_path):
+    path=fixture(tmp_path/'artist'/'album'/'song')
+    (path.parent/'song.wav').rename(path.parent/'guitar.wav')
+    sf.write(path.parent/'preview.wav',np.zeros(100),44100)
+    rows=scan_charts(tmp_path)
+    assert len(rows)==1 and not rows[0]['errors']
+    assert Path(rows[0]['audio']).name=='guitar.wav'
+
+
+def test_multiple_unidentified_stems_require_full_mix_choice(tmp_path):
+    path=fixture(tmp_path/'song')
+    (path.parent/'song.wav').rename(path.parent/'guitar.wav')
+    sf.write(path.parent/'bass.wav',np.zeros(100),44100)
+    row=inspect_chart(path)
+    assert not row['audio']
+    assert any('audio' in e for e in row['errors'])
