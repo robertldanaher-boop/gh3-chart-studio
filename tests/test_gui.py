@@ -536,13 +536,36 @@ def test_cleaner_bulk_selection_and_visible_start(tmp_path,app,monkeypatch):
     panel=w.cleaner
     panel.select_none.click()
     assert all(panel.table.item(i,0).checkState()==Qt.Unchecked for i in range(3))
-    panel.select_all.click()
+    panel.select_ready.click()
     assert sum(panel.table.item(i,0).checkState()==Qt.Checked for i in range(3))==2
     assert '2 checked' in panel.selection_summary.text()
     assert panel.export_button.visibleRegion().boundingRect().height()>0
     assert not panel.open_output.isEnabled()
     panel.approve.setChecked(True)
-    monkeypatch.setattr(QFileDialog,'getExistingDirectory',lambda *args,**kwargs:str(tmp_path))
+    def unexpected_picker(*args,**kwargs):raise AssertionError('Start must not open a folder picker')
+    monkeypatch.setattr(QFileDialog,'getExistingDirectory',unexpected_picker)
     panel.export_button.click();wait(w)
     assert panel.last_output is not None and panel.open_output.isEnabled()
+    w.close()
+
+
+def test_cleaner_select_all_reports_blocked_and_exports_valid(tmp_path,app):
+    from test_cleaner import fixture
+    import json
+    source=tmp_path/'songs';fixture(source/'good')
+    bad=fixture(source/'bad');bad.write_text('broken',encoding='utf-8')
+    w=Window();w.cleaner.scan(source);wait(w);panel=w.cleaner
+    panel.select_all.click()
+    assert all(panel.table.item(i,0).checkState()==Qt.Checked for i in range(2))
+    assert '2 checked of 2' in panel.selection_summary.text()
+    assert '1 blocked' in panel.selection_summary.text()
+    assert any('BLOCKED:' in panel.table.item(i,3).text() for i in range(2))
+    panel.approve.setChecked(True);panel.output_path.setText(str(source))
+    panel.export_button.click()
+    assert not w.busy() and 'Cannot start' in panel.status.text()
+    panel.output_path.setText(str(tmp_path/'output'));panel.export_button.click();wait(w)
+    results=json.loads((panel.last_output/'cleanup_summary.json').read_text(encoding='utf-8'))['results']
+    assert sorted(r['status'] for r in results)==['exported','failed']
+    assert next(r['error'] for r in results if r['status']=='failed')=='; '.join(next(r['errors'] for r in panel.rows if r['errors']))
+    assert '1 exported, 1 failed' in panel.status.text()
     w.close()

@@ -1,11 +1,24 @@
-# GH3 Chart Studio — 0.6.3 handoff
+# GH3 Chart Studio — 0.6.4 handoff
 
 Prepared November 17, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_6_3.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.3 is authoritative.
+GH3_Chart_Studio_v0_6_4.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.4 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.6.3 update
+## Current 0.6.4 update
+
+True Select all plus ready-only option, visible blocked-song errors and exact
+failure reasons in cleanup_summary.json. Start now runs directly using visible
+output parent (defaults beside source); separate Change output folder opens picker.
+Preflight destination check and cleaner goal routing expose errors/progress.
+Mixed selected rows export valid songs while recording blocked rows as failures.
+215 tests passed in 22.38s; 1024x700 offscreen screenshot inspected.
+Native Windows and user's 54-song collection not tested. The 10 blocked errors
+have not been provided; do not claim they are resolved. See docs/M6_4_WINDOWS_GUIDE.md,
+M6_4_IMPLEMENTATION_LOG.md and M6_4_TEST_RESULTS.txt. Next collect actual error
+report and verify one exported song in the target importer/game.
+
+## Prior 0.6.3 update
 
 Cleaner bulk selection (ready rows only), checked/error counts, fixed top START
 CLEANING and approval controls. Start explains unmet prerequisites. Results opens

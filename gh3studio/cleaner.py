@@ -107,7 +107,7 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
         progress(index-1,len(rows),row['path'])
         result={'source':row['path']}
         try:
-            if row['errors'] or row['song'] is None:raise ChartError('Row has unresolved review errors')
+            if row['errors'] or row['song'] is None:raise ChartError('; '.join(row['errors']) or 'No parsed chart is available')
             if any(fingerprint(p)!=digest for p,digest in row['hashes'].items()):raise ChartError('Source changed after scan; rescan before export')
             song=copy.deepcopy(row['song'])
             name=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',song.metadata['Artist']+' - '+song.metadata['Name']).strip(' .')[:100]
