@@ -1,11 +1,26 @@
-# GH3 Chart Studio — 0.5.6 handoff
+# GH3 Chart Studio — 0.6.0 handoff
 
 Prepared November 15, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_5_6.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.5.6 is authoritative.
+GH3_Chart_Studio_v0_6_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.5.6 update
+## Current 0.6.0 update
+
+New Clean charts goal/tab supports folder drop, recursive song collection review,
+metadata/audio correction, conservative all-guitar-difficulty cleanup and Ogg folders.
+No missing Medium generated. Existing Medium Orange removed with seeded sustain
+transfer before explicit sustain repair. Required title/artist; optional fields flagged;
+no factual metadata verification. Review acknowledgement required before exporting.
+Outputs are new folders outside source tree; per-song errors/cancel summarized.
+Existing Ogg tags reconciled by re-encoding only when needed; other audio to Vorbis.
+No native Windows/game acceptance; read docs/M6_WINDOWS_GUIDE.md and
+M6_IMPLEMENTATION_LOG.md. 206 tests passed in19.80s; result M6_TEST_RESULTS.txt. Startup/dependency
+bootstrap v0.5.6 preserved. This user-authorized collection cleanup supersedes the
+prior blanket deferral of batch work; large-collection/game acceptance still pending.
+No actual Claude collaboration occurred. Next one-song and small-collection acceptance.
+
+## Prior 0.5.6 update
 
 START_WINDOWS.cmd probes Python3.11 x64/Tk/venv/ensurepip directly and via py.
 Missing usable runtime calls tools/install_python_windows.cmd: python.org signed

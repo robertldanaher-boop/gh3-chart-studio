@@ -7,7 +7,7 @@ from .model import ChartError
 from .song_identity import AUDIO_FIELDS
 
 
-def export_ogg(source_path,destination,metadata=None):
+def export_ogg(source_path,destination,metadata=None, *, reconcile_metadata=False):
     source_path=Path(source_path);destination=Path(destination)
     with sf.SoundFile(source_path) as source:
         if source.channels not in (1,2) or source.frames<=0:
@@ -17,6 +17,7 @@ def export_ogg(source_path,destination,metadata=None):
         desired_tags=dict(original_tags)
         desired_tags.update({tag:str(metadata[field]) for field,tag in AUDIO_FIELDS.items() if metadata and metadata.get(field)})
         reuse=source.format=='OGG' and source.subtype=='VORBIS'
+        if reconcile_metadata and any(original_tags.get(k)!=v for k,v in desired_tags.items() if k!='software'):reuse=False
         if not reuse:
             with sf.SoundFile(destination,'w',format='OGG',subtype='VORBIS',samplerate=source.samplerate,channels=source.channels) as target:
                 for tag,value in desired_tags.items():setattr(target,tag,value)

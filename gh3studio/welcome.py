@@ -66,11 +66,12 @@ class WelcomePanel(QWidget):
             label=QLabel(body);label.setObjectName('cardBody');label.setWordWrap(True);col.addWidget(label)
             col.addStretch();label=QLabel(steps);label.setWordWrap(True);label.setObjectName('muted');col.addWidget(label)
             button=QPushButton(action);primary(button);button.clicked.connect(lambda checked=False,g=key:owner.start_guided(g));col.addWidget(button);self.actions[key]=button;cards.addWidget(card,1)
+        clean=QPushButton('03  Clean charts for GH3 — one folder or a collection');primary(clean);clean.clicked.connect(lambda:owner.start_guided('clean'));layout.addWidget(clean);self.actions['clean']=clean
         row=QHBoxLayout();layout.addLayout(row)
         refine=QPushButton('Advanced chart conversion / variations');refine.clicked.connect(lambda:owner.start_guided('refine'));row.addWidget(refine);self.actions['refine']=refine
         library=QPushButton('Browse local patterns');library.clicked.connect(lambda:owner.tabs.setCurrentWidget(owner.library));row.addWidget(library)
         self.resume=QPushButton('Continue current song');self.resume.clicked.connect(owner.resume_workflow);row.addWidget(self.resume)
-        self.current=QLabel('One song at a time. Original files stay untouched.');self.current.setObjectName('muted');self.current.setWordWrap(True);layout.addWidget(self.current)
+        self.current=QLabel('Work on one song, or clean a collection. Original files stay untouched.');self.current.setObjectName('muted');self.current.setWordWrap(True);layout.addWidget(self.current)
         layout.addStretch()
     def update_state(self):
         for button in self.actions.values():button.setEnabled(not self.owner.busy())

@@ -10,10 +10,10 @@ from .validation import ensure_valid
 from .model import ChartError, Note
 from . import __version__
 
-def load(path, phrase_mode='modern', *, learning_only=False):
+def load(path, phrase_mode='modern', *, learning_only=False, cleanup=False):
     path=Path(path)
     if path.stat().st_size>32*1024*1024: raise ChartError('Input exceeds the 32 MiB safety limit')
-    if path.suffix.lower()=='.chart': song=read_chart(path)
+    if path.suffix.lower()=='.chart': song=read_chart(path,cleanup=cleanup)
     elif path.suffix.lower() in ('.mid','.midi'): song=read_midi(path,phrase_mode)
     else: raise ChartError('Choose a .chart or .mid file')
     ini=path.parent/'song.ini'

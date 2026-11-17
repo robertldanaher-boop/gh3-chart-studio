@@ -5,7 +5,7 @@ from fractions import Fraction
 from pathlib import Path
 from .model import Song, Note, Phrase, ChartError, BASES
 
-def read_chart(path):
+def read_chart(path, *, cleanup=False):
     text = Path(path).read_text(encoding='utf-8-sig')
     sections = {}
     current = None
@@ -72,7 +72,11 @@ def read_chart(path):
                     else: song.modifiers.setdefault(difficulty, []).append((tick, f'N {lane} {length}'))
                 elif typ == 'S':
                     kind, length = map(int, parts)
-                    if kind not in (0, 1, 2): raise ChartError(f'Unsupported phrase S {kind}')
+                    if kind not in (0, 1, 2):
+                        if cleanup:
+                            song.modifiers.setdefault(difficulty, []).append((tick, f'S {kind} {length}'))
+                            continue
+                        raise ChartError(f'Unsupported phrase S {kind}')
                     song.phrases[difficulty].append(Phrase(tick, kind, length))
                 else:
                     song.modifiers.setdefault(difficulty, []).append((tick, typ+' '+args))

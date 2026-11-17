@@ -457,3 +457,32 @@ def test_orange_sustain_transfer_checkbox(tmp_path,app):
     assert len(w.converted.tracks['Medium'])==2
     assert w.converted.tracks['Expert']==w.song.tracks['Expert']
     w.close()
+
+
+def test_clean_goal_reviews_and_exports_folder(tmp_path,app):
+    from test_cleaner import fixture
+    source=tmp_path/'songs';fixture(source/'one')
+    w=Window();assert w.start_guided('clean',str(source));wait(w)
+    assert w.tabs.currentWidget() is w.cleaner
+    assert len(w.cleaner.rows)==1 and not w.cleaner.rows[0]['errors']
+    assert w.cleaner.table.item(0,0).checkState()==Qt.Checked
+    output=tmp_path/'cleaned'
+    w.cleaner.export_to(output);assert not output.exists()
+    w.cleaner.approve.setChecked(True);w.cleaner.export_to(output);wait(w)
+    assert (output/'cleanup_summary.json').exists()
+    assert w.cleaner.last_output==output
+    assert not w.cleaner.approve.isChecked()
+    w.close()
+
+
+def test_folder_drop_on_start_routes_to_cleaner(tmp_path,app):
+    from test_cleaner import fixture
+    source=tmp_path/'songs';fixture(source/'one')
+    w=Window();w.show();mime=QMimeData();mime.setUrls([QUrl.fromLocalFile(str(source))])
+    event=QDropEvent(QPointF(10,10),Qt.CopyAction,mime,Qt.LeftButton,Qt.NoModifier)
+    w.dropEvent(event);wait(w)
+    assert w.tabs.currentWidget() is w.cleaner
+    assert len(w.cleaner.rows)==1
+    w.resize(1024,700);app.processEvents()
+    assert w.cleaner.export_button.visibleRegion().boundingRect().height()>0
+    w.close()
