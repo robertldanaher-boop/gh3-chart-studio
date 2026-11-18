@@ -60,6 +60,8 @@ class PlaybackPanel(QWidget):
         self.difficulty=QComboBox();self.difficulty.currentTextChanged.connect(self.select_difficulty);row.addWidget(self.difficulty)
         self.provenance=QLabel('No chart loaded');self.provenance.setWordWrap(True);self.provenance.setObjectName('muted');row.addWidget(self.provenance,1)
         self.highway=Highway();layout.addWidget(self.highway,1)
+        self.edit_button=QPushButton('Edit displayed chart…');self.edit_button.clicked.connect(self.open_editor);layout.addWidget(self.edit_button)
+        self.highway.setContextMenuPolicy(Qt.CustomContextMenu);self.highway.customContextMenuRequested.connect(self.open_editor)
         self.seek=QSlider(Qt.Horizontal);self.seek.setRange(0,0);self.seek.sliderMoved.connect(self.player.setPosition);layout.addWidget(self.seek)
         row=QHBoxLayout();layout.insertLayout(2,row)
         self.play_button=QPushButton('Play preview audio');self.play_button.clicked.connect(self.toggle);row.addWidget(self.play_button)
@@ -99,6 +101,12 @@ class PlaybackPanel(QWidget):
         self.player.playbackStateChanged.connect(self.playback_changed,Qt.QueuedConnection)
         self.timer=QTimer(self);self.timer.setInterval(33);self.timer.timeout.connect(self.tick);self.timer.start()
         self.update_busy(False,False)
+    def open_editor(self,*args):
+        if not self.current or self.owner.busy():return
+        from .editor_gui import ChartEditorDialog
+        self.player.pause()
+        dialog=ChartEditorDialog(self);dialog.exec();dialog.deleteLater()
+
     def set_focused(self,focused):
         self.legacy_conversion.setVisible(not focused)
         self.setMinimumHeight(275 if focused else 0)
@@ -226,6 +234,7 @@ class PlaybackPanel(QWidget):
         self.highway.notes=timeline(*self.current,threshold) if self.current else []
         self.highway.update();self.update_busy(self.owner.busy(),False)
     def update_busy(self,busy,cancellable):
+        self.edit_button.setEnabled(not busy and self.current is not None)
         self.regenerate_sustains.setEnabled(not busy and self.sustain_source is not None and self.current is not None and self.current[0] is self.owner.converted and bool((self.owner.report or {}).get('transferred_orange_sustains')))
         self.sustain_seed.setEnabled(not busy)
         self.orange_sustains.setEnabled(not busy)

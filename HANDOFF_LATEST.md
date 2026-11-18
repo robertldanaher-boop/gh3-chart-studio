@@ -1,11 +1,16 @@
-# GH3 Chart Studio — 0.7.3 handoff
+# GH3 Chart Studio — 0.8.0 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_7_3.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.3 is authoritative.
+GH3_Chart_Studio_v0_8_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.8.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.7.3 update
+## Current 0.8.0 update
+
+Bob reports 0.7.3 tested and playing in Dolphin on November 18, 2026.
+Added working-copy editor launched from playback preview/button. EditSession validates transactional edits; ChartEditorDialog supports drag notes/tails, star power, HOPO profile 2.95, patterns, undo/redo, audio navigation, and worker-based new-folder export. Medium Orange prohibited. Source unchanged; output not merged into converter: reopen exported chart. Clean incompatible sources first. 268 tests passed in 24.04s; five new tests plus full regression results in docs/M8_TEST_RESULTS.txt. See docs/M8_WINDOWS_GUIDE.md and M8_IMPLEMENTATION_LOG.md for exact changed files and acceptance steps. Native Windows/new editor gameplay not tested here. Next: Windows/Dolphin acceptance, then multi-select/copy/paste and autosave. No actual Claude involvement.
+
+## Previous 0.7.3 update
 
 Implemented automatic source-decoder fallback via imageio-ffmpeg 0.6.0. export_ogg
 catches eligible stage-specific LibsndfileError, decodes strictly to temporary PCM,

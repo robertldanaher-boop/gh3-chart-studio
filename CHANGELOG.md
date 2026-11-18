@@ -1,3 +1,9 @@
+# 0.8.0 — Interactive chart editing
+
+- Transactional preview editor, note/sustain drags, star power, HOPO/strum and pattern actions.
+- Undo/redo, audio navigation, full-song export preserving source files and four-fret Medium.
+- User reports 0.7.3 playing in Dolphin; new editor acceptance pending.
+
 # Changelog
 
 ## 0.7.3 — November 18, 2026

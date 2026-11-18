@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.7.3 — Wii chart workshop
+# GH3 Chart Studio 0.8.0 — Wii chart workshop
+
+**New: interactive chart editor.** Right-click the playback preview or choose Edit displayed chart. Edit notes, sustains, star power and patterns in a working copy, then export a new song folder. See [Windows editor guide](docs/M8_WINDOWS_GUIDE.md) and [implementation details](docs/M8_IMPLEMENTATION_LOG.md).
 
 Prepare existing authored song folders for GH3 Wii, or create a challenging
 four-fret Medium from Expert/Hard. The primary interface has **Home**, **Clean
