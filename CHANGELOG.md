@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.3 — November 18, 2026
+
+Built-in strict FFmpeg fallback for source audio decoding failures, verified header
+frame/rate/channel preservation, atomic Ogg export and clearer stage/file errors.
+Automatic setup of pinned imageio-ffmpeg; recovery shown in results and logs.
+263 tests passed, plus the supplied original Opus recovered through the cleaner
+with a synthetic chart. Native Windows/game acceptance pending.
+
 ## 0.7.2 — November 18, 2026
 
 Per-song synchronization review in Clean songs; normalize an explicitly selected

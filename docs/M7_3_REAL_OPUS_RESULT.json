@@ -1,0 +1,41 @@
+{
+  "input_sha256": "d7a23cd0767a3867150bc0919822b341b95554b33006cc4a04fb6f17f73d8a43",
+  "synthetic_chart_only": true,
+  "original_input_unchanged": true,
+  "audio_export": {
+    "embedded_tags": {
+      "title": "Audio fallback acceptance",
+      "software": "Lavc60.3.100 libopus (libsndfile-1.2.2)",
+      "artist": "Synthetic chart",
+      "date": "2024-02-06;2024",
+      "album": "Lost in the Dark"
+    },
+    "metadata_warnings": [
+      "Source audio recovered automatically with FFmpeg; original recording unchanged. See audio_export.fallback."
+    ],
+    "file": "song.ogg",
+    "format": "OGG",
+    "codec": "VORBIS",
+    "operation": "encoded_to_vorbis",
+    "frames": 9710324,
+    "sample_rate": 48000,
+    "channels": 2,
+    "fully_decoded": true,
+    "resampled": false,
+    "timing_shift_applied": false,
+    "padding_frames": 0,
+    "trimmed_frames": 0,
+    "fallback": {
+      "decoder": "FFmpeg",
+      "provider": "imageio-ffmpeg 0.6.0",
+      "decoded_frames": 9710324,
+      "sample_rate": 48000,
+      "channels": 2,
+      "source_header_matched": true,
+      "resampled": false,
+      "trimmed_frames": 0,
+      "original_error": "Audio decode source failed for \"/workspace/scratch/3330ef718b66/upload/song.opus\": Supported file format but file is malformed."
+    }
+  },
+  "cleanup_log_recovery_present": true
+}

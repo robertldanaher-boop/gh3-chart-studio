@@ -222,7 +222,9 @@ class CleanerPanel(QWidget):
             lines=['OUTPUT: '+str(path),'LOG: '+str(Path(path)/'cleanup.log'),'']
             for result in results:
                 lines.append(('EXPORTED: ' if result['status']=='exported' else 'NEEDS HELP: ')+result['source'])
-                lines.append(result.get('folder',result.get('error','')));lines.append('')
+                lines.append(result.get('folder',result.get('error','')))
+                if result.get('audio_recovered'):lines.append('Audio recovered automatically with FFmpeg; see validation.json for checks.')
+                lines.append('')
             self.results.setPlainText('\n'.join(lines));self.detail_tabs.setCurrentWidget(self.results);self.approve.setChecked(False)
         self.owner.run_job('Cleaning and exporting song folders…',lambda cancel:export_cleaned(selected,path,self.root,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name)),ready,True)
     def open_folder(self):

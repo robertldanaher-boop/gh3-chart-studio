@@ -146,7 +146,10 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             if sync:
                 report['synchronization']=sync
                 log('SYNCHRONIZATION | '+json.dumps(sync,ensure_ascii=True))
-            export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True,audio_padding_frames=sync.get('audio_padding_frames',0))
+            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True,audio_padding_frames=sync.get('audio_padding_frames',0))
+            if details['audio_export'].get('fallback'):
+                result['audio_recovered']=True
+                log('AUDIO RECOVERED | '+row['audio']+' | '+json.dumps(details['audio_export']['fallback']))
             result.update(status='exported',folder=str(folder))
         except Exception as exc:
             result.update(status='failed',error=str(exc));log('FAILED | '+str(exc)+'\n'+traceback.format_exc())

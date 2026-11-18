@@ -53,3 +53,11 @@ requires an audit of the actual platform backend, matching notices and correspon
 source availability; the existing distribution-notice collector alone does not
 complete that audit. Do not describe a Windows binary as distribution-ready based
 only on a successful PyInstaller build. We use Qt APIs; no FFmpeg source was copied.
+
+## Audio recovery dependency (0.7.3)
+
+imageio-ffmpeg 0.6.0 (BSD-2-Clause wrapper) supplies a separate FFmpeg executable.
+The binary has its own GPL license; the wrapper's BSD license does not cover it.
+See docs/FFMPEG_DEPENDENCY.md. This source ZIP does not redistribute that executable;
+START_WINDOWS installs the hash-pinned upstream Windows wheel. Build collection now
+captures the actual executable's license/build notices as well as wrapper notices.

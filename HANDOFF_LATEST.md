@@ -1,11 +1,37 @@
-# GH3 Chart Studio — 0.7.2 handoff
+# GH3 Chart Studio — 0.7.3 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_7_2.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.2 is authoritative.
+GH3_Chart_Studio_v0_7_3.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.3 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Post-release audio diagnosis — November 18, 2026
+## Current 0.7.3 update
+
+Implemented automatic source-decoder fallback via imageio-ffmpeg 0.6.0. export_ogg
+catches eligible stage-specific LibsndfileError, decodes strictly to temporary PCM,
+checks frames/rate/channels against readable original header, then exports/validates
+Ogg with padding and metadata applied once. No source changes or discarded-error
+flags. Write/output-validation failures do not retry the source decoder. Atomic
+song staging and temporary PCM cleanup retained. FFmpeg timeout180s, cancellation
+still between songs. Source scan header failures remain unsupported.
+
+Setup lock adds only imageio-ffmpeg; Windows wheel hash checked and FFmpeg7.1.exe
+inspected, not run. Linux provider FFmpeg7.0.2 tested. Wrapper BSD2, native binary
+GPLv3+; separate notices included, compiled redistribution source obligations still
+need arranging. Source ZIP has no decoder binaries or private/commercial music.
+Build script collects provider data; notice collector records binary -L/-version.
+
+Results show Audio recovered automatically; cleanup.log includes AUDIO RECOVERED;
+validation.json audio_export.fallback records original error and recovery checks.
+263 tests passed in25.48s (Python3.11.18/Linux/offscreen). Six new synthetic recovery
+cases plus the actual user's original Opus through inspect_chart/export_cleaned
+with a synthetic chart: 9,710,324 stereo frames at48kHz; input hash unchanged and
+complete Ogg read-back. Actual user chart not supplied, Windows/game test pending.
+See docs/M7_3_WINDOWS_GUIDE.md, M7_3_IMPLEMENTATION_LOG.md, M7_3_TEST_RESULTS.txt,
+M7_3_REAL_OPUS_RESULT.json and FFMPEG_DEPENDENCY.md. Next original-Opus Windows
+acceptance and one-song TheGHOST/Wii test. No actual Claude handoff occurred.
+
+## Historical post-release audio diagnosis — November 18, 2026
 
 User supplied song.opus for Lost in the Dark (Left to Suffer / Paleface Swiss).
 Reproduced SoundFile/libsndfile 1.2.2 decoding failure after 524288 returned frames.
@@ -18,7 +44,7 @@ Do not bundle user recording in releases or tests. Next implement stage/file-spe
 errors and a licensed/tested Windows decoding fallback; no silent frame skipping.
 No actual user's chart or song.ini was supplied. Full song/game acceptance pending.
 
-## Current 0.7.2 update
+## Prior 0.7.2 update
 
 Bob confirmed 0.7.1 runs on Windows, then reported nonzero Offset/song.ini delay
 and a SyncTrack anchor at tick 13824. No actual affected song assets were provided.

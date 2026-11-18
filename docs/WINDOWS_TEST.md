@@ -1,6 +1,7 @@
-# Windows 10/11 acceptance — current release 0.7.2
+# Windows 10/11 acceptance — current release 0.7.3
 
-Follow [M7_2_WINDOWS_GUIDE.md](M7_2_WINDOWS_GUIDE.md) for synchronization and anchor review, then
+Follow [M7_3_WINDOWS_GUIDE.md](M7_3_WINDOWS_GUIDE.md) for automatic audio recovery;
+[M7_2_WINDOWS_GUIDE.md](M7_2_WINDOWS_GUIDE.md) covers synchronization and anchors, then
 [M7_WINDOWS_GUIDE.md](M7_WINDOWS_GUIDE.md) for the two essential workflows,
 small-window checks, audio preview and reserved tools. Older M*_WINDOWS_GUIDE files
 are historical instructions; tab names in them may have moved under Tools in reserve.

@@ -20,6 +20,8 @@ https://github.com/TheNathannator/GuitarGame_ChartFormats
 - NumPy and SciPy communities: numerical processing/audio analysis, BSD licensing.
 - SoundFile contributors: audio I/O and metadata, BSD.
 - libsndfile contributors: native audio format support, LGPL.
+- imageio-ffmpeg contributors: packaged FFmpeg executable discovery, BSD-2-Clause wrapper.
+- FFmpeg contributors: alternate audio decoding in a separate process. The pinned binary builds use GPL terms distinct from the wrapper; see docs/FFMPEG_DEPENDENCY.md and licenses/FFmpeg.
 - CFFI and pycparser: bindings/parser dependencies, MIT/BSD.
 
 ## Test/build tooling and supporting packages

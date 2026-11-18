@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.7.2 — Wii chart workshop
+# GH3 Chart Studio 0.7.3 — Wii chart workshop
 
 Prepare existing authored song folders for GH3 Wii, or create a challenging
 four-fret Medium from Expert/Hard. The primary interface has **Home**, **Clean
@@ -15,7 +15,7 @@ songs** and **Four-fret Medium**. Audio generation and pattern tools remain unde
 3. Choose **Clean my songs** or **Make a challenging Medium** from Home.
 4. Follow the numbered steps in the selected workspace.
 
-See [0.7.2 Windows test steps](docs/M7_2_WINDOWS_GUIDE.md), including small-window,
+See [0.7.3 Windows test steps](docs/M7_3_WINDOWS_GUIDE.md), including small-window,
 playback, export and reserved-tool checks. Setup failures are recorded in
 `start_windows.log` and `startup_bootstrap.log`.
 
@@ -33,6 +33,17 @@ Every successful output contains `notes.chart`, `song.ogg`, `song.ini`, validati
 and import reports. Per-run `cleanup.log` and `cleanup_summary.json` record outcomes.
 **Open results / logs** also works after an all-failed run if a report folder exists.
 **Save scan report** collects blockers before export. Original folders stay untouched.
+
+## Automatic audio recovery
+
+If the source decoder fails while exporting a recording, the app now retries with
+packaged FFmpeg, validates decoded length/rate/channels, and continues the Ogg export.
+No manual conversion is required. Results and cleanup.log identify recovered audio;
+validation.json records both the original error and recovery checks. Sources remain
+untouched. Startup installs the new pinned decoder dependency automatically.
+Unrecoverable audio remains a reported failure; errors now name the file and stage.
+See [Windows recovery test](docs/M7_3_WINDOWS_GUIDE.md) and
+[dependency/licensing notes](docs/FFMPEG_DEPENDENCY.md).
 
 ## Resolve synchronization blockers
 
@@ -68,8 +79,8 @@ are not implemented. A source's existing Medium is replaced only in the new outp
 
 ## Limits and verification
 
-257 tests passed in 23.15 seconds on Python 3.11/Linux with Qt offscreen. See
-[recorded results](docs/M7_2_TEST_RESULTS.txt). Existing 1024x700 and wider-font checks
+263 tests passed in 25.48 seconds on Python 3.11/Linux with Qt offscreen. See
+[recorded results](docs/M7_3_TEST_RESULTS.txt). Existing 1024x700 and wider-font checks
 remain; new checks exercise the synchronization dialog, tempo preservation and
 actual padded Ogg exports. The user confirmed 0.7.1 launches on Windows; this new
 release still needs Windows acceptance. No native Windows build, audible device,
@@ -99,9 +110,10 @@ The ZIP includes `repository.bundle` and `RELEASE_COMMIT.txt`. Restore history w
 `git clone repository.bundle GH3-Chart-Studio-repo`. Source modules live in
 `gh3studio/`; tests in `tests/`; synthetic examples in `examples/`. No commercial
 recordings are bundled. [Project direction](docs/PROJECT_DIRECTION.md),
-[implementation log](docs/M7_2_IMPLEMENTATION_LOG.md) and [handoff](HANDOFF_LATEST.md)
+[implementation log](docs/M7_3_IMPLEMENTATION_LOG.md) and [handoff](HANDOFF_LATEST.md)
 record scope, limitations and next work.
 
 Credits to Nanook and TeamGHOST and the format-reference authors remain under
 **About** and in [credits](docs/CREDITS.md). Dependency notices are in `licenses/`
-and `THIRD_PARTY.md`. No new third-party dependency or artwork was added in 0.7.2.
+and `THIRD_PARTY.md`. Version 0.7.3 adds imageio-ffmpeg for automatic audio recovery;
+its wrapper and native decoder have distinct licenses.

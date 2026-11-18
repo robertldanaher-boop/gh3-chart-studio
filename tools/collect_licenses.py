@@ -21,3 +21,13 @@ try:
         shutil.copyfile(notice,dest)
 except ImportError:
     pass
+
+# FFmpeg is a separate executable with its own license, not the wrapper's BSD license.
+import subprocess
+import imageio_ffmpeg
+executable=imageio_ffmpeg.get_ffmpeg_exe()
+dest=root/'FFmpeg';dest.mkdir(parents=True,exist_ok=True)
+for flag,name in [('-L','BINARY_LICENSE.txt'),('-version','BINARY_BUILD.txt')]:
+    result=subprocess.run([executable,flag],capture_output=True,text=True,check=True,
+                          creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+    (dest/name).write_text(result.stdout+result.stderr,encoding='utf-8')
