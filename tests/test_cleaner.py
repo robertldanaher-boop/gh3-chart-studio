@@ -76,9 +76,10 @@ def test_ambiguous_chart_and_cancel(tmp_path):
     assert results==[] and json.loads((tmp_path/'out'/'cleanup_summary.json').read_text(encoding='utf-8'))['cancelled']
 
 
-def test_offset_and_nonstandard_meter_block(tmp_path):
+def test_offset_auto_resolved_but_nonstandard_meter_blocks(tmp_path):
     path=fixture(tmp_path/'source',{'Name':'Song','Artist':'Artist','Offset':'0.1'})
-    assert 'Offset' in inspect_chart(path)['errors'][0]
+    row=inspect_chart(path);assert not row['errors']
+    assert row['synchronization']['automatic'] and row['synchronization']['reviewed_shift_ms']==0
     song=read_chart(path);song.metadata['Offset']='0';song.signatures=[(0,6,8)];write_chart(song,path)
     assert 'Non-/4' in inspect_chart(path)['errors'][0]
 
@@ -98,6 +99,8 @@ def test_ogg_tags_reconciled_in_clean_export(tmp_path):
 def test_metadata_edits_survive_chart_errors(tmp_path,broken):
     path=fixture(tmp_path/'source',{'Name':'Old title','Artist':'Old artist','Offset':'0.1'})
     if broken:path.write_text('invalid chart syntax',encoding='utf-8')
+    else:
+        song=read_chart(path);song.signatures=[(0,6,8)];write_chart(song,path)
     edits={'Name':'Corrected † title','Artist':'Correct artist','Album':'Album','Year':'1999','Charter':''}
     row=inspect_chart(path,path.parent/'song.wav',edits)
     assert row['errors'] and row['song'] is None

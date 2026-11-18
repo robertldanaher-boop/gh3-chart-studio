@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.8.0 handoff
+# GH3 Chart Studio — 0.8.1 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_8_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.8.0 is authoritative.
+GH3_Chart_Studio_v0_8_1.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.8.1 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.8.0 update
+## Current 0.8.1 update
+
+User says reviewed songs have correct timing and explicitly requests automatic Use song.ini delay without prompts until an in-game issue occurs. Clean Songs now normalizes offset/delay using delay alone; missing/zero delay = zero, chart Offset never added. Manual review takes precedence and hash expiry still applies. Automatic plans are recomputed from originals, not stored as manual overrides. Optional timing tool retained; details/log report automatic policy. Anchor conflicts, malformed timing and existing bounds remain distinct blockers. See M8_1_WINDOWS_GUIDE.md, M8_1_IMPLEMENTATION_LOG.md and M8_1_TEST_RESULTS.txt. 276 tests passed in 25.15s. No new dependency or native Windows/game testing. Next: collection acceptance in Dolphin, revisit timing only upon real issue.
+
+## Previous 0.8.0 update
 
 Bob reports 0.7.3 tested and playing in Dolphin on November 18, 2026.
 Added working-copy editor launched from playback preview/button. EditSession validates transactional edits; ChartEditorDialog supports drag notes/tails, star power, HOPO profile 2.95, patterns, undo/redo, audio navigation, and worker-based new-folder export. Medium Orange prohibited. Source unchanged; output not merged into converter: reopen exported chart. Clean incompatible sources first. 268 tests passed in 24.04s; five new tests plus full regression results in docs/M8_TEST_RESULTS.txt. See docs/M8_WINDOWS_GUIDE.md and M8_IMPLEMENTATION_LOG.md for exact changed files and acceptance steps. Native Windows/new editor gameplay not tested here. Next: Windows/Dolphin acceptance, then multi-select/copy/paste and autosave. No actual Claude involvement.

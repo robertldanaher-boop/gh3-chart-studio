@@ -64,7 +64,7 @@ def test_review_resolves_blocker_and_exports_logged_zero_offset_copy(tmp_path,sh
     path=fixture(tmp_path/'source',{'Name':'Sync study','Artist':'Artist','Offset':'0.25'})
     (path.parent/'song.ini').write_text('[song]\ndelay = 100\npreview_start_time = 20\n',encoding='utf-8')
     before={str(p):fingerprint(p) for p in path.parent.iterdir()}
-    row=inspect_chart(path);assert any('Offset' in e for e in row['errors'])
+    row=inspect_chart(path);assert not row['errors'] and row['synchronization']['automatic']
     fixed=inspect_chart(path,sync_review=review(row,shift));assert not fixed['errors']
     assert not any('set the same delay' in w for w in fixed['warnings'])
     result=export_cleaned([fixed],tmp_path/'output',path.parent)[0];assert result['status']=='exported'
@@ -153,3 +153,52 @@ def test_preview_times_follow_the_padded_recording():
 def test_duplicate_editor_anchors_are_not_silently_resolved(tmp_path):
     path=anchored(anchored(fixture(tmp_path/'source')))
     assert any('Duplicate tempo anchors' in e for e in inspect_chart(path)['errors'])
+
+
+@pytest.mark.parametrize('offset,delay',[('0.25','100'),('-0.25','-100'),('0','250'),('0.5','0'),('0.5',None)])
+def test_automatic_ini_policy_exports_without_review(tmp_path,offset,delay):
+    path=fixture(tmp_path/'source',{'Name':'Auto sync','Artist':'Artist','Offset':offset})
+    if delay is not None:(path.parent/'song.ini').write_text('[song]\ndelay='+delay+'\n',encoding='utf-8')
+    original={str(p):fingerprint(p) for p in path.parent.iterdir()}
+    row=inspect_chart(path)
+    assert not row['errors'] and 'sync_review' not in row
+    plan=row['synchronization'];assert plan['automatic']
+    assert plan['reviewed_shift_ms']==float(delay or 0)  # Never add chart Offset.
+    again=inspect_chart(path,metadata=dict(row['metadata'],Name='Corrected'))
+    assert again['song'].tracks==row['song'].tracks
+    assert again['synchronization']['audio_padding_frames']==plan['audio_padding_frames']
+    result=export_cleaned([row],tmp_path/'export',path.parent)[0];assert result['status']=='exported'
+    folder=Path(result['folder']);out=read_chart(folder/'notes.chart')
+    pad=plan['audio_padding_frames']/plan['sample_rate']
+    for diff,notes in row['sync_source'].tracks.items():
+        for before,after in zip(notes,out.tracks[diff]):
+            assert out.seconds(after.tick)-pad==pytest.approx(row['sync_source'].seconds(before.tick)+float(delay or 0)/1000,abs=.0001)
+    assert out.metadata['Offset']=='0'
+    assert 'delay = 0' in (folder/'song.ini').read_text(encoding='utf-8')
+    assert json.loads((folder/'validation.json').read_text(encoding='utf-8'))['synchronization']['automatic']
+    assert 'song.ini delay only' in (tmp_path/'export'/'cleanup.log').read_text(encoding='utf-8')
+    assert original=={str(p):fingerprint(p) for p in path.parent.iterdir()}
+    # A normalized exported folder must not receive a second shift/padding.
+    reopened=inspect_chart(folder/'notes.chart');assert not reopened['errors']
+    assert 'synchronization' not in reopened
+
+
+def test_manual_override_beats_automatic_and_still_expires(tmp_path):
+    path=fixture(tmp_path/'source',{'Name':'Song','Artist':'Artist','Offset':'0.5'})
+    (path.parent/'song.ini').write_text('[song]\ndelay=100\n',encoding='utf-8')
+    row=inspect_chart(path);accepted=review(row,-200)
+    overridden=inspect_chart(path,sync_review=accepted)
+    assert overridden['synchronization']['reviewed_shift_ms']==-200
+    assert not overridden['synchronization'].get('automatic')
+    (path.parent/'song.ini').write_text('[song]\ndelay=150\n',encoding='utf-8')
+    assert inspect_chart(path,sync_review=accepted)['errors']
+    rescanned=inspect_chart(path);assert not rescanned['errors']
+    assert rescanned['synchronization']['reviewed_shift_ms']==150
+
+
+def test_automatic_does_not_accept_conflicting_anchors_or_extreme_delay(tmp_path):
+    path=anchored(fixture(tmp_path/'source',{'Name':'Song','Artist':'Artist','Offset':'0.1'}),stamp=750000)
+    assert any('anchor timestamps' in e for e in inspect_chart(path)['errors'])
+    path=fixture(tmp_path/'extreme')
+    (path.parent/'song.ini').write_text('[song]\ndelay=60001\n',encoding='utf-8')
+    assert any('60,000' in e for e in inspect_chart(path)['errors'])

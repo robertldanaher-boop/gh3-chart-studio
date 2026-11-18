@@ -74,6 +74,8 @@ class SynchronizationDialog(QDialog):
         self.preview_notes()
         if row.get('sync_review'):
             self.mode.setCurrentIndex(4);self.shift.setValue(row['sync_review']['shift_ms'])
+        elif row.get('synchronization',{}).get('automatic'):
+            self.mode.setCurrentIndex(1)
         self.finished.connect(self.stop_media)
     def select_device(self,*args):
         if self.devices.currentData() is not None:self.output.setDevice(self.devices.currentData())

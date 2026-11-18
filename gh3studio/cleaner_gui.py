@@ -47,8 +47,8 @@ class CleanerPanel(QWidget):
         self.chart_button=QPushButton('Choose chart…');self.chart_button.clicked.connect(self.choose_chart);row.addWidget(self.chart_button)
         self.save_report=QPushButton('Save scan report…');self.save_report.clicked.connect(self.save_scan_report);row.addWidget(self.save_report)
         row=QHBoxLayout();content.addLayout(row)
-        self.sync_button=QPushButton('Review synchronization…');self.sync_button.clicked.connect(self.review_sync);row.addWidget(self.sync_button)
-        hint=QLabel('Resolve Offset / delay for the selected song, then review and export.');hint.setWordWrap(True);row.addWidget(hint,1)
+        self.sync_button=QPushButton('Timing tools (optional)…');self.sync_button.clicked.connect(self.review_sync);row.addWidget(self.sync_button)
+        hint=QLabel('song.ini delay is applied automatically. Open timing tools only to override it.');hint.setWordWrap(True);row.addWidget(hint,1)
         row=QHBoxLayout();outer.addLayout(row);row.addWidget(QLabel('Save to'))
         self.output_path=QLineEdit();self.output_path.setPlaceholderText('Output location is set after scanning');row.addWidget(self.output_path,1)
         self.output_button=QPushButton('Change…');self.output_button.clicked.connect(self.choose_output);row.addWidget(self.output_button)
@@ -120,7 +120,7 @@ class CleanerPanel(QWidget):
                'Audio: '+(Path(row['audio']).name if row['audio'] else '(needs matching recording)'),'',
                'Scope: all guitar difficulties. Forced/tap markers and other instruments are omitted. Reported sustain repairs change holds.','']
         if row.get('sync_values'):
-            values=row['sync_values'];lines += [f"Stored Offset: {values['offset_seconds']:g} s; song.ini delay: {values['delay_ms']:g} ms",'Synchronization: '+('reviewed for this source' if row.get('sync_review') else 'not reviewed'),'']
+            values=row['sync_values'];lines += [f"Stored Offset: {values['offset_seconds']:g} s; song.ini delay: {values['delay_ms']:g} ms",'Synchronization: '+('manually reviewed for this source' if row.get('sync_review') else ('automatic — song.ini delay only' if row.get('synchronization',{}).get('automatic') else 'no adjustment needed')),'']
         lines += ['• '+message for message in row['errors']]
         lines += ['', 'PLANNED CHANGES — '+str(len(row['changes']))]
         for change in row['changes']:

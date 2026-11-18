@@ -1,3 +1,9 @@
+# 0.8.1 — Automatic song.ini delay
+
+- Clean Songs normalizes stored delay automatically, without per-song synchronization confirmation.
+- Chart Offset is ignored by this user-selected policy; missing delay is zero. Source files unchanged.
+- Optional manual timing tool and adjustment logs retained; eight new regression cases.
+
 # 0.8.0 — Interactive chart editing
 
 - Transactional preview editor, note/sustain drags, star power, HOPO/strum and pattern actions.

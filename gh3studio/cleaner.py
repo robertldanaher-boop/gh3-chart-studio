@@ -75,8 +75,19 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None):
                 song,plan=normalize(song,float(sync_review['shift_ms']),rate)
                 row['sync_review']=copy.deepcopy(sync_review);row['synchronization']=plan
                 row['changes'].append(plan)
-        if (offset or delay) and 'synchronization' not in row:
-            row['errors'].append('Nonzero Offset or song.ini delay needs manual synchronization review')
+        # User-selected default: song.ini delay is authoritative. Chart Offset is
+        # never added. Missing delay means zero. An explicit manual review wins.
+        if sync_review is None and (offset or delay) and row.get('audio_format'):
+            rate=sf.info(row['audio']).samplerate
+            song,plan=normalize(song,delay,rate)
+            plan.update(action='automatically normalize using song.ini delay',
+                        policy='song.ini delay only; chart Offset ignored; missing delay = 0',
+                        automatic=True)
+            song.warnings=[w for w in song.warnings if not w.startswith('Synchronization was explicitly normalized;')]
+            song.warnings.append('Synchronization automatically normalized using song.ini delay; use zero importer delay for this export.')
+            row['synchronization']=plan;row['changes'].append(plan)
+        if (offset or delay) and 'synchronization' not in row and sync_review is None:
+            row['errors'].append('Automatic synchronization needs readable matching audio')
         # Medium must never export Orange; preserve its sustains using seeded four-fret placement.
         if any(n.lane==4 for n in song.tracks.get('Medium',[])):
             song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=True,sustain_seed=0)

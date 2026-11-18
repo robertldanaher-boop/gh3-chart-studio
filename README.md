@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.8.0 — Wii chart workshop
+# GH3 Chart Studio 0.8.1 — Wii chart workshop
+
+**Automatic timing:** Clean Songs now uses song.ini delay without a per-song timing prompt. Chart Offset is not added; missing delay means zero. Manual overrides remain under Timing tools (optional). See [0.8.1 Windows steps](docs/M8_1_WINDOWS_GUIDE.md).
 
 **New: interactive chart editor.** Right-click the playback preview or choose Edit displayed chart. Edit notes, sustains, star power and patterns in a working copy, then export a new song folder. See [Windows editor guide](docs/M8_WINDOWS_GUIDE.md) and [implementation details](docs/M8_IMPLEMENTATION_LOG.md).
 
