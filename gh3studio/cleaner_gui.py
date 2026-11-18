@@ -46,6 +46,9 @@ class CleanerPanel(QWidget):
         self.audio_button=QPushButton('Choose audio…');self.audio_button.clicked.connect(self.choose_audio);row.addWidget(self.audio_button)
         self.chart_button=QPushButton('Choose chart…');self.chart_button.clicked.connect(self.choose_chart);row.addWidget(self.chart_button)
         self.save_report=QPushButton('Save scan report…');self.save_report.clicked.connect(self.save_scan_report);row.addWidget(self.save_report)
+        row=QHBoxLayout();content.addLayout(row)
+        self.sync_button=QPushButton('Review synchronization…');self.sync_button.clicked.connect(self.review_sync);row.addWidget(self.sync_button)
+        hint=QLabel('Resolve Offset / delay for the selected song, then review and export.');hint.setWordWrap(True);row.addWidget(hint,1)
         row=QHBoxLayout();outer.addLayout(row);row.addWidget(QLabel('Save to'))
         self.output_path=QLineEdit();self.output_path.setPlaceholderText('Output location is set after scanning');row.addWidget(self.output_path,1)
         self.output_button=QPushButton('Change…');self.output_button.clicked.connect(self.choose_output);row.addWidget(self.output_button)
@@ -108,6 +111,7 @@ class CleanerPanel(QWidget):
         return index if 0<=index<len(self.rows) else None
     def show_details(self,*args):
         index=self.selected()
+        self.sync_button.setEnabled(index is not None and bool(self.rows[index].get('sync_source')) and bool(self.rows[index].get('audio_format')) and not self.owner.busy())
         if index is None:self.details.clear();return
         row=self.rows[index]
         lines=['NEEDS CORRECTION' if row['errors'] else 'READY FOR YOUR REVIEW',
@@ -115,6 +119,8 @@ class CleanerPanel(QWidget):
                'Artist: '+(row['metadata'].get('Artist','') or '(missing)'),
                'Audio: '+(Path(row['audio']).name if row['audio'] else '(needs matching recording)'),'',
                'Scope: all guitar difficulties. Forced/tap markers and other instruments are omitted. Reported sustain repairs change holds.','']
+        if row.get('sync_values'):
+            values=row['sync_values'];lines += [f"Stored Offset: {values['offset_seconds']:g} s; song.ini delay: {values['delay_ms']:g} ms",'Synchronization: '+('reviewed for this source' if row.get('sync_review') else 'not reviewed'),'']
         lines += ['• '+message for message in row['errors']]
         lines += ['', 'PLANNED CHANGES — '+str(len(row['changes']))]
         for change in row['changes']:
@@ -131,6 +137,7 @@ class CleanerPanel(QWidget):
     def recheck(self,index,**overrides):
         if self.owner.busy():return
         row=self.rows[index];path=overrides.pop('path',row['path']);audio=overrides.pop('audio',row['audio'] or None);metadata=overrides.pop('metadata',{k:v for k,v in row['metadata'].items() if k in FIELDS})
+        sync_review=overrides.pop('sync_review',row.get('sync_review'))
         self.approve.setChecked(False)
         if metadata is not None:
             row['metadata'].update(metadata)
@@ -140,7 +147,19 @@ class CleanerPanel(QWidget):
         def ready(value):
             self.rows[index]=value;self.render(preserve_selection=True);self.table.selectRow(index);self.show_details()
             self.status.setText('Edits retained in this review. '+('Chart still needs correction: '+ '; '.join(value['errors']) if value['errors'] else 'Ready for review and export.')+' Export writes these edits to a new folder; originals stay unchanged.')
-        self.owner.run_job('Rechecking selected song…',lambda cancel:inspect_chart(path,audio,metadata),ready)
+        self.owner.run_job('Rechecking selected song…',lambda cancel:inspect_chart(path,audio,metadata,sync_review=sync_review),ready)
+    def review_sync(self):
+        index=self.selected()
+        if index is None or self.owner.busy():return
+        row=self.rows[index]
+        if not row.get('sync_source') or not row.get('audio_format'):
+            self.status.setText('Choose a valid chart and matching recording before synchronization review.');return
+        from .sync_gui import SynchronizationDialog
+        try:dialog=SynchronizationDialog(row,self)
+        except Exception as exc:self.status.setText('Cannot preview synchronization: '+str(exc));return
+        try:
+            if dialog.exec()==QDialog.Accepted:self.recheck(index,sync_review=dialog.review)
+        finally:dialog.stop_media();dialog.deleteLater()
     def edit_metadata(self):
         index=self.selected()
         if index is None:return
@@ -168,6 +187,9 @@ class CleanerPanel(QWidget):
         for row in self.rows:
             lines+=['',row['path'],'Title: '+row['metadata'].get('Name',''),
                     'Artist: '+row['metadata'].get('Artist',''),'Audio: '+row['audio']]
+            if row.get('sync_values'):lines+=['TIMING: '+json.dumps(row['sync_values'])]
+            if row.get('synchronization'):lines+=['REVIEWED SYNC: '+json.dumps(row['synchronization'])]
+            for anchor in row.get('anchor_checks',[]):lines+=['ANCHOR: '+json.dumps(anchor)]
             lines+=['ERROR: '+e for e in row['errors']]+['WARNING: '+w for w in row['warnings']]
             if not row['errors']:lines.append('READY')
         try:
@@ -206,7 +228,8 @@ class CleanerPanel(QWidget):
     def open_folder(self):
         if self.last_output:QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.last_output)))
     def update_busy(self,busy,cancellable):
-        for widget in (self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button,self.select_all,self.select_ready,self.select_none,self.output_path,self.output_button,self.save_report,self.search,self.filter):widget.setEnabled(not busy)
+        for widget in (self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button,self.select_all,self.select_ready,self.select_none,self.output_path,self.output_button,self.save_report,self.search,self.filter,self.sync_button):widget.setEnabled(not busy)
         self.export_button.setEnabled(not busy and bool(self.rows))
         self.cancel_button.setEnabled(busy and cancellable)
         self.open_output.setEnabled(not busy and self.last_output is not None)
+        if not busy:self.show_details()

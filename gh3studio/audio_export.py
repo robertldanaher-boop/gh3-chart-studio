@@ -7,20 +7,26 @@ from .model import ChartError
 from .song_identity import AUDIO_FIELDS
 
 
-def export_ogg(source_path,destination,metadata=None, *, reconcile_metadata=False):
+def export_ogg(source_path,destination,metadata=None, *, reconcile_metadata=False, padding_frames=0):
+    if not isinstance(padding_frames,int) or padding_frames<0:raise ChartError("Invalid audio padding")
     source_path=Path(source_path);destination=Path(destination)
     with sf.SoundFile(source_path) as source:
         if source.channels not in (1,2) or source.frames<=0:
             raise ChartError('Audio must be nonempty mono or stereo')
-        expected=(source.frames,source.samplerate,source.channels)
+        if padding_frames>120*source.samplerate:raise ChartError("Audio padding exceeds two minutes")
+        expected=(source.frames+padding_frames,source.samplerate,source.channels)
         original_tags=source.copy_metadata()
         desired_tags=dict(original_tags)
         desired_tags.update({tag:str(metadata[field]) for field,tag in AUDIO_FIELDS.items() if metadata and metadata.get(field)})
-        reuse=source.format=='OGG' and source.subtype=='VORBIS'
+        reuse=source.format=='OGG' and source.subtype=='VORBIS' and padding_frames==0
         if reconcile_metadata and any(original_tags.get(k)!=v for k,v in desired_tags.items() if k!='software'):reuse=False
         if not reuse:
             with sf.SoundFile(destination,'w',format='OGG',subtype='VORBIS',samplerate=source.samplerate,channels=source.channels) as target:
                 for tag,value in desired_tags.items():setattr(target,tag,value)
+                remaining=padding_frames
+                while remaining:
+                    count=min(remaining,65536)
+                    target.write(np.zeros((count,source.channels),dtype='float32'));remaining-=count
                 for block in source.blocks(blocksize=65536,dtype='float32',always_2d=True):
                     if not np.isfinite(block).all():raise ChartError('Audio contains nonfinite samples')
                     target.write(block)
@@ -46,4 +52,4 @@ def export_ogg(source_path,destination,metadata=None, *, reconcile_metadata=Fals
     return {'embedded_tags':exported_tags,'metadata_warnings':metadata_warnings,'file':'song.ogg','format':'OGG','codec':'VORBIS',
             'operation':'copied_without_reencoding' if reuse else 'encoded_to_vorbis',
             'frames':expected[0],'sample_rate':expected[1],'channels':expected[2],
-            'fully_decoded':True,'resampled':False,'timing_shift_applied':False}
+            'fully_decoded':True,'resampled':False,'timing_shift_applied':bool(padding_frames),'padding_frames':padding_frames,'trimmed_frames':0}

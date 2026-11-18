@@ -61,7 +61,10 @@ def read_chart(path, *, cleanup=False):
                         exponent = int(parts[1]) if len(parts)>1 else 2
                         if not 0 <= exponent <= 7: raise ChartError('Invalid time signature denominator')
                         signatures.append((tick, int(parts[0]), 2**exponent))
-                    elif typ == 'A': raise ChartError('Tempo anchors need manual resolution before import')
+                    elif typ == 'A':
+                        if not cleanup:raise ChartError('Tempo anchors need manual resolution before import; use Clean songs')
+                        if len(parts)!=1 or int(parts[0])<0:raise ChartError('Invalid tempo anchor')
+                        song.anchors.append((tick,int(parts[0])))
                     else: raise ChartError(f'Unsupported sync event {typ}')
                 elif section == 'Events':
                     if typ != 'E': raise ChartError('Unsupported global event')
@@ -86,11 +89,16 @@ def read_chart(path, *, cleanup=False):
     song.signatures = sorted(signatures) or song.signatures
     if song.tempos[0][0] != 0: song.tempos.insert(0, (0, Fraction(500000)))
     if song.signatures[0][0] != 0: song.signatures.insert(0, (0,4,4))
+    tempo_ticks={t for t,_ in tempos}
+    if len({t for t,_ in song.anchors})!=len(song.anchors):raise ChartError('Duplicate tempo anchors need external review')
+    for tick,_ in song.anchors:
+        if tick not in tempo_ticks:raise ChartError(f'SyncTrack, tick {tick}: anchor has no paired BPM marker; review externally')
     for notes in song.tracks.values(): notes.sort()
     for phrases in song.phrases.values(): phrases.sort(key=lambda p:(p.tick,p.kind,p.length))
     return song
 
 def write_chart(song, path):
+    if song.anchors:raise ChartError("Resolve tempo anchors in Clean songs before writing a chart")
     meta = dict(song.metadata, Resolution=str(song.resolution))
     lines = ['[Song]', '{']
     for key, value in meta.items():

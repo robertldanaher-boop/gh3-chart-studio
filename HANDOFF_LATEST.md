@@ -1,11 +1,41 @@
-# GH3 Chart Studio — 0.7.1 handoff
+# GH3 Chart Studio — 0.7.2 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_7_1.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.1 is authoritative.
+GH3_Chart_Studio_v0_7_2.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.2 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.7.1 update
+## Current 0.7.2 update
+
+Bob confirmed 0.7.1 runs on Windows, then reported nonzero Offset/song.ini delay
+and a SyncTrack anchor at tick 13824. No actual affected song assets were provided.
+New per-song Review synchronization dialog in Clean songs shows stored values,
+explicit presets/custom total (+ notes later), independent difficulty/audio preview,
+seeking, device/volume and acknowledgement. Values are never auto-summed.
+
+normalize() translates chart objects by whole initial bars and pads audio, preserving
+all tick lengths and the tempo/meter relationships; metadata delay becomes zero.
+Negative shifts need no negative ticks or audio trimming. Padding rounds to samples.
+Shift limit ±60s, padding cap 120s. Existing cleanup sustain repairs remain separate.
+Reviews bind to chart/audio paths and hashes including song.ini; metadata-only edits
+retain them, changed assets require another review. Source files remain untouched.
+Plans are logged in validation.json and cleanup.log; export must use the paired
+new chart/audio and zero importer delay. Session-only, per-song; no auto alignment.
+
+Cleaner parses paired editor A anchors. Matching timestamps within 1ms are listed
+for removal without changing BPMs. Conflicts remain blocked until explicit listening
+review and Keep existing BPM map acknowledgement. No BPM reconstruction from anchors.
+Malformed/duplicate/unpaired anchors stay blocked; strict imports/writes still refuse
+unresolved anchors. Added Song.anchors and validation/export guards.
+
+257 tests passed in23.15s (Python3.11.18/Linux/Qt offscreen), 32 new cases. Final GUI
+wording/layout checked separately; see docs/M7_2_GUI_TEST_RESULTS.txt. Read
+M7_2_WINDOWS_GUIDE.md, M7_2_IMPLEMENTATION_LOG.md and M7_2_TEST_RESULTS.txt. User's
+Windows/audio/TheGHOST/Wii acceptance still needed. No new dependency or third-party
+code copied; format docs are the existing CC0 reference. Next one affected song
+end-to-end, then actual collection logs. No Claude handoff occurred.
+
+## Prior 0.7.1 update
 
 Bob's Windows startup reported 5 layout failures, 217 passed, 1 skipped: window
 width 1083px normally and 1208px with 18px text, exceeding the unchanged 1024px

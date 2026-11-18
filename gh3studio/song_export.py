@@ -46,7 +46,7 @@ def prepare_medium(song, strip_markers=False, trim_sustains=False):
     return result,review
 
 
-def export_song_folder(song, report, destination, audio_path, source_path=None, *, clean_all=False):
+def export_song_folder(song, report, destination, audio_path, source_path=None, *, clean_all=False, audio_padding_frames=0):
     destination=Path(destination);audio_path=Path(audio_path)
     if clean_all:
         checked,review=prepare_cleanup(song,True,True)
@@ -64,11 +64,12 @@ def export_song_folder(song, report, destination, audio_path, source_path=None, 
     destination.parent.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix='.gh3-song-',dir=destination.parent))
     try:
-        audio_details=export_ogg(audio_path,stage/'song.ogg',song.metadata,reconcile_metadata=clean_all)
+        audio_details=export_ogg(audio_path,stage/'song.ogg',song.metadata,reconcile_metadata=clean_all,padding_frames=audio_padding_frames)
         frames,rate,channels=(audio_details[k] for k in ('frames','sample_rate','channels'))
         output=copy.deepcopy(song)
         for key in ('GuitarStream','BassStream','RhythmStream'):output.metadata.pop(key,None)
         output.metadata['MusicStream']='song.ogg'
+        if 'Length' in output.metadata:output.metadata['Length']=str(frames/rate)
         write_chart(output,stage/'notes.chart');reopened=read_chart(stage/'notes.chart')
         if reopened.tracks!=song.tracks or reopened.events!=song.events or reopened.signatures!=song.signatures:
             raise ChartError('Chart note/timing read-back mismatch')
@@ -93,7 +94,8 @@ def export_song_folder(song, report, destination, audio_path, source_path=None, 
             warnings[0]='All exported guitar difficulties passed structural cleanup checks; runtime acceptance remains untested.'
             warnings[1]='Source files are unchanged. Exported difficulties include the reviewed marker removals and sustain repairs.'
             warnings[2]='Audio is Ogg Vorbis with reviewed metadata. Existing Vorbis is reused only when tags agree; conflicting tags require lossy re-encoding.'
-        details=dict(report,song_identity={field:song.metadata.get(field,'') for field in FIELDS},source_ini_metadata=dict(song.ini_metadata),audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
+        if audio_padding_frames:warnings[2]='Audio has reviewed leading silence; no source samples were trimmed. Vorbis was re-encoded. See synchronization and audio_export details.'
+        details=dict(report,song_identity={field:song.metadata.get(field,'') for field in FIELDS},source_ini_metadata=report.get('source_ini_metadata',dict(song.ini_metadata)),audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
         def digest(path):
             h=hashlib.sha256()
             with Path(path).open('rb') as f:

@@ -23,7 +23,7 @@ def fingerprint(path):
     return h.hexdigest()
 
 
-def inspect_chart(path,audio=None,metadata=None):
+def inspect_chart(path,audio=None,metadata=None,sync_review=None):
     path=Path(path).resolve()
     row={'path':str(path),'errors':[],'warnings':[],'changes':[],'metadata':{k:v for k,v in (metadata or {}).items() if k in FIELDS},'audio':str(audio) if audio else '','song':None,'hashes':{}}
     try:
@@ -53,8 +53,30 @@ def inspect_chart(path,audio=None,metadata=None):
             except Exception as exc:row['errors'].append('Audio: '+str(exc))
         if not any(song.tracks.values()):raise ChartError('No supported playable guitar notes')
         if any(d!=4 for _,_,d in song.signatures):raise ChartError('Non-/4 time signature needs manual review for TheGHOST; tempo/meter will not be guessed')
-        if float(song.metadata.get('Offset','0')) or float(song.metadata.get('SongIniDelay','0')):
-            raise ChartError('Nonzero Offset or song.ini delay needs manual synchronization review')
+        from .synchronization import timing_values,normalize,inspect_anchors
+        offset,delay=timing_values(song)
+        for p in (path,path.parent/'song.ini'):
+            if p.exists():row['hashes'][str(p)]=fingerprint(p)
+        row['sync_source']=copy.deepcopy(song)
+        row['sync_values']={'offset_seconds':offset,'delay_ms':delay}
+        review_current=bool(sync_review is not None and sync_review.get('source_hashes')==row['hashes'] and
+                            sync_review.get('chart_path')==str(path) and sync_review.get('audio_path')==row['audio'])
+        row['anchor_checks']=inspect_anchors(song)
+        conflicts=[a for a in row['anchor_checks'] if a['needs_review']]
+        if conflicts and not (review_current and sync_review.get('accept_anchor_map')):
+            row['errors'].append('Tempo anchor timestamps differ from the BPM map. Review synchronization to keep the existing BPM map, or correct the tempo map externally.')
+        row['changes']+=row['anchor_checks']
+        song.anchors=[]
+        if sync_review is not None:
+            if not review_current:
+                row['errors'].append('Synchronization review expired: chart/audio/song.ini changed. Review synchronization again.')
+            elif row.get('audio_format'):
+                rate=sf.info(row['audio']).samplerate
+                song,plan=normalize(song,float(sync_review['shift_ms']),rate)
+                row['sync_review']=copy.deepcopy(sync_review);row['synchronization']=plan
+                row['changes'].append(plan)
+        if (offset or delay) and 'synchronization' not in row:
+            row['errors'].append('Nonzero Offset or song.ini delay needs manual synchronization review')
         # Medium must never export Orange; preserve its sustains using seeded four-fret placement.
         if any(n.lane==4 for n in song.tracks.get('Medium',[])):
             song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=True,sustain_seed=0)
@@ -65,9 +87,7 @@ def inspect_chart(path,audio=None,metadata=None):
         if not any(clean.tracks.values()):row['errors'].append('Cleanup would leave no playable guitar notes')
         row['warnings']+=song.warnings
         row['warnings']+=['All guitar difficulties are cleaned. Forced/tap markers are removed; natural HOPO behavior may change.','Other instrument sections, stems and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
-        row['song']=clean
-        for p in (path,path.parent/'song.ini'):
-            if p.exists():row['hashes'][str(p)]=fingerprint(p)
+        row['song']=clean if not row['errors'] else None
     except Exception as exc:row['errors'].append(str(exc))
     return row
 
@@ -121,7 +141,12 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             name=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',song.metadata['Artist']+' - '+song.metadata['Name']).strip(' .')[:100]
             folder=dest/f'{index:04d} - {name}'
             report={'operation':'clean-all-guitar-difficulties','cleanup_changes':row['changes'],'warnings':row['warnings'],'source_hashes':row['hashes']}
-            export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True)
+            if row.get('sync_source'):report['source_ini_metadata']=dict(row['sync_source'].ini_metadata)
+            sync=row.get('synchronization',{})
+            if sync:
+                report['synchronization']=sync
+                log('SYNCHRONIZATION | '+json.dumps(sync,ensure_ascii=True))
+            export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True,audio_padding_frames=sync.get('audio_padding_frames',0))
             result.update(status='exported',folder=str(folder))
         except Exception as exc:
             result.update(status='failed',error=str(exc));log('FAILED | '+str(exc)+'\n'+traceback.format_exc())

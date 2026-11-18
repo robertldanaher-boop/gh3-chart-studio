@@ -1,3 +1,19 @@
+# Current synchronization update (0.7.2)
+
+Clean songs can explicitly normalize reviewed Offset/delay using a translated
+chart timeline and padded full-mix Ogg, with zero export delay. No samples are
+trimmed; note lengths and tempo/meter relationships remain exact. Other cleanup
+repairs are separate. Import the matching output chart/audio together and do not
+reapply source delays. See M7_2_WINDOWS_GUIDE.md for limits and acceptance steps.
+
+Paired editor anchors matching the existing BPM map within 1 ms are cleanup
+candidates. Conflicts require explicit review to retain that BPM map; no anchor-based
+tempo reconstruction is performed. Malformed or unpaired anchors remain blocked.
+The strict converter still rejects unresolved anchors and nonzero Offset.
+
+The older notes below describe individual paths; the current cleaner guide governs
+its reviewed song-folder export. Windows/Wii runtime certification remains pending.
+
 ## Current 0.4.9 additions
 
 The song-folder .chart path now accepts validated N5/E* HOPO flips and offers an explicit experimental assistance profile targeting TheGHOST measure 2.95. The paired MIDI path remains strict. See M4_9_WINDOWS_GUIDE.md and M4_9_IMPLEMENTATION_LOG.md for scope, references and limitations; earlier milestone limitations below describe prior behavior. Source tracks remain unmodified.

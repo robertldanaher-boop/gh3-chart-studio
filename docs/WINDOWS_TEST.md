@@ -1,6 +1,6 @@
-# Windows 10/11 acceptance — current release 0.7.1
+# Windows 10/11 acceptance — current release 0.7.2
 
-Follow [M7_1_WINDOWS_GUIDE.md](M7_1_WINDOWS_GUIDE.md) for the startup layout fix, then
+Follow [M7_2_WINDOWS_GUIDE.md](M7_2_WINDOWS_GUIDE.md) for synchronization and anchor review, then
 [M7_WINDOWS_GUIDE.md](M7_WINDOWS_GUIDE.md) for the two essential workflows,
 small-window checks, audio preview and reserved tools. Older M*_WINDOWS_GUIDE files
 are historical instructions; tab names in them may have moved under Tools in reserve.

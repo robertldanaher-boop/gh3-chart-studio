@@ -5,6 +5,7 @@ def validate(song, require_medium=False, *, learning_only=False):
     if require_medium and learning_only:
         raise ValueError("Learning validation cannot validate an export")
     errors=[]; warnings=list(song.warnings)
+    if song.anchors and not learning_only:errors.append("Unreviewed tempo anchors; use Clean songs")
     if not 1 <= song.resolution <= 32767: errors.append('Resolution must be 1..32767 PPQ')
     if not song.tempos or song.tempos[0][0]!=0: errors.append('Tempo map must start at zero')
     for tick,tempo in song.tempos:

@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.7.1 — Wii chart workshop
+# GH3 Chart Studio 0.7.2 — Wii chart workshop
 
 Prepare existing authored song folders for GH3 Wii, or create a challenging
 four-fret Medium from Expert/Hard. The primary interface has **Home**, **Clean
@@ -15,7 +15,7 @@ songs** and **Four-fret Medium**. Audio generation and pattern tools remain unde
 3. Choose **Clean my songs** or **Make a challenging Medium** from Home.
 4. Follow the numbered steps in the selected workspace.
 
-See [0.7.1 Windows test steps](docs/M7_1_WINDOWS_GUIDE.md), including small-window,
+See [0.7.2 Windows test steps](docs/M7_2_WINDOWS_GUIDE.md), including small-window,
 playback, export and reserved-tool checks. Setup failures are recorded in
 `start_windows.log` and `startup_bootstrap.log`.
 
@@ -33,6 +33,19 @@ Every successful output contains `notes.chart`, `song.ogg`, `song.ini`, validati
 and import reports. Per-run `cleanup.log` and `cleanup_summary.json` record outcomes.
 **Open results / logs** also works after an all-failed run if a report folder exists.
 **Save scan report** collects blockers before export. Original folders stay untouched.
+
+## Resolve synchronization blockers
+
+Select a song in Clean songs and click **Review synchronization…**. Inspect Offset
+and song.ini delay, choose the intended total shift, listen using the selected
+track/recording, and confirm before applying. Export uses a reviewed chart lead-in
+and audio silence so both delay fields can be zero without trimming audio. Import
+the resulting chart and Ogg together; do not apply the original delay again.
+Matching editor tempo anchors are listed for cleanup. Conflicting anchors require
+an explicit choice to keep the existing BPM map after listening; their timestamps
+are not used to invent a new tempo map. Malformed/unpaired anchors remain blocked.
+See the [step-by-step guide](docs/M7_2_WINDOWS_GUIDE.md). Reviews are per song and
+session-only; changing source assets invalidates them. No automatic sync detection.
 
 ## Create four-fret Medium
 
@@ -55,19 +68,18 @@ are not implemented. A source's existing Medium is replaced only in the new outp
 
 ## Limits and verification
 
-225 tests passed in 23.83 seconds on Python 3.11/Linux with Qt offscreen. See
-[recorded results](docs/M7_1_TEST_RESULTS.txt). Version 0.7.1 fixes the shared header
-and Medium footer layout constraints after Windows startup reported five failures.
-The original 1024x700 checks remain; new checks also use 18px text and 160% font
-stretch across all workspaces. A wide-text screenshot was inspected. This is a tested source package,
-not a prebuilt or Windows-verified executable. Native Windows DPI/audio devices,
-TheGHOST and Wii/Dolphin acceptance remain pending. No signing/SmartScreen guarantee.
+257 tests passed in 23.15 seconds on Python 3.11/Linux with Qt offscreen. See
+[recorded results](docs/M7_2_TEST_RESULTS.txt). Existing 1024x700 and wider-font checks
+remain; new checks exercise the synchronization dialog, tempo preservation and
+actual padded Ogg exports. The user confirmed 0.7.1 launches on Windows; this new
+release still needs Windows acceptance. No native Windows build, audible device,
+TheGHOST or Wii/Dolphin tests here. No signing/SmartScreen guarantee.
 
 The conservative cleaner removes forced/tap/open-note markers and repairs reported
 sustain overlaps across all guitar difficulties. Other instruments, separate stems
 and artwork are omitted. A sole instrument-named recording may be auto-matched;
-verify it is the full mix. Stems are not automatically mixed. Nonzero offset/delay,
-non-/4 meter and other unresolved chart errors may block export. Do not assume every
+verify it is the full mix. Stems are not automatically mixed. Nonzero offset/delay requires the new synchronization review.
+Non-/4 meter and other unresolved chart errors may still block export. Do not assume every
 source is supported. HOPO assistance remains experimental and requires importer/
 game verification. Edits and selections are session-only until export.
 
@@ -87,9 +99,9 @@ The ZIP includes `repository.bundle` and `RELEASE_COMMIT.txt`. Restore history w
 `git clone repository.bundle GH3-Chart-Studio-repo`. Source modules live in
 `gh3studio/`; tests in `tests/`; synthetic examples in `examples/`. No commercial
 recordings are bundled. [Project direction](docs/PROJECT_DIRECTION.md),
-[implementation log](docs/M7_1_IMPLEMENTATION_LOG.md) and [handoff](HANDOFF_LATEST.md)
+[implementation log](docs/M7_2_IMPLEMENTATION_LOG.md) and [handoff](HANDOFF_LATEST.md)
 record scope, limitations and next work.
 
 Credits to Nanook and TeamGHOST and the format-reference authors remain under
 **About** and in [credits](docs/CREDITS.md). Dependency notices are in `licenses/`
-and `THIRD_PARTY.md`. No new third-party dependency or artwork was added in 0.7.1.
+and `THIRD_PARTY.md`. No new third-party dependency or artwork was added in 0.7.2.

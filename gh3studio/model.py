@@ -29,6 +29,7 @@ class Song:
     modifiers: dict[str, list[tuple[int, str]]] = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     ini_metadata: dict[str, str] = field(default_factory=dict)
+    anchors: list[tuple[int, int]] = field(default_factory=list)  # editor tick/audio microseconds
 
     def seconds(self, tick: int) -> float:
         result = Fraction(0)

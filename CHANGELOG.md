@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.2 — November 18, 2026
+
+Per-song synchronization review in Clean songs; normalize an explicitly selected
+shift with exact chart translation and audio padding, zero exported delay and
+logged changes. Safely remove matching editor anchors; conflicting timestamps
+require explicit retention of the existing BPM map. Thirty-two new tests; 257 passed
+on Linux/offscreen. Native Windows/game acceptance pending. See
+docs/M7_2_IMPLEMENTATION_LOG.md.
+
 ## 0.7.1 — November 18, 2026
 
 Fix shared-header minimum width after Windows startup reported five small-window
