@@ -3,7 +3,8 @@
 Accepted direction from Bob Danaher, November 17, 2026. This document supersedes
 older feature-priority lists. It defines intended work; it is not a statement that
 all behavior below is implemented or that arbitrary imports are Wii-compatible.
-The last application release remains v0.6.4.
+This direction was accepted at v0.6.4. The focused GUI is delivered in v0.7.0;
+see M7_WINDOWS_GUIDE.md for current workflows and test evidence.
 
 ## Purpose
 

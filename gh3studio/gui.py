@@ -3,11 +3,11 @@ import json
 import sys
 from datetime import datetime
 from pathlib import Path
-from PySide6.QtCore import Qt, QThread, Signal, Slot
+from PySide6.QtCore import Qt, QThread, Signal, Slot, QTimer
 from PySide6.QtGui import QColor, QPen, QBrush
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QComboBox, QSpinBox, QSlider, QTextEdit, QFileDialog,
-    QGraphicsView, QGraphicsScene, QSplitter, QGroupBox, QFormLayout, QProgressBar, QTabWidget, QScrollArea)
+    QGraphicsView, QGraphicsScene, QSplitter, QGroupBox, QFormLayout, QProgressBar, QTabWidget, QScrollArea, QMenu)
 from .converter import Settings, convert
 from .service import load, export_bundle
 from .library_gui import LibraryPanel
@@ -59,15 +59,15 @@ class Window(QMainWindow):
         self.song=None; self.converted=None; self.report=None; self.path=None; self.worker=None
         self.variants={};self.goal=None;self.last_export_path=None
         apply_style(self)
-        self.setWindowTitle(f'GH3 Chart Studio {__version__} — Expert Medium')
+        self.setWindowTitle(f'GH3 Chart Studio {__version__} — Wii chart workshop')
         self.resize(1180,840); self.setAcceptDrops(True)
         shell=QWidget();shell_layout=QVBoxLayout(shell);shell_layout.setContentsMargins(14,10,14,12);self.setCentralWidget(shell)
         header=QHBoxLayout();shell_layout.addLayout(header)
-        brand=QLabel('GH3  /  CHART STUDIO');brand.setObjectName('brand');brand.setWordWrap(True);header.addWidget(brand)
-        badge=QLabel('Chart studio  •  '+__version__);badge.setObjectName('versionBadge');badge.setWordWrap(True);header.addWidget(badge);header.addStretch()
-        header=QHBoxLayout();shell_layout.addLayout(header);header.addStretch()
-        self.home_button=QPushButton('Start / choose a goal');self.home_button.setObjectName('quietAction');self.home_button.clicked.connect(lambda:self.tabs.setCurrentWidget(self.welcome));header.addWidget(self.home_button)
-        credits=QPushButton('About / credits');credits.setObjectName('quietAction');credits.clicked.connect(lambda:show_credits(self));header.addWidget(credits)
+        brand=QLabel('GH3  /  CHART STUDIO');brand.setObjectName('brand');header.addWidget(brand)
+        badge=QLabel('WII WORKSHOP  ·  '+__version__);badge.setObjectName('versionBadge');header.addWidget(badge);header.addStretch()
+        self.home_button=QPushButton('Home');self.home_button.setObjectName('quietAction');self.home_button.clicked.connect(lambda:self.tabs.setCurrentWidget(self.welcome));header.addWidget(self.home_button)
+        self.reserve_button=QPushButton('Tools in reserve');self.reserve_button.setObjectName('quietAction');self.reserve_menu=QMenu(self);self.reserve_button.setMenu(self.reserve_menu);header.addWidget(self.reserve_button)
+        credits=QPushButton('About');credits.setObjectName('quietAction');credits.clicked.connect(lambda:show_credits(self));header.addWidget(credits)
         self.tabs=QTabWidget();self.tabs.setUsesScrollButtons(True);shell_layout.addWidget(self.tabs)
         root=QWidget();self.converter=root; self.tabs.addTab(root,'Chart Converter');outer=QVBoxLayout(root)
         scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll);body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body)
@@ -110,7 +110,7 @@ class Window(QMainWindow):
         row.addWidget(QLabel('Seed:')); self.seed=QSpinBox(); self.seed.setRange(0,2147483647); self.seed.valueChanged.connect(self.invalidate); row.addWidget(self.seed)
         self.pattern_style=QComboBox();self.pattern_style.addItems(['All styles',*CATEGORIES]);self.pattern_style.currentIndexChanged.connect(self.invalidate);row.addWidget(self.pattern_style)
         self.variant_choice=QComboBox(); self.variant_choice.addItems(['Choose generated variation',*VARIANTS]); self.variant_choice.currentIndexChanged.connect(self.select_variant); row.addWidget(self.variant_choice,1)
-        self.progress=QProgressBar(); self.progress.setRange(0,1); self.progress.setValue(0); layout.addWidget(self.progress)
+        self.progress=QProgressBar(); self.progress.setRange(0,1); self.progress.setValue(0)
         row=QHBoxLayout(); row.addWidget(QLabel('Note preview (first 2,000 gems; scroll horizontally):'))
         self.view_choice=QComboBox(); self.view_choice.addItems(['Converted Medium','Source']); self.view_choice.currentIndexChanged.connect(self.refresh_preview)
         row.addWidget(self.view_choice); layout.addLayout(row)
@@ -123,9 +123,46 @@ class Window(QMainWindow):
         self.audio=AudioPanel(self); self.tabs.addTab(self.audio,'Audio Studio')
         from .cleaner_gui import CleanerPanel
         self.cleaner=CleanerPanel(self);self.tabs.addTab(self.cleaner,'Clean charts')
-        self.welcome=WelcomePanel(self);self.tabs.insertTab(0,self.welcome,'Start');self.tabs.setCurrentWidget(self.welcome)
+        from .workspace import AdaptPanel
+        self.adapt=AdaptPanel(self);self.tabs.insertTab(0,self.adapt,'Four-fret Medium')
+        self.tabs.removeTab(self.tabs.indexOf(self.cleaner));self.tabs.insertTab(0,self.cleaner,'Clean songs')
+        self.welcome=WelcomePanel(self);self.tabs.insertTab(0,self.welcome,'Home');self.tabs.setCurrentWidget(self.welcome)
+        self.reserved=(self.converter,self.library,self.audio)
+        for panel,label in ((self.converter,'Advanced converter'),(self.library,'Local pattern library'),(self.audio,'Audio drafting lab')):
+            self.tabs.setTabText(self.tabs.indexOf(panel),label);self.tabs.setTabVisible(self.tabs.indexOf(panel),False)
+            action=self.reserve_menu.addAction(label);action.triggered.connect(lambda checked=False,p=panel:self.open_reserved(p))
+        self.reserve_menu.addSeparator();self.reserve_menu.addAction('Save application log…',self.save_diagnostics)
+        self.reserve_menu.addAction('Return to essentials',self.hide_reserved)
+        self.tabs.currentChanged.connect(self.workspace_changed)
+        self.operation_label=QLabel('Ready • Original files stay untouched');self.operation_label.setObjectName('muted');self.operation_label.setWordWrap(True)
+        shell_layout.addWidget(self.operation_label);shell_layout.addWidget(self.progress)
+        self.operation_started=None;self.operation_name='';self.operation_count=None
+        self.clock=QTimer(self);self.clock.setInterval(1000);self.clock.timeout.connect(self.refresh_operation_clock);self.clock.start()
         for button in (self.convert_button,self.export_button,self.audio.draft_button,self.audio.export_button,self.playback.orange_button):primary(button)
         self.update_buttons()
+    def enter_workspace(self,goal):
+        if self.busy():return
+        self.goal=goal
+        self.tabs.setCurrentWidget(self.cleaner if goal=='clean' else self.adapt)
+        if goal=='orange':self.adapt.attach_preview()
+    def open_reserved(self,panel):
+        if self.busy():return
+        self.tabs.setTabVisible(self.tabs.indexOf(panel),True)
+        if panel is self.audio:self.goal='audio';self.audio.set_mode('audio');self.audio.show_analysis()
+        elif panel is self.converter:self.goal='refine'
+        self.tabs.setCurrentWidget(panel)
+    def hide_reserved(self):
+        self.tabs.setCurrentWidget(self.welcome)
+        for panel in self.reserved:self.tabs.setTabVisible(self.tabs.indexOf(panel),False)
+    def workspace_changed(self,*args):
+        if self.tabs.currentWidget() is self.adapt:self.adapt.attach_preview()
+    def refresh_operation_clock(self):
+        if not self.busy() or self.operation_started is None:return
+        import time
+        seconds=int(time.monotonic()-self.operation_started);count=''
+        if self.operation_count:
+            done,total=self.operation_count;count=f' · {done}/{total} completed'
+        self.operation_label.setText(f'{self.operation_name} · {seconds//60:02d}:{seconds%60:02d} elapsed{count}')
     def start_guided(self,goal,path=None):
         if self.busy():return False
         if goal=='clean':
@@ -140,18 +177,20 @@ class Window(QMainWindow):
         if not path:return False
         self.goal=goal;self.audio.set_mode(goal)
         if goal=='audio':
+            self.tabs.setTabVisible(self.tabs.indexOf(self.audio),True)
             self.song=None;self.original_song=None;self.path=None;self.cleanup_report=None
             self.converted=None;self.report=None;self.variants={};self.playback.set_chart(None,'Medium')
             self.file_label.setText('Audio-only workflow — no chart template loaded')
             self.tabs.setCurrentWidget(self.audio);self.audio.template.setChecked(False);self.audio.open_path(path)
         else:
-            self.tabs.setCurrentWidget(self.audio if goal=='orange' else self.converter)
+            self.tabs.setTabVisible(self.tabs.indexOf(self.converter),goal=='refine')
+            self.tabs.setCurrentWidget(self.adapt if goal=='orange' else self.converter)
             if goal=='orange':self.audio.show_listen()
             self.open_path(path)
         return True
     def resume_workflow(self):
         if self.goal=='clean':self.tabs.setCurrentWidget(self.cleaner)
-        elif self.goal=='refine':self.tabs.setCurrentWidget(self.converter)
+        elif self.goal=='refine':self.open_reserved(self.converter)
         elif self.converted is not None or (self.song is not None and self.goal!='audio'):self.audio.show_listen()
         else:self.tabs.setCurrentWidget(self.audio)
     def log_line(self,text):
@@ -176,6 +215,8 @@ class Window(QMainWindow):
         if hasattr(self,'playback'): self.playback.update_busy(busy,False)
         self.cancel_button.setEnabled(busy and getattr(self,'cancellable',False))
         if hasattr(self,'welcome'):self.welcome.update_state()
+        if hasattr(self,'adapt'):self.adapt.update_state()
+        if hasattr(self,'reserve_button'):self.reserve_button.setEnabled(not busy)
     def invalidate(self,*args):
         self.converted=None; self.report=None; self.variants={}
         self.variant_choice.blockSignals(True); self.variant_choice.setCurrentIndex(0); self.variant_choice.blockSignals(False)
@@ -183,6 +224,10 @@ class Window(QMainWindow):
     def settings(self):
         return Settings(self.source.currentText(),self.sliders['Density'].value(),self.sliders['Chords'].value(),self.sliders['Movement'].value(),self.max_chord.value())
     def run_job(self,label,fn,on_success,cancellable=False):
+        import time
+        self.operation_started=time.monotonic();self.operation_name=label;self.operation_count=None
+        self.operation_label.setText(label)
+        if hasattr(self,'adapt'):self.adapt.next_step.setText(label)
         self.cancellable=cancellable; self.log_line(label); self.progress.setRange(0,0)
         self.worker=Worker(fn,self)
         self.success_callback=on_success
@@ -193,6 +238,7 @@ class Window(QMainWindow):
         self.update_buttons(); self.worker.start()
     @Slot(int,int,str)
     def job_progress(self,done,total,name):
+        self.operation_count=(done,total);self.refresh_operation_clock()
         if hasattr(self,'cleaner') and self.goal=='clean':self.cleaner.status.setText(f'{done}/{total} — {name}')
         self.progress.setRange(0,total); self.progress.setValue(done)
         self.library.summary.setText(f'{done}/{total} — {name}' if total else name)
@@ -206,6 +252,8 @@ class Window(QMainWindow):
     @Slot(str)
     def job_failed(self,error):
         self.log_line('ERROR — '+error)
+        self.operation_label.setText('Could not complete: '+error)
+        if hasattr(self,'adapt'):self.adapt.next_step.setText('Needs attention: '+error)
         if hasattr(self,'cleaner') and self.goal=='clean':self.cleaner.status.setText('Operation failed: '+error)
         if hasattr(self,'playback'):self.playback.status.setText('Operation failed: '+error)
         if hasattr(self,'library'): self.library.summary.setText('Operation failed: '+error)
@@ -216,7 +264,11 @@ class Window(QMainWindow):
         self.success_callback=None; worker.operation=None; worker.deleteLater()
         self.progress.setRange(0,1); self.progress.setValue(1)
         if hasattr(self,'audio'): self.audio.progress.setRange(0,1); self.audio.progress.setValue(1)
+        message=self.operation_label.text()
+        if not message.startswith('Could not complete:'):self.operation_label.setText('Finished · '+self.operation_name)
+        error_text=self.adapt.next_step.text()
         self.update_buttons()
+        if error_text.startswith('Needs attention:'):self.adapt.next_step.setText(error_text)
     def start_from_audio(self):
         self.start_guided('audio')
     def review_cleanup(self):
@@ -358,16 +410,20 @@ class Window(QMainWindow):
         if not self.busy() and event.mimeData().hasUrls(): event.acceptProposedAction()
     def dropEvent(self,event):
         paths=[u.toLocalFile() for u in event.mimeData().urls() if u.isLocalFile()]
-        if len(paths)!=1: self.log_line('Drop one chart or a single parent folder for recursive pattern scanning.'); return
+        if len(paths)!=1: self.log_line('Drop one chart file or one parent folder containing your songs.'); return
         if Path(paths[0]).is_dir():
             if self.tabs.currentWidget() is self.library:self.library.scan(paths[0])
             else:self.start_guided('clean',paths[0])
             event.acceptProposedAction(); return
-        if self.tabs.currentWidget() is self.welcome and not Path(paths[0]).is_dir():
-            goal='audio' if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3') else 'orange'
-            self.start_guided(goal,paths[0]);event.acceptProposedAction();return
-        if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3'):
-            self.tabs.setCurrentWidget(self.audio); self.audio.open_path(paths[0]); event.acceptProposedAction(); return
+        if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus'):
+            # A recording on the essential path is for listening, not transcription.
+            if self.tabs.currentWidget() is self.audio:
+                self.audio.open_path(paths[0])
+            else:
+                self.playback.open_audio(paths[0]);self.tabs.setCurrentWidget(self.adapt)
+            event.acceptProposedAction();return
+        if self.tabs.currentWidget() in (self.welcome,self.adapt):
+            self.start_guided('orange',paths[0]);event.acceptProposedAction();return
         self.open_path(paths[0]); event.acceptProposedAction()
     def closeEvent(self,event):
         if self.busy():

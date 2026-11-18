@@ -57,3 +57,26 @@ def apply_style(window):
 def primary(widget):
     widget.setObjectName('primaryAction')
     widget.style().unpolish(widget);widget.style().polish(widget);widget.update()
+
+# Focused workshop surfaces. All decoration is native Qt; no downloaded assets.
+STYLE += '''
+QWidget { font-size: 13px; }
+QLabel#brand { font-size: 18px; letter-spacing: 1px; }
+QLabel#versionBadge { color: #86b6b7; font-size: 11px; }
+QLabel#hero { font-size: 32px; }
+QLabel#pageTitle { font-size: 24px; font-weight: 700; color: #f1f6fc; }
+QLabel#songTitle { font-size: 16px; font-weight: 600; }
+QLabel#step { background: #172636; color: #94a8bf; padding: 9px 12px; border: 1px solid #283b50; border-radius: 7px; }
+QLabel#step[active="true"] { background: #1b3c3c; border-color: #63ddb1; color: #bff6df; font-weight: 600; }
+QLabel#step[complete="true"] { color: #9ee6c9; border-color: #35594f; }
+QLabel#nextStep { background: #172e39; border-left: 3px solid #68d7b5; border-radius: 7px; padding: 7px 9px; }
+QFrame#card { background: qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #203344,stop:1 #182331); border: 1px solid #3e556b; border-radius: 14px; }
+QTableView { alternate-background-color: #142130; gridline-color: transparent; }
+QTableView::item { padding: 5px; }
+QTableView::item:selected { background: #244c5c; color: #f3fcff; }
+QTabBar::tab { padding: 9px 16px; }
+QMenu { background: #1b2939; border: 1px solid #486079; padding: 6px; }
+QMenu::item { padding: 9px 18px; }
+QMenu::item:selected { background: #31566a; border-radius: 4px; }
+QSplitter::handle { background: #24374a; }
+'''

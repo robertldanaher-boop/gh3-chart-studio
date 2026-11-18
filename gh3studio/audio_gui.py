@@ -109,7 +109,12 @@ class AudioPanel(QWidget):
         self.pages.setCurrentWidget(self.analysis_page)
         if hasattr(self,"draft_button"):self.update_busy(self.owner.busy(),getattr(self.owner,"cancellable",False))
     def show_listen(self):
-        self.owner.tabs.setCurrentWidget(self);self.pages.setCurrentWidget(self.owner.playback)
+        if self.owner.goal=='orange':
+            self.owner.tabs.setCurrentWidget(self.owner.adapt);self.owner.adapt.attach_preview()
+        else:
+            self.owner.tabs.setTabVisible(self.owner.tabs.indexOf(self),True)
+            self.pages.addWidget(self.owner.playback);self.owner.playback.set_focused(False)
+            self.owner.tabs.setCurrentWidget(self);self.pages.setCurrentWidget(self.owner.playback)
         self.update_busy(self.owner.busy(),getattr(self.owner,"cancellable",False))
     def selection_changed(self):
         count=sum(self.onsets.included);self.selection_label.setText(f'{count} of {len(self.onsets.included)} attacks included')

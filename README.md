@@ -1,188 +1,93 @@
-Product focus: **GH3 Wii chart cleanup and challenging lower difficulties from authored charts**. See [accepted project direction](docs/PROJECT_DIRECTION.md). Audio transcription and learned generation are deferred; existing experimental tools remain in v0.6.4.
+# GH3 Chart Studio 0.7.0 — Wii chart workshop
 
-Latest release: **0.6.4**. True Select all, visible blocked-song errors, separate output path and direct START CLEANING. See [Windows steps](docs/M6_4_WINDOWS_GUIDE.md).
-
-Version **0.6.3**: Cleaner has visible **START CLEANING**, **Select all ready**, a selection count, and automatic same-folder audio matching for a single non-preview recording. See [Windows steps and limitations](docs/M6_3_WINDOWS_GUIDE.md).
-
-Version **0.6.2**: Cleaner metadata edits survive chart validation errors and stay visible when reopening the editor. See [Windows retest](docs/M6_2_WINDOWS_GUIDE.md).
-
-Version **0.6.1**: Corrects Windows-default-encoding test reads and further isolates wide GUI controls. See [Windows retest steps](docs/M6_1_WINDOWS_GUIDE.md).
-
-Version **0.6.0**: New **Clean charts for GH3** goal: scan a song folder or collection, review cleanup and metadata, then export new chart/Ogg/song.ini folders. See [Windows workflow and limits](docs/M6_WINDOWS_GUIDE.md).
-
-Version **0.5.6**: START_WINDOWS.cmd now detects a usable runtime and downloads/installs signed Python 3.11 x64 when missing, then installs app dependencies, tests and launches. See [first-run setup and limits](docs/M5_6_WINDOWS_GUIDE.md).
-
-Version **0.5.5**: Fixes minimum-width constraints in Audio Studio and the hidden Pattern Library tab. Startup tests remain required. See [Windows retest steps](docs/M5_5_WINDOWS_GUIDE.md).
-
-Version **0.5.4**: Orange sustains can transfer randomly to Green, Red, Yellow or Blue, with a repeatable seed and Regenerate control. See [Windows steps](docs/M5_4_WINDOWS_GUIDE.md).
-
-Version **0.5.3**: Optional Orange sustain transfer to Blue (button 4) before four-fret Medium creation. See [Windows steps](docs/M5_3_WINDOWS_GUIDE.md).
-
-Version **0.5.2**: First launch now asks Agree and continue or Disagree and close. Acceptance is saved per Windows user across updates; the notice remains under About / credits. See [first-run Windows verification](docs/M5_2_WINDOWS_GUIDE.md). Start with a goal: an existing chart or a recording. See [guided Windows workflows](docs/M5_WINDOWS_GUIDE.md) and [credits](docs/CREDITS.md).
-
-Version **0.4.9** features: See [song identity, Hard/Expert source and HOPO review](docs/M4_9_WINDOWS_GUIDE.md). HOPO export is an experimental TheGHOST chart profile requiring in-game acceptance.
-
-Version **0.4.8** features: See [one-song Ogg export and Windows test steps](docs/M4_8_WINDOWS_GUIDE.md). Batch support is deferred until one song is verified end to end.
-
-Version **0.4.7** features: See [preview audio testing and troubleshooting](docs/M4_7_WINDOWS_GUIDE.md).
-
-Version **0.4.6** features: See [startup progress and Windows testing](docs/M4_6_WINDOWS_GUIDE.md).
-
-Version **0.4.5** features: See [Windows test steps](docs/M4_5_WINDOWS_GUIDE.md) for exact displayed-difficulty Orange removal and chart/audio song-folder export.
-
-# GH3 Chart Studio 0.4.4 — Guided audio workflow and horizontal preview
-
-A Python 3.11 / PySide6 desktop converter for authored Expert or Hard guitar tracks.
-Expert Medium is written into **MediumSingle** and MIDI **PART GUITAR pitches 72–75**.
-Orange (chart lane 4 / MIDI pitch 76) is blocked in Medium at conversion and export.
-
-This is a tested **source release**. Windows, TheGHOST, Dolphin and Wii execution have
-not been tested here. No prebuilt Windows EXE is included.
-
-## One-file setup, test and launch
-
-Place START_WINDOWS.cmd in the extracted app folder beside run_app.py, then double-click
-it. It verifies Python 3.11 x64, creates/uses .venv, installs pinned dependencies,
-runs the full test suite, then launches only on success. No intermediate key presses
-are required. start_windows.log records the latest attempt, including app errors.
-A failed stage stops and leaves the window open. The three former setup/test/launch scripts have been removed. build_windows.cmd remains a separate developer packaging tool.
-This CMD file was statically reviewed; Windows execution remains unverified here.
+Prepare existing authored song folders for GH3 Wii, or create a challenging
+four-fret Medium from Expert/Hard. The primary interface has **Home**, **Clean
+songs** and **Four-fret Medium**. Audio generation and pattern tools remain under
+**Tools in reserve**; they are not part of the main workflow.
 
 ## Start on Windows 10/11 x64
 
-1. Extract the complete ZIP into a normal writable folder (not inside the ZIP viewer).
-2. Python 3.11 x64 is detected automatically. Missing runtimes trigger the signed installer download; internet is required. See the 0.5.6 guide for repair limitations.
-3. Double-click **START_WINDOWS.cmd**. It installs dependencies, runs tests and opens the app automatically. Internet is required for the first installation.
-4. If a stage fails, the app does not launch; the window displays the error and start_windows.log records the details.
-5. Confirm the application title shows **0.4.4**.
-6. Open or drag in `examples/technical-study.chart`.
-7. Select Expert, leave Density at 6, and click **Convert & validate**.
-8. Review the counts/warnings and preview. Select Source to compare.
-9. Click **Export .chart + MIDI…**, then choose a parent folder. A new dated folder is
-   created containing both formats, metadata, settings and a validation report.
+1. Close the old application. Extract the complete ZIP into a new writable folder.
+2. Double-click **START_WINDOWS.cmd**. It checks Python 3.11 x64, sets up dependencies,
+   runs automated tests, and launches. Missing runtimes trigger the existing signed
+   installer bootstrap; internet is needed for initial setup. See
+   [bootstrap details](docs/M5_6_WINDOWS_GUIDE.md).
+3. Choose **Clean my songs** or **Make a challenging Medium** from Home.
+4. Follow the numbered steps in the selected workspace.
 
-For your own song, import its original audio separately in TheGHOST and choose
-**either notes.chart or notes.mid**. Prefer `.chart` for short sustains. Do not rely
-on folder auto-detection when both files are present. Reimporting our MIDI requires
-**Legacy MIDI / TheGHOST** mode. The default Modern mode handles pitch 116 phrases.
+See [exact Windows test steps](docs/M7_WINDOWS_GUIDE.md), including small-window,
+playback, export and reserved-tool checks. Setup failures are recorded in
+`start_windows.log` and `startup_bootstrap.log`.
 
-## New in 0.4.4
+## Clean existing songs
 
-Pattern scans populate the table automatically (newest 200 patterns, all categories).
-Audio Studio's listening page now has Open chart, Display difficulty and Remove
-Orange → Medium controls. This action copies Expert/Hard into Medium, deletes only
-Orange gems, and preserves remaining notes and original difficulties. Unsupported
-mechanics are blocked rather than silently repaired. See docs/M4_4_WINDOWS_GUIDE.md.
+Choose one song folder or a parent collection; scanning is recursive. The queue
+matches assets inside each song folder, displays planned repairs and blocked
+songs, and supports title/artist search plus **Needs help**/**Ready** filters.
+**Select all**, **Ready only** and **Clear** operate on the entire queue, including
+filtered-out rows. Review each relevant song, correct metadata or ambiguous assets,
+check **Apply the cleanup changes I reviewed**, then **Start cleaning**. The output
+location is already shown; Start does not open a location picker.
 
-## Added in 0.4.3
+Every successful output contains `notes.chart`, `song.ogg`, `song.ini`, validation
+and import reports. Per-run `cleanup.log` and `cleanup_summary.json` record outcomes.
+**Open results / logs** also works after an all-failed run if a report folder exists.
+**Save scan report** collects blockers before export. Original folders stay untouched.
 
-Fixed a Windows-only test failure caused by comparing Qt forward-slash paths
-with Windows backslash paths as raw strings. Paths now compare as filesystem paths.
-No test was removed or skipped; the startup test gate remains.
+## Create four-fret Medium
 
-## Added in 0.4.2
+Choose a supported `.chart` or game-chart MIDI file, select **Expert** or **Hard**,
+then **Create four-fret Medium**. The focused workflow does not apply automatic
+density thinning. Orange taps are removed. Sustain preservation is enabled by
+default in this workflow: Orange sustains transfer to allowed frets using the
+existing repeatable random placement; unresolved conflicts require export review.
 
-One startup file, START_WINDOWS.cmd, replaces the three separate setup/test/launch scripts.
+Use **View track**, **Review source** and **Review Medium** to compare the actual
+source and prepared output. **Play preview audio** plays the matched recording
+or asks you to choose it. **Playback & timing options** exposes output device,
+volume, estimated HOPO display, explicit timing edits and sustain regeneration.
+**Review / export song…** opens metadata, recording and compatibility review before
+asking where to save a new song folder. Expert/Hard source tracks are retained.
 
-## Added in 0.4.1
+Medium must contain only Green, Red, Yellow and Blue. The existing chart/MIDI
+export validators continue enforcing this rule. Other target difficulty profiles
+are not implemented. A source's existing Medium is replaced only in the new output.
 
-Start audio workflow → Audio Studio: **1. Choose audio → 2. Review attacks →
-Create draft → 3. Listen / timing → 4. Export**. The entire audio path stays in
-one workspace. Optional settings are visible by name and expand when needed.
+## Limits and verification
 
-Uncheck unwanted attacks before generation. Listen on horizontal G/R/Y/B rows,
-matching the Converter map. Analyze an already-separated guitar file while keeping
-the original mix for playback. Built-in separation and tablature integration are
-not implemented; see docs/INSTRUMENT_AND_TAB_ROADMAP.md.
+223 tests passed in 23.28 seconds on Python 3.11/Linux with Qt offscreen. See
+[recorded results](docs/M7_TEST_RESULTS.txt). Essential screens were inspected at
+1024x700; automated checks also cover 18px text. This is a tested source package,
+not a prebuilt or Windows-verified executable. Native Windows DPI/audio devices,
+TheGHOST and Wii/Dolphin acceptance remain pending. No signing/SmartScreen guarantee.
 
-Use docs/M4_4_WINDOWS_GUIDE.md for the current 134-test release; docs/M4_1_WINDOWS_GUIDE.md covers the audio workflow.
+The conservative cleaner removes forced/tap/open-note markers and repairs reported
+sustain overlaps across all guitar difficulties. Other instruments, separate stems
+and artwork are omitted. A sole instrument-named recording may be auto-matched;
+verify it is the full mix. Stems are not automatically mixed. Nonzero offset/delay,
+non-/4 meter and other unresolved chart errors may block export. Do not assume every
+source is supported. HOPO assistance remains experimental and requires importer/
+game verification. Edits and selections are session-only until export.
 
-## Added in 0.4.0
+For legacy game-chart MIDI, use **Tools in reserve → Advanced converter** to choose
+**Legacy MIDI / TheGHOST** before importing; the default reader is Modern MIDI.
+General instrumental MIDI is not automatically a guitar-game chart. See the
+[compatibility notes](docs/COMPATIBILITY.md) and each export's import report.
 
-- **Start from audio…**: no chart required. Analyze, create a four-fret draft,
-  then use **Listen & Sync** to hear the recording and review scrolling notes.
-- Playback, pause, stop, seek and volume; media-clock-driven note highway.
-- Preview a signed millisecond shift, apply to the output, undo/redo and export.
-  Tempo/meter maps remain unchanged; note/phrase/event times move with tick rounding.
-- **Review GH3 cleanup…** lists marker removals and optional sustain shortening
-  before applying an in-memory working copy. Restore Original discards cleanup.
-- Pattern import accepts marked/overlapping sources for statistical learning only.
-  Source marker metadata and overlap warnings remain visible.
-- Choose a pattern style when generating variations; browse categories in Pattern Library.
-- HOPO highlighting estimates natural eligibility; it does not force taps or emulate GH3.
+## Build, history and credits
 
-Read `docs/M4_WINDOWS_GUIDE.md` for the exact audio-only and cleanup workflows.
+Run **build_windows.cmd** after setup. It tests, collects licenses and builds with
+PyInstaller. Keep the entire `dist/GH3ChartStudio` directory together. This Windows
+build recipe has not been executed here; it does not promise byte-identical builds.
+See [Windows acceptance](docs/WINDOWS_TEST.md).
 
-## Added in 0.3.0
+The ZIP includes `repository.bundle` and `RELEASE_COMMIT.txt`. Restore history with
+`git clone repository.bundle GH3-Chart-Studio-repo`. Source modules live in
+`gh3studio/`; tests in `tests/`; synthetic examples in `examples/`. No commercial
+recordings are bundled. [Project direction](docs/PROJECT_DIRECTION.md),
+[implementation log](docs/M7_IMPLEMENTATION_LOG.md) and [handoff](HANDOFF_LATEST.md)
+record scope, limitations and next work.
 
-The audio-analysis page in **Audio Studio** imports WAV/FLAC/OGG/MP3, detects candidate attacks,
-estimates constant tempo, supports manual BPM and draft shifts, shows a real waveform,
-and creates reviewable four-fret onset drafts. It can preserve an authored tempo map
-and use local learned patterns. Timing diagnostics distinguish possible offset/drift
-issues. See `docs/AUDIO_ANALYSIS.md`. This is not verified guitar transcription.
-
-## Added in 0.2.0
-
-The **Pattern Library** tab recursively scans chart folders into local SQLite storage,
-extracts reusable patterns, supports similarity search and preference ratings, and
-generates three seeded variations. See `docs/PATTERN_LIBRARY.md` for the exact workflow.
-This is statistical pattern retrieval, not neural training or audio analysis.
-
-## Implemented
-
-- Strict .chart parsing and MIDI type 0/1 PPQ import for guitar.
-- Expert/Hard conversion with deterministic contour-aware four-fret mapping.
-- Density, chord and movement controls; maximum 1–3 simultaneous gems.
-- Default density retains all authored onsets. No notes inserted to increase density.
-- Original guitar difficulties retained; existing Medium replaced in the new output only.
-- Tempo positions, retained onsets and sustain ticks preserved in the internal model.
-- Legacy per-difficulty Star Power and face-off serialization; modern SP import.
-- Metadata from chart, MIDI internal metadata and adjacent song.ini.
-- Real note preview, single-file drag/drop, background workers, conversion cancellation.
-- Save/load settings, diagnostic log, atomic new-folder export and read-back checks.
-
-The static Converter preview is read-only and limited to 2,000 gems. Listen & Sync shows the active chart against audio and supports whole-chart timing shifts, not individual note editing. The engine uses authored chart
-structure, stored patterns and the optional onset-analysis pipeline; it does not train
-a neural model or claim measured real-song musical quality.
-
-## Controls
-
-| Control | Actual behavior |
-|---|---|
-| Density 6 | Preserve every source onset |
-| Density 1–5 | Suppress close events, retaining quarter-note anchors and section/phrase starts |
-| Chords 1–2 / 3–4 / 5–6 | Up to 1 / 2 / 3 gems, also bounded by Max chord gems |
-| Movement 1–6 | Reduce travel at low settings; favor contour at high settings |
-
-Chord reduction keeps outer voices (plus a middle voice when three are allowed).
-A deterministic candidate score favors contour and avoids collapsing changed source
-patterns into repeated target shapes. This is a first heuristic, not proven musical
-understanding or a trained model. Every removed gem/event is reported.
-
-## Limitations and compatibility
-
-Read `docs/COMPATIBILITY.md` before importing songs. Forced HOPOs, modern taps,
-open notes, disjoint/extended source sustains, tempo anchors and nonzero chart Offset
-are not safely translated in this version. Some block conversion, others paired export.
-Other instruments are not exported. Audio is neither modified nor copied.
-
-Binary packaging: run **build_windows.cmd** after setup. It runs tests before
-PyInstaller. Keep the resulting `dist/GH3ChartStudio` folder intact. The build recipe
-is provided but has not been executed on Windows. It is dependency-pinned, not a
-claim of byte-identical executables on different Windows machines.
-
-## Project files
-
-- `gh3studio/`: data model, parsers, converter, validator, export service, GUI,
-  pattern database, scanner, variation engine and audio-analysis pipeline.
-- `tests/`: unit/integration/GUI regression tests.
-- `examples/`: original synthetic study and verified paired exports (no commercial music).
-- `presets/`: working JSON presets.
-- `requirements-windows.lock`: transitive Windows dependencies pinned with hashes.
-- `docs/`: architecture, compatibility research, Windows acceptance steps and implementation log.
-- `tools/`: optional independent parser check and license collection utility.
-- `licenses/`: collected dependency notices; `THIRD_PARTY.md` explains use.
-- `repository.bundle`: Git history supplied with the ZIP. To restore a checkout:
-  `git clone repository.bundle GH3-Chart-Studio-repo`.
-
-Recommended next step: Windows listening and TheGHOST acceptance using one song; then individual note/sustain editing with undo and a verified forced-HOPO export profile. The current relay checkpoint is `HANDOFF_LATEST.md`. Bob reports an attempted Claude handoff blocked by missing packages; no Claude code changes have been received.
+Credits to Nanook and TeamGHOST and the format-reference authors remain under
+**About** and in [credits](docs/CREDITS.md). Dependency notices are in `licenses/`
+and `THIRD_PARTY.md`. No new third-party dependency or artwork was added in 0.7.0.

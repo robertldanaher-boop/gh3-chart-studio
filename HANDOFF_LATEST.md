@@ -1,9 +1,26 @@
-# GH3 Chart Studio — 0.6.4 handoff
+# GH3 Chart Studio — 0.7.0 handoff
 
-Prepared November 17, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_6_4.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.4 is authoritative.
+Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
+GH3_Chart_Studio_v0_7_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
+
+## Current 0.7.0 update
+
+Focused GUI implemented: Home, Clean songs, Four-fret Medium. Tools in reserve
+reveals advanced converter, patterns and audio lab on demand. New AdaptPanel uses
+existing Orange-removal service, defaults sustain preservation ON in the focused
+workflow, has independent Expert/Hard source selection and explicit source/output
+comparison. Cleaner adds search/status filters, side-by-side inspector/results,
+pinned destination/Start and readable outcomes; logs open even after all failed.
+Playback transport is above the chart; extra settings collapsed. Dropped audio
+on the main path is preview-only. Export dialog explains blockers in plain text.
+Global operation/elapsed/count display and refreshed startup branding. No new deps.
+223 tests passed in23.28s on Linux/Python3.11/Qt offscreen. Small-window/large-text
+assertions retained; screenshots inspected. Windows build/audio/game tests pending.
+Read docs/M7_WINDOWS_GUIDE.md, M7_IMPLEMENTATION_LOG.md and M7_TEST_RESULTS.txt.
+Next user acceptance of the essential workflows, actual54-song blockers, one-song
+Wii acceptance. Session persistence/retry/additional profiles still unimplemented.
 
 ## Accepted scope update after v0.6.4
 
@@ -15,10 +32,10 @@ within legal choices. Audio playback/sync/export stays; transcription, separatio
 tablature search and learned generation are deferred. Authored game-chart MIDI
 still supported: parsing authored notes is distinct from audio transcription.
 See docs/PROJECT_DIRECTION.md for complete policy, acceptance and known gaps.
-Documentation update only; application release remains v0.6.4, 215 tests last
-recorded. No new functionality or native Windows/game verification claimed.
+The scope decision was initially documentation-only. The 0.7.0 update above
+implements its focused GUI; native Windows/game verification remains pending.
 
-## Current 0.6.4 update
+## Prior 0.6.4 update
 
 Includes Save scan report (all discovered blockers) and per-run cleanup.log
 (timestamped per-song outcomes, error traceback and completion/cancel counts).

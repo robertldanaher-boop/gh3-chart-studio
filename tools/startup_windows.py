@@ -14,7 +14,7 @@ import time
 import traceback
 import uuid
 
-MESSAGES=("Tuning the strings and warming up the stage…", "Giving the Orange notes a night off…", "Checking the setlist. Your encore is coming!", "Warming up the amps—no sound check required yet.", "A few backstage checks before the music starts…")
+MESSAGES=("Tuning the strings and warming up the stage…", "Getting your chart-cleaning workbench ready…", "Checking the setlist. Your encore is coming!", "Warming up the amps—no sound check required yet.", "A few backstage checks before the music starts…")
 STEPS=('1 / 3 — Set up and verify dependencies','2 / 3 — Run automated tests','3 / 3 — Open GH3 Chart Studio')
 DEFAULT_SECONDS=(90.,30.,10.)
 
@@ -51,7 +51,7 @@ class Startup:
         self.root=root;self.events=queue.Queue();self.cancelled=threading.Event();self.process=None
         self.started=self.step_started=time.monotonic();self.step=0;self.test_percent=None;self.last_output=self.started
         self.estimates,self.historical=load_history(root/'startup_timings.json');self.durations=[];self.done=False;self.last_percent=0
-        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — getting ready');self.ui.geometry('860x700');self.ui.minsize(690,560);self.ui.configure(bg='#101722')
+        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — opening the workshop');self.ui.geometry('860x700');self.ui.minsize(690,560);self.ui.configure(bg='#101722')
         style=ttk.Style(self.ui);style.theme_use('clam')
         style.configure('.',background='#101722',foreground='#e5edf7',font=('Segoe UI',10))
         style.configure('TButton',background='#263b51',foreground='#e5edf7',padding=(12,7),borderwidth=0)
@@ -59,7 +59,7 @@ class Startup:
         style.configure('Horizontal.TProgressbar',background='#65dfb5',troughcolor='#203247',borderwidth=0,lightcolor='#65dfb5',darkcolor='#65dfb5')
         frame=ttk.Frame(self.ui,padding=18);frame.pack(fill='both',expand=True)
         ttk.Label(frame,text='GH3  /  CHART STUDIO',font=('Segoe UI',21,'bold')).pack(anchor='w')
-        ttk.Label(frame,text='SETTING THE STAGE',foreground='#72dfbf',font=('Segoe UI',9,'bold')).pack(anchor='w',pady=(4,0))
+        ttk.Label(frame,text='WII CHART WORKSHOP  /  GETTING READY',foreground='#72dfbf',font=('Segoe UI',9,'bold')).pack(anchor='w',pady=(4,0))
         self.motion=True;self.animation_started=time.monotonic()
         self.visual=tk.Canvas(frame,height=78,bg='#101722',highlightthickness=0);self.visual.pack(fill='x',pady=(4,0))
         ttk.Label(frame,text=random.choice(MESSAGES),wraplength=730).pack(anchor='w',pady=(6,16))

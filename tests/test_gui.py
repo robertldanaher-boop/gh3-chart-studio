@@ -408,11 +408,11 @@ def test_guided_orange_hard_path_and_next_step(tmp_path,app):
     song=Song(tracks={'Expert':[Note(0,0),Note(96,4)],'Hard':[Note(0,2),Note(192,4),Note(384,3)],'Medium':[Note(0,1)]})
     chart=tmp_path/'notes.chart';write_chart(song,chart)
     w=Window();assert w.start_guided('orange',chart);wait(w)
-    assert w.tabs.currentWidget() is w.audio and w.audio.pages.currentWidget() is w.playback
-    assert 'Choose Hard or Expert' in w.audio.next_step.text()
-    w.playback.difficulty.setCurrentText('Hard');w.playback.orange_button.click();wait(w)
+    assert w.tabs.currentWidget() is w.adapt
+    assert 'Choose Expert or Hard' in w.adapt.next_step.text()
+    w.adapt.source.setCurrentText('Hard');w.adapt.create_button.click();wait(w)
     assert w.converted.tracks['Medium']==[Note(0,2),Note(384,3)]
-    assert 'Compare the new Medium with Hard' in w.audio.next_step.text()
+    assert 'Compare tracks' in w.adapt.next_step.text()
     assert w.converted.tracks['Expert']==song.tracks['Expert']
     w.close()
 

@@ -28,7 +28,7 @@ Reference documentation for chart, MIDI and song.ini formats.<br>
 <h2>Development and packaging</h2>
 <p>pytest, PyInstaller, pyinstaller-hooks-contrib, setuptools, packaging and their supporting dependencies. These tools have their own licenses; applicable notices are included in the <b>licenses</b> folder and collected for Windows builds.</p>
 <p>GH3 Chart Studio's own code is MIT licensed. Source chart authors and artists retain their own credits; the export workflow preserves song/artist/charter metadata.</p>
-<p><b>Scope:</b> single-song workflow first. No built-in instrument separation or batch queue. TheGHOST/Wii/Dolphin acceptance is still a separate test.</p>
+<p><b>Scope:</b> existing-chart cleanup and four-fret adaptation. Recursive collection cleanup is available; instrument separation is not built in. TheGHOST/Wii/Dolphin acceptance is still a separate test.</p>
 '''
 
 class FretMotif(QWidget):
@@ -52,32 +52,31 @@ class WelcomePanel(QWidget):
         super().__init__();self.owner=owner;self.actions={}
         outer=QVBoxLayout(self);scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll)
         body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body);layout.setContentsMargins(24,20,24,20);layout.setSpacing(14)
-        eyebrow=QLabel('YOUR SONG. FOUR FRETS.');eyebrow.setObjectName('eyebrow');layout.addWidget(eyebrow)
-        title=QLabel('What would you like to make?');title.setObjectName('hero');title.setWordWrap(True);layout.addWidget(title)
-        intro=QLabel('Pick a starting point. We’ll guide one song from source to preview to an Ogg song folder.');intro.setWordWrap(True);intro.setObjectName('muted');layout.addWidget(intro)
+        eyebrow=QLabel('BUILT FOR YOUR GH3 WII COLLECTION');eyebrow.setObjectName('eyebrow');layout.addWidget(eyebrow)
+        title=QLabel('Great charts. Your way to play.');title.setObjectName('hero');title.setWordWrap(True);layout.addWidget(title)
+        intro=QLabel('Start with songs that are already charted. We’ll help you prepare them for import or bring the challenge to four frets.');intro.setWordWrap(True);intro.setObjectName('muted');layout.addWidget(intro)
         layout.addWidget(FretMotif())
         cards=QHBoxLayout();cards.setSpacing(16);layout.addLayout(cards)
-        for key,number,title,body,steps,action in [
-            ('orange','01','Keep the challenge. Lose Orange.','Start with an authored chart. Copy Hard or Expert into four-fret Medium, preserving every surviving note.','Open chart  →  Choose difficulty  →  Remove Orange  →  Listen & export','Open an existing chart'),
-            ('audio','02','Start with the recording.','No chart yet? Analyze audio, choose the musical attacks to keep, then create and review a draft.','Choose audio  →  Review attacks  →  Create draft  →  Listen & export','Choose a recording')]:
+        for key,number,title,description,steps,action in [
+            ('clean','01','Clean songs for GH3 Wii','Check existing charts, match their audio and metadata, and export organized song folders.','One song or a collection · Recursive scanning','Clean my songs'),
+            ('orange','02','Create four-fret Medium','Start from Expert or Hard. Keep playable rhythms and sustains while removing Orange.','Authored charts · Source tracks preserved','Make a challenging Medium')]:
             card=QFrame();card.setObjectName('card');col=QVBoxLayout(card);col.setContentsMargins(22,18,22,20);col.setSpacing(12)
             num=QLabel(number);num.setObjectName('cardNumber');col.addWidget(num)
             label=QLabel(title);label.setObjectName('cardTitle');label.setWordWrap(True);col.addWidget(label)
-            label=QLabel(body);label.setObjectName('cardBody');label.setWordWrap(True);col.addWidget(label)
+            label=QLabel(description);label.setObjectName('cardBody');label.setWordWrap(True);col.addWidget(label)
             col.addStretch();label=QLabel(steps);label.setWordWrap(True);label.setObjectName('muted');col.addWidget(label)
-            button=QPushButton(action);primary(button);button.clicked.connect(lambda checked=False,g=key:owner.start_guided(g));col.addWidget(button);self.actions[key]=button;cards.addWidget(card,1)
-        clean=QPushButton('03  Clean charts for GH3 — one folder or a collection');primary(clean);clean.clicked.connect(lambda:owner.start_guided('clean'));layout.addWidget(clean);self.actions['clean']=clean
+            button=QPushButton(action);primary(button);button.clicked.connect(lambda checked=False,g=key:owner.enter_workspace(g));col.addWidget(button);self.actions[key]=button;cards.addWidget(card,1)
         row=QHBoxLayout();layout.addLayout(row)
-        refine=QPushButton('Advanced chart conversion / variations');refine.clicked.connect(lambda:owner.start_guided('refine'));row.addWidget(refine);self.actions['refine']=refine
-        library=QPushButton('Browse local patterns');library.clicked.connect(lambda:owner.tabs.setCurrentWidget(owner.library));row.addWidget(library)
-        self.resume=QPushButton('Continue current song');self.resume.clicked.connect(owner.resume_workflow);row.addWidget(self.resume)
-        self.current=QLabel('Work on one song, or clean a collection. Original files stay untouched.');self.current.setObjectName('muted');self.current.setWordWrap(True);layout.addWidget(self.current)
+        self.resume=QPushButton('Continue current work');self.resume.clicked.connect(owner.resume_workflow);row.addWidget(self.resume);row.addStretch()
+        self.current=QLabel('Drop a song folder to clean it, or a chart file to create Medium.');self.current.setObjectName('muted');self.current.setWordWrap(True);layout.addWidget(self.current)
+        note=QLabel('Original files stay untouched. Audio experiments and pattern tools are available under Tools in reserve.');note.setObjectName('muted');note.setWordWrap(True);layout.addWidget(note)
         layout.addStretch()
     def update_state(self):
         for button in self.actions.values():button.setEnabled(not self.owner.busy())
-        self.resume.setEnabled(not self.owner.busy() and (self.owner.song is not None or self.owner.audio.path is not None))
-        if self.owner.song:self.current.setText('Current song: '+self.owner.song.metadata.get('Name','Untitled')+' • '+self.owner.song.metadata.get('Artist','Unknown artist'))
-        elif self.owner.audio.path:self.current.setText('Current recording: '+self.owner.audio.path.name)
+        self.resume.setEnabled(not self.owner.busy() and (bool(self.owner.cleaner.rows) or self.owner.song is not None or self.owner.audio.path is not None))
+        if self.owner.goal=='clean' and self.owner.cleaner.rows:self.current.setText(f'Current collection: {len(self.owner.cleaner.rows)} song folders. Continue to review or export.')
+        elif self.owner.song:self.current.setText('Current song: '+self.owner.song.metadata.get('Name','Untitled')+' • '+self.owner.song.metadata.get('Artist','Unknown artist'))
+        elif self.owner.audio.path:self.current.setText('Reserved audio experiment: '+self.owner.audio.path.name)
 
 
 def legal_notice_text():
