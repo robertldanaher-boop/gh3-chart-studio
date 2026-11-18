@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.7.0 — Wii chart workshop
+# GH3 Chart Studio 0.7.1 — Wii chart workshop
 
 Prepare existing authored song folders for GH3 Wii, or create a challenging
 four-fret Medium from Expert/Hard. The primary interface has **Home**, **Clean
@@ -15,7 +15,7 @@ songs** and **Four-fret Medium**. Audio generation and pattern tools remain unde
 3. Choose **Clean my songs** or **Make a challenging Medium** from Home.
 4. Follow the numbered steps in the selected workspace.
 
-See [exact Windows test steps](docs/M7_WINDOWS_GUIDE.md), including small-window,
+See [0.7.1 Windows test steps](docs/M7_1_WINDOWS_GUIDE.md), including small-window,
 playback, export and reserved-tool checks. Setup failures are recorded in
 `start_windows.log` and `startup_bootstrap.log`.
 
@@ -55,9 +55,11 @@ are not implemented. A source's existing Medium is replaced only in the new outp
 
 ## Limits and verification
 
-223 tests passed in 23.28 seconds on Python 3.11/Linux with Qt offscreen. See
-[recorded results](docs/M7_TEST_RESULTS.txt). Essential screens were inspected at
-1024x700; automated checks also cover 18px text. This is a tested source package,
+225 tests passed in 23.83 seconds on Python 3.11/Linux with Qt offscreen. See
+[recorded results](docs/M7_1_TEST_RESULTS.txt). Version 0.7.1 fixes the shared header
+and Medium footer layout constraints after Windows startup reported five failures.
+The original 1024x700 checks remain; new checks also use 18px text and 160% font
+stretch across all workspaces. A wide-text screenshot was inspected. This is a tested source package,
 not a prebuilt or Windows-verified executable. Native Windows DPI/audio devices,
 TheGHOST and Wii/Dolphin acceptance remain pending. No signing/SmartScreen guarantee.
 
@@ -85,9 +87,9 @@ The ZIP includes `repository.bundle` and `RELEASE_COMMIT.txt`. Restore history w
 `git clone repository.bundle GH3-Chart-Studio-repo`. Source modules live in
 `gh3studio/`; tests in `tests/`; synthetic examples in `examples/`. No commercial
 recordings are bundled. [Project direction](docs/PROJECT_DIRECTION.md),
-[implementation log](docs/M7_IMPLEMENTATION_LOG.md) and [handoff](HANDOFF_LATEST.md)
+[implementation log](docs/M7_1_IMPLEMENTATION_LOG.md) and [handoff](HANDOFF_LATEST.md)
 record scope, limitations and next work.
 
 Credits to Nanook and TeamGHOST and the format-reference authors remain under
 **About** and in [credits](docs/CREDITS.md). Dependency notices are in `licenses/`
-and `THIRD_PARTY.md`. No new third-party dependency or artwork was added in 0.7.0.
+and `THIRD_PARTY.md`. No new third-party dependency or artwork was added in 0.7.1.

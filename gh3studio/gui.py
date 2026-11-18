@@ -63,8 +63,9 @@ class Window(QMainWindow):
         self.resize(1180,840); self.setAcceptDrops(True)
         shell=QWidget();shell_layout=QVBoxLayout(shell);shell_layout.setContentsMargins(14,10,14,12);self.setCentralWidget(shell)
         header=QHBoxLayout();shell_layout.addLayout(header)
-        brand=QLabel('GH3  /  CHART STUDIO');brand.setObjectName('brand');header.addWidget(brand)
-        badge=QLabel('WII WORKSHOP  ·  '+__version__);badge.setObjectName('versionBadge');header.addWidget(badge);header.addStretch()
+        branding=QVBoxLayout();branding.setSpacing(2);header.addLayout(branding,1)
+        brand=QLabel('GH3  /  CHART STUDIO');brand.setObjectName('brand');brand.setWordWrap(True);branding.addWidget(brand)
+        badge=QLabel('WII WORKSHOP  ·  '+__version__);badge.setObjectName('versionBadge');badge.setWordWrap(True);branding.addWidget(badge)
         self.home_button=QPushButton('Home');self.home_button.setObjectName('quietAction');self.home_button.clicked.connect(lambda:self.tabs.setCurrentWidget(self.welcome));header.addWidget(self.home_button)
         self.reserve_button=QPushButton('Tools in reserve');self.reserve_button.setObjectName('quietAction');self.reserve_menu=QMenu(self);self.reserve_button.setMenu(self.reserve_menu);header.addWidget(self.reserve_button)
         credits=QPushButton('About');credits.setObjectName('quietAction');credits.clicked.connect(lambda:show_credits(self));header.addWidget(credits)
@@ -140,6 +141,9 @@ class Window(QMainWindow):
         self.clock=QTimer(self);self.clock.setInterval(1000);self.clock.timeout.connect(self.refresh_operation_clock);self.clock.start()
         for button in (self.convert_button,self.export_button,self.audio.draft_button,self.audio.export_button,self.playback.orange_button):primary(button)
         self.update_buttons()
+    def layout_report(self):
+        from .layout_debug import layout_report
+        return layout_report(self)
     def enter_workspace(self,goal):
         if self.busy():return
         self.goal=goal

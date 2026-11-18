@@ -1,11 +1,35 @@
-# GH3 Chart Studio — 0.7.0 handoff
+# GH3 Chart Studio — 0.7.1 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_7_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.0 is authoritative.
+GH3_Chart_Studio_v0_7_1.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.1 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.7.0 update
+## Current 0.7.1 update
+
+Bob's Windows startup reported 5 layout failures, 217 passed, 1 skipped: window
+width 1083px normally and 1208px with 18px text, exceeding the unchanged 1024px
+limit. Wider font metrics on Linux reproduced the same failure class (1049/1173px)
+and identified the shared single-row header as the limiting layout. Brand and
+version now stack and wrap, keeping navigation alongside them. The four Medium
+footer actions use a two-row grid so post-export controls also fit.
+
+Original size assertions and startup's full-test gate remain. Two new regression
+cases apply 160% font stretch, with/without 18px text, visit all six pages and
+check every post-export footer action. Both failed against the old header; see
+docs/M7_1_REPRODUCTION.txt. All 225 tests passed in 23.83s on Python 3.11.18/Linux,
+Qt offscreen; no native Windows execution. Inspected 1024x700 wide-font screenshot.
+Failure assertions now include JSON layout diagnostics (fonts, DPI, style, minimum
+sizes, pages and scroll ranges) in the existing startup log. No music/export or
+dependency behavior changed. See docs/M7_1_WINDOWS_GUIDE.md,
+M7_1_IMPLEMENTATION_LOG.md and M7_1_TEST_RESULTS.txt.
+
+Next: run this release's START_WINDOWS.cmd on Bob's Windows machine, then verify
+the essential workflows and one song in TheGHOST/Wii. Diagnose collection blockers
+from actual scan/cleanup logs before adding features. No Claude handoff has occurred.
+Account usage limits are not observable here; keep this handoff current each release.
+
+## Prior 0.7.0 update
 
 Focused GUI implemented: Home, Clean songs, Four-fret Medium. Tools in reserve
 reveals advanced converter, patterns and audio lab on demand. New AdaptPanel uses

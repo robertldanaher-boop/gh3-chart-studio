@@ -28,7 +28,7 @@ def test_essential_actions_visible_at_1024_by_700(app,large_text):
     w.resize(1024,700);w.show()
     for goal,panel in [('clean',w.cleaner),('orange',w.adapt)]:
         w.enter_workspace(goal);app.processEvents()
-        assert w.width()<=1024 and w.height()<=700
+        assert w.width()<=1024 and w.height()<=700, w.layout_report()
         assert panel.export_button.visibleRegion().boundingRect().height()>=panel.export_button.height()-2
         assert panel.steps.isVisible()
     w.close()
@@ -101,3 +101,25 @@ def test_export_review_explains_missing_recording(app):
     assert 'recording' in dialog.readiness.text()
     assert 'Structural checks passed' in dialog.details.toPlainText()
     dialog.close()
+
+
+@pytest.mark.parametrize('large_text',[False,True])
+def test_wider_font_metrics_fit_all_workspaces_and_export_actions(app,large_text):
+    from PySide6.QtWidgets import QWidget
+    w=Window()
+    if large_text:w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
+    # Exercise wider glyph metrics without relying on a particular installed font.
+    # The old single-line header exceeded 1024px with this 160% stretch.
+    for widget in [w,*w.findChildren(QWidget)]:
+        font=widget.font();font.setStretch(160);widget.setFont(font)
+    w.resize(1024,700);w.show();app.processEvents()
+    for panel in (w.welcome,w.cleaner,w.adapt,w.audio,w.library,w.converter):
+        w.tabs.setTabVisible(w.tabs.indexOf(panel),True);w.tabs.setCurrentWidget(panel);app.processEvents()
+        assert w.width()<=1024 and w.height()<=700, w.layout_report()
+    w.tabs.setCurrentWidget(w.adapt)
+    w.adapt.open_output.show();app.processEvents()  # Post-export controls must also fit.
+    assert w.width()<=1024 and w.height()<=700, w.layout_report()
+    for button in (w.adapt.restore_button,w.adapt.output_preview,w.adapt.open_output,w.adapt.export_button):
+        assert button.visibleRegion().boundingRect()==button.rect()
+        assert button.width()>=button.minimumSizeHint().width()
+    w.close()

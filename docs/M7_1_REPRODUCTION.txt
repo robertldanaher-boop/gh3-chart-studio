@@ -1,0 +1,60 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_____ test_wider_font_metrics_fit_all_workspaces_and_export_actions[False] _____
+
+app = <PySide6.QtWidgets.QApplication(0x55956af0b350) at 0x7fda4142bb80>
+large_text = False
+
+    @pytest.mark.parametrize('large_text',[False,True])
+    def test_wider_font_metrics_fit_all_workspaces_and_export_actions(app,large_text):
+        from PySide6.QtWidgets import QWidget
+        w=Window()
+        if large_text:w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
+        # Exercise wider glyph metrics without relying on a particular installed font.
+        # The old single-line header exceeded 1024px with this 160% stretch.
+        for widget in [w,*w.findChildren(QWidget)]:
+            font=widget.font();font.setStretch(160);widget.setFont(font)
+        w.resize(1024,700);w.show();app.processEvents()
+        for panel in (w.welcome,w.cleaner,w.adapt,w.audio,w.library,w.converter):
+            w.tabs.setTabVisible(w.tabs.indexOf(panel),True);w.tabs.setCurrentWidget(panel);app.processEvents()
+>           assert w.width()<=1024 and w.height()<=700
+E           assert (1049 <= 1024)
+E            +  where 1049 = <built-in method width of Window object at 0x7fda4142b540>()
+E            +    where <built-in method width of Window object at 0x7fda4142b540> = <gh3studio.gui.Window(0x55956ac527a0) at 0x7fda4142b540>.width
+
+tests/test_focused_workspace.py:118: AssertionError
+----------------------------- Captured stderr call -----------------------------
+qt.multimedia.ffmpeg: Using Qt multimedia with FFmpeg version 7.1 LGPL version 2.1 or later
+socket(): Operation not permitted
+socket(): Operation not permitted
+PulseAudioService: pa_context_connect() failed
+This plugin does not support propagateSizeHints()
+_____ test_wider_font_metrics_fit_all_workspaces_and_export_actions[True] ______
+
+app = <PySide6.QtWidgets.QApplication(0x55956af0b350) at 0x7fda4142bb80>
+large_text = True
+
+    @pytest.mark.parametrize('large_text',[False,True])
+    def test_wider_font_metrics_fit_all_workspaces_and_export_actions(app,large_text):
+        from PySide6.QtWidgets import QWidget
+        w=Window()
+        if large_text:w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
+        # Exercise wider glyph metrics without relying on a particular installed font.
+        # The old single-line header exceeded 1024px with this 160% stretch.
+        for widget in [w,*w.findChildren(QWidget)]:
+            font=widget.font();font.setStretch(160);widget.setFont(font)
+        w.resize(1024,700);w.show();app.processEvents()
+        for panel in (w.welcome,w.cleaner,w.adapt,w.audio,w.library,w.converter):
+            w.tabs.setTabVisible(w.tabs.indexOf(panel),True);w.tabs.setCurrentWidget(panel);app.processEvents()
+>           assert w.width()<=1024 and w.height()<=700
+E           assert (1173 <= 1024)
+E            +  where 1173 = <built-in method width of Window object at 0x7fda7c99b040>()
+E            +    where <built-in method width of Window object at 0x7fda7c99b040> = <gh3studio.gui.Window(0x55956b8612d0) at 0x7fda7c99b040>.width
+
+tests/test_focused_workspace.py:118: AssertionError
+----------------------------- Captured stderr call -----------------------------
+This plugin does not support propagateSizeHints()
+=========================== short test summary info ============================
+FAILED tests/test_focused_workspace.py::test_wider_font_metrics_fit_all_workspaces_and_export_actions[False]
+FAILED tests/test_focused_workspace.py::test_wider_font_metrics_fit_all_workspaces_and_export_actions[True]
+2 failed, 8 deselected in 1.27s

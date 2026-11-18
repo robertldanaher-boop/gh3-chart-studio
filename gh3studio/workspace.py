@@ -1,7 +1,7 @@
 """Focused chart workflows; delegates musical edits to existing tested services."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QWidget,QLabel,QVBoxLayout,QHBoxLayout,QPushButton,
-    QComboBox,QCheckBox,QScrollArea,QFrame,QSizePolicy)
+    QComboBox,QCheckBox,QScrollArea,QFrame,QSizePolicy,QGridLayout)
 from .appearance import primary
 
 
@@ -46,11 +46,11 @@ class AdaptPanel(QWidget):
         self.summary=QLabel('Choose a chart to see its available source difficulties.');self.summary.setWordWrap(True);self.summary.setObjectName('muted');self.body.addWidget(self.summary)
         self.preview_host=QVBoxLayout();self.body.addLayout(self.preview_host,1)
         self.next_step=QLabel('Choose an existing .chart or game-chart MIDI file to begin.');self.next_step.setWordWrap(True);self.next_step.setObjectName('nextStep');outer.addWidget(self.next_step)
-        row=QHBoxLayout();outer.addLayout(row)
-        self.restore_button=QPushButton('Review source');self.restore_button.clicked.connect(self.review_source);row.addWidget(self.restore_button)
-        self.output_preview=QPushButton('Review Medium');self.output_preview.clicked.connect(self.review_output);row.addWidget(self.output_preview)
-        self.open_output=QPushButton('Open exported folder');self.open_output.clicked.connect(owner.audio.open_export_folder);row.addWidget(self.open_output)
-        self.export_button=QPushButton('Review / export song…');primary(self.export_button);self.export_button.clicked.connect(owner.start_export);row.addWidget(self.export_button,1)
+        footer=QGridLayout();outer.addLayout(footer);footer.setColumnStretch(0,1);footer.setColumnStretch(1,1)
+        self.restore_button=QPushButton('Review source');self.restore_button.clicked.connect(self.review_source);footer.addWidget(self.restore_button,0,0)
+        self.output_preview=QPushButton('Review Medium');self.output_preview.clicked.connect(self.review_output);footer.addWidget(self.output_preview,0,1)
+        self.open_output=QPushButton('Open exported folder');self.open_output.clicked.connect(owner.audio.open_export_folder);footer.addWidget(self.open_output,1,0)
+        self.export_button=QPushButton('Review / export song…');primary(self.export_button);self.export_button.clicked.connect(owner.start_export);footer.addWidget(self.export_button,1,1)
         self.source.currentTextChanged.connect(self.review_source)
     def attach_preview(self):
         self.preview_host.addWidget(self.owner.playback)

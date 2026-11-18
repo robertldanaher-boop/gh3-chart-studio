@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.1 — November 18, 2026
+
+Fix shared-header minimum width after Windows startup reported five small-window
+failures. Stack/wrap branding and split the Medium footer actions into two rows.
+Keep the existing size limits and startup test gate. Add wide-font regressions
+and detailed layout reports on assertion failure. 225 tests passed on Linux with
+Qt offscreen; native Windows acceptance remains pending. See
+docs/M7_1_IMPLEMENTATION_LOG.md and docs/M7_1_WINDOWS_GUIDE.md.
+
 ## 0.3.0 — November 14, 2026
 
 Local audio decoding, spectral/energy attack analysis, tempo/beat estimates, manual

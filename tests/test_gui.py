@@ -230,7 +230,7 @@ def test_guided_footer_visible_at_small_window(app,large_text):
     w=Window()
     if large_text:w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
     w.resize(1024,700);w.show();w.tabs.setCurrentWidget(w.audio);QApplication.processEvents()
-    assert w.width()<=1024 and w.height()<=700
+    assert w.width()<=1024 and w.height()<=700, w.layout_report()
     assert w.audio.draft_button.isVisible()
     assert w.audio.draft_button.visibleRegion().boundingRect().height()>0
     assert not w.audio.advanced.isVisible()
@@ -493,11 +493,11 @@ def test_wide_hidden_library_controls_scroll_instead_of_widening_window(app):
     w=Window()
     w.library.similar_button.setText('Find matches with unusually wide Windows font metrics ' * 5)
     w.resize(1024,700);w.show();w.tabs.setCurrentWidget(w.audio);app.processEvents()
-    assert w.width()<=1024
+    assert w.width()<=1024, w.layout_report()
     w.tabs.setCurrentWidget(w.library);app.processEvents()
     scroll=w.library.findChild(QScrollArea)
     assert scroll.horizontalScrollBar().maximum()>0
-    assert w.width()<=1024
+    assert w.width()<=1024, w.layout_report()
     w.close()
 
 
