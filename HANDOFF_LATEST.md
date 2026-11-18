@@ -5,6 +5,19 @@ GH3_Chart_Studio_v0_7_2.zip. Restore Git with `git clone repository.bundle studi
 Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.7.2 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
+## Post-release audio diagnosis — November 18, 2026
+
+User supplied song.opus for Lost in the Dark (Left to Suffer / Paleface Swiss).
+Reproduced SoundFile/libsndfile 1.2.2 decoding failure after 524288 returned frames.
+FFmpeg 7.1.5 strict full decode succeeds. Delivered separate song.ogg recovery;
+9,710,324 stereo frames at48kHz (202.2984167s), zero alignment lag at5/100/195s,
+and actual application export_ogg with metadata reconciliation/read-back passed.
+No runtime source change or automatic fallback shipped; v0.7.2 remains current.
+See docs/OPUS_DECODING_DIAGNOSTIC.md for hashes, commands and acceptance steps.
+Do not bundle user recording in releases or tests. Next implement stage/file-specific
+errors and a licensed/tested Windows decoding fallback; no silent frame skipping.
+No actual user's chart or song.ini was supplied. Full song/game acceptance pending.
+
 ## Current 0.7.2 update
 
 Bob confirmed 0.7.1 runs on Windows, then reported nonzero Offset/song.ini delay
