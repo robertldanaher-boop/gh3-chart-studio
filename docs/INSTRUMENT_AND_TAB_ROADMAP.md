@@ -1,3 +1,5 @@
+> Deferred by the accepted [project direction](PROJECT_DIRECTION.md). The text below is historical research, not the next implementation priority.
+
 # Instrument and tablature refinement — researched, not implemented
 
 Current 0.4.1 implementation: external stem input, separate original-mix playback,

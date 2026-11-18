@@ -5,6 +5,19 @@ GH3_Chart_Studio_v0_6_4.zip. Restore Git with `git clone repository.bundle studi
 Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.6.4 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
+## Accepted scope update after v0.6.4
+
+Prioritize existing-chart cleanup for GH3 Wii and challenging lower difficulties
+from Expert/Hard by reducing fret requirements. Preserve rhythm, tempo, valid
+sustains/chords and verified mechanics; no automatic density reduction or target
+note count. Medium must contain only G/R/Y/B. Retain seeded random sustain transfer
+within legal choices. Audio playback/sync/export stays; transcription, separation,
+tablature search and learned generation are deferred. Authored game-chart MIDI
+still supported: parsing authored notes is distinct from audio transcription.
+See docs/PROJECT_DIRECTION.md for complete policy, acceptance and known gaps.
+Documentation update only; application release remains v0.6.4, 215 tests last
+recorded. No new functionality or native Windows/game verification claimed.
+
 ## Current 0.6.4 update
 
 Includes Save scan report (all discovered blockers) and per-run cleanup.log

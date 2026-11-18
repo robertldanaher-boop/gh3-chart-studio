@@ -1,3 +1,5 @@
+Product focus: **GH3 Wii chart cleanup and challenging lower difficulties from authored charts**. See [accepted project direction](docs/PROJECT_DIRECTION.md). Audio transcription and learned generation are deferred; existing experimental tools remain in v0.6.4.
+
 Latest release: **0.6.4**. True Select all, visible blocked-song errors, separate output path and direct START CLEANING. See [Windows steps](docs/M6_4_WINDOWS_GUIDE.md).
 
 Version **0.6.3**: Cleaner has visible **START CLEANING**, **Select all ready**, a selection count, and automatic same-folder audio matching for a single non-preview recording. See [Windows steps and limitations](docs/M6_3_WINDOWS_GUIDE.md).
