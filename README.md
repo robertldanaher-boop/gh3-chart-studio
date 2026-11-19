@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.11.1 — Wii chart workshop
+# GH3 Chart Studio 0.11.2 — Wii chart workshop
 
 **Startup layout fix:** The collection source explanation now wraps at large text sizes, preventing a hidden page from widening the entire window. [Fix details and Windows test steps](docs/M11_1_RELEASE.md).
 

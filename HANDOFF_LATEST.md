@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.11.1 handoff
+# GH3 Chart Studio — 0.11.2 handoff
 
 Prepared November 19, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_11_1.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.1 is authoritative.
+GH3_Chart_Studio_v0_11_2.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.2 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.11.1 update
+## Current 0.11.2 update
+
+Windows v0.11.1: 287 passed, 1 skipped, 1 failed: long wrapped source hint allocated 57px but needed 81px. Source controls now inside collection scroll content; hint vertical QSizePolicy.Minimum prevents compression while scroll contains minimum height. Footer remains fixed. Tests unchanged, no bypass. See docs/M11_2_RELEASE.md and M11_2_TEST_RESULTS.txt. Native Windows confirmation pending.
+
+## Previous 0.11.1 update
 
 User Windows startup log: 3 failed, 283 passed, 1 skipped; all failures were large-text width assertions (1094px instead of 1024). Diagnostic tree identifies the hidden bulk source explanation with a 1008px minimum width, propagating through stacked pages. cleaner_gui.py now gives this QLabel a stable name and word wrapping. Regression test stretches the explanation through text length independent of installed fonts, checks hidden and active collection view, fully visible export controls and return to single-song view. No test bypass or dependency/conversion changes. See docs/M11_1_RELEASE.md and M11_1_TEST_RESULTS.txt. Focused suite: 12 passed in 3.23s; full suite: 289 passed in 26.51s (Linux/Python3.11.18/Qt offscreen). Native Windows/Dolphin execution remains pending.
 

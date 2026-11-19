@@ -1,3 +1,8 @@
+# 0.11.2 — Prevent clipped collection help
+
+- Move collection source settings into the scroll area; wrapped explanation cannot shrink below its requested height.
+- Keep output controls fixed and retain all layout assertions.
+
 # 0.11.1 — Large-text startup layout fix
 
 - Wrap collection source-difficulty help text so hidden/active pages fit small windows.

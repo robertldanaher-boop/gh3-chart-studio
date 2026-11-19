@@ -23,12 +23,15 @@ class CleanerPanel(QWidget):
             # Keep this explanation wrappable with Windows fonts and larger text.
             self.bulk_source_hint=QLabel('Source difficulty (changing this rescans the collection)')
             self.bulk_source_hint.setObjectName('bulkSourceHint');self.bulk_source_hint.setWordWrap(True)
-            outer.addWidget(self.bulk_source_hint);outer.addWidget(self.bulk_source);outer.addWidget(self.bulk_sustains)
+            # A wrapped label must not shrink below its height-for-width hint.
+            self.bulk_source_hint.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Minimum)
             self.bulk_source.currentIndexChanged.connect(self.rescan_bulk);self.bulk_sustains.toggled.connect(self.rescan_bulk)
         else:self.bulk_source.hide();self.bulk_sustains.hide()
         self.steps=StepStrip(['Find songs','Review & repair','Clean & export']);outer.addWidget(self.steps)
         scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll,1)
         body=QWidget();scroll.setWidget(body);content=QVBoxLayout(body);content.setContentsMargins(0,0,8,0);content.setSpacing(8)
+        if four_fret:
+            content.addWidget(self.bulk_source_hint);content.addWidget(self.bulk_source);content.addWidget(self.bulk_sustains)
         row=QHBoxLayout();content.addLayout(row)
         self.scan_button=QPushButton('Choose song folder…');self.scan_button.clicked.connect(self.browse);row.addWidget(self.scan_button)
         self.source_label=QLabel('Choose a collection folder; all subfolders are scanned.' if four_fret else 'Or drop a folder anywhere in this workspace');self.source_label.setObjectName('muted');self.source_label.setWordWrap(True);row.addWidget(self.source_label,1)
