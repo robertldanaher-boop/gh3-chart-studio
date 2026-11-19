@@ -17,8 +17,10 @@ def test_recursive_bulk_fallback_preserves_other_tracks_and_exports(tmp_path):
     good=[r for r in rows if not r['errors']];assert len(good)==2
     for row in good:
         original=read_chart(row['path']);out=row['song']
-        for d in ('Expert','Hard','Easy'):
-            assert out.tracks.get(d)==original.tracks.get(d)
+        for d in ('Expert','Hard'):
+            if original.tracks.get(d):assert out.tracks[d]==original.tracks[d]
+        assert all(out.tracks.get(d) for d in ('Easy','Medium','Hard','Expert'))
+        assert all(n.lane<3 for n in out.tracks['Easy'])
         assert all(n.lane<4 for n in out.tracks['Medium'])
         assert any(n.length==96 for n in out.tracks['Medium'])
     results=export_cleaned(rows,tmp_path/'out',root)

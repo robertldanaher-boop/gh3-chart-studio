@@ -13,7 +13,7 @@ class SongExportDialog(QDialog):
         content=QWidget();scroll.setWidget(content);layout=QVBoxLayout(content)
         from .workspace import heading
         layout.addWidget(heading('Ready for the next stage.', 'Review the recording and song details before creating a new folder.'))
-        label=QLabel('Exports notes.chart + song.ogg + song.ini and validation details. Expert/Hard stay untouched.\nCleanup is optional and affects only Medium. Shortening sustains changes the exact Orange-only copy.');label.setWordWrap(True);layout.addWidget(label)
+        label=QLabel('Exports notes.chart + song.ogg + song.ini and validation details. Existing Expert/Hard stay untouched; conversions also create three-fret Easy and fill missing slots.\nThis optional cleanup affects Medium. Shortening sustains changes the exact Orange-only copy.');label.setWordWrap(True);layout.addWidget(label)
         layout.addWidget(QLabel('Recording from preview (used for this song’s export):'))
         row=QHBoxLayout();layout.addLayout(row);self.audio=QLineEdit(audio_path);row.addWidget(self.audio)
         browse=QPushButton('Change recording…');browse.clicked.connect(self.browse);row.addWidget(browse)

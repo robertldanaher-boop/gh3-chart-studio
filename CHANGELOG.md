@@ -1,3 +1,9 @@
+# 0.10.0 — Three-fret Easy and complete difficulty slots
+
+- Single/bulk four-fret conversion now produces Easy G/R/Y and Medium G/R/Y/B.
+- Retains existing Hard/Expert; fills missing slots with selected source.
+- Preserves source rhythm in all-removed fallback and rejects empty converted slots before export.
+
 # 0.9.1 — Song identity folder names
 
 - All song-folder exports use Artist - Song Title; no numbered prefix or timestamp.

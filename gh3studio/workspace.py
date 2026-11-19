@@ -29,7 +29,7 @@ class AdaptPanel(QWidget):
         super().__init__();self.owner=owner;self.loaded_song=None
         outer=QVBoxLayout(self);outer.setContentsMargins(18,14,18,14);outer.setSpacing(10)
         outer.addWidget(heading('Four frets. Keep the challenge.',
-            'Copy an authored Expert or Hard track into Medium. Keep the rhythm; reduce the buttons.'))
+            'Copy Expert/Hard into four-fret Medium and three-fret Easy. Populate all difficulty slots.'))
         self.steps=StepStrip(['Choose chart','Create Medium','Listen & export']);outer.addWidget(self.steps)
         self.scroll=QScrollArea();self.scroll.setWidgetResizable(True);outer.addWidget(self.scroll,1)
         body=QWidget();self.body=QVBoxLayout(body);self.body.setContentsMargins(0,0,8,0);self.body.setSpacing(10);self.scroll.setWidget(body)
@@ -40,7 +40,7 @@ class AdaptPanel(QWidget):
         row=QHBoxLayout();self.body.addLayout(row)
         row.addWidget(QLabel('Copy from'));self.source=QComboBox();self.source.setMinimumContentsLength(7);row.addWidget(self.source)
         arrow=QLabel('→  Medium · Green / Red / Yellow / Blue');arrow.setWordWrap(True);row.addWidget(arrow,1)
-        self.create_button=QPushButton('Create four-fret Medium');primary(self.create_button);self.create_button.clicked.connect(self.create_medium);row.addWidget(self.create_button)
+        self.create_button=QPushButton('Create Medium + Easy');primary(self.create_button);self.create_button.clicked.connect(self.create_medium);row.addWidget(self.create_button)
         self.preserve=QCheckBox('Keep Orange sustains on playable frets');self.preserve.setChecked(True)
         self.preserve.setToolTip('Use repeatable random placement among suitable frets. Orange taps are removed; sustain conflicts are reported before export.')
         self.body.addWidget(self.preserve)
@@ -93,6 +93,8 @@ class AdaptPanel(QWidget):
         if output:
             notes=output.tracks.get('Medium',[]);events=len({n.tick for n in notes});sustains=sum(n.length>0 for n in notes)
             self.summary.setText(f'Medium from {report.get("source_difficulty","draft")}: {events:,} note events · {len(notes):,} fret gems · {sustains:,} sustains · {sum(n.lane==4 for n in notes)} Orange')
+            if report.get('difficulty_completion'):
+                self.summary.setText(self.summary.text()+f" · Easy: {len(output.tracks.get('Easy',[])):,} gems / 3 frets · all 4 difficulties populated")
             self.next_step.setText('Export complete. Open the song folder for import testing.' if self.owner.last_export_path else
                 'Medium is prepared. Compare tracks below, listen, then review metadata and compatibility before export.')
         elif song:

@@ -58,7 +58,7 @@ class CleanerPanel(QWidget):
         row=QHBoxLayout();outer.addLayout(row);row.addWidget(QLabel('Save to'))
         self.output_path=QLineEdit();self.output_path.setPlaceholderText('Output location is set after scanning');row.addWidget(self.output_path,1)
         self.output_button=QPushButton('Change…');self.output_button.clicked.connect(self.choose_output);row.addWidget(self.output_button)
-        self.approve=QCheckBox('Replace Medium and apply its listed repairs' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
+        self.approve=QCheckBox('Replace Medium + Easy; fill missing slots' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
         self.status=QLabel('Step 1 · Choose a folder. Charts, audio and metadata are matched inside each song folder.');self.status.setWordWrap(True);self.status.setObjectName('nextStep');outer.addWidget(self.status)
         row=QHBoxLayout();outer.addLayout(row)
         self.open_output=QPushButton('Open results / logs');self.open_output.clicked.connect(self.open_folder);row.addWidget(self.open_output)
@@ -130,7 +130,7 @@ class CleanerPanel(QWidget):
                'Song: '+(row['metadata'].get('Name','') or Path(row['path']).parent.name),
                'Artist: '+(row['metadata'].get('Artist','') or '(missing)'),
                'Audio: '+(Path(row['audio']).name if row['audio'] else '(needs matching recording)'),'',
-               ('Scope: replace Medium from Expert/Hard; retain other tracks. Listed Medium sustain repairs change holds.' if self.four_fret else 'Scope: all guitar difficulties. Forced/tap markers and other instruments are omitted. Reported sustain repairs change holds.'),'']
+               ('Scope: four-fret Medium and three-fret Easy from Expert/Hard; fill missing Hard/Expert. Listed sustain repairs change holds.' if self.four_fret else 'Scope: all guitar difficulties. Forced/tap markers and other instruments are omitted. Reported sustain repairs change holds.'),'']
         if row.get('sync_values'):
             values=row['sync_values'];lines += [f"Stored Offset: {values['offset_seconds']:g} s; song.ini delay: {values['delay_ms']:g} ms",'Synchronization: '+('manually reviewed for this source' if row.get('sync_review') else ('automatic — song.ini delay only' if row.get('synchronization',{}).get('automatic') else 'no adjustment needed')),'']
         lines += ['• '+message for message in row['errors']]

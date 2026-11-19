@@ -308,9 +308,9 @@ def test_marked_display_copy_replaces_old_medium_and_folder_export(tmp_path,app)
 
 def test_failed_orange_copy_disables_stale_export(app):
     from gh3studio.model import Song,Note
-    w=Window();w.song=Song(tracks={'Expert':[Note(0,4)],'Medium':[Note(0,1)]})
+    w=Window();w.song=Song(tracks={'Expert':[],'Medium':[Note(0,1)]})
     w.converted=w.song;w.report={'source_difficulty':'Hard'};w.refresh_preview()
-    w.playback.difficulty.setCurrentText('Expert');w.playback.remove_orange();wait(w)
+    w.playback.remove_orange(source=(w.song,'Expert'));wait(w)
     assert w.converted is None and not w.audio.export_button.isEnabled()
     assert 'empty' in w.playback.status.text()
     assert 'OUTPUT' not in w.playback.provenance.text()

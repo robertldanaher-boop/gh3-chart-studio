@@ -7,6 +7,7 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QPushButton,QLabel,QSlider,QDoubleSpinBox,QCheckBox,QFileDialog,QComboBox,QScrollArea,QSpinBox,QGridLayout
 from .editing import timeline,shift_timing,remove_orange_to_medium
 from .validation import ensure_valid
+from .difficulty_set import complete_conversion
 
 class Highway(QWidget):
     """Horizontal lanes matching the converter; notes scroll toward a playhead."""
@@ -213,9 +214,9 @@ class PlaybackPanel(QWidget):
             self.owner.converted,self.owner.report=value
             self.owner.variants={};self.owner.variant_choice.blockSignals(True);self.owner.variant_choice.setCurrentIndex(0);self.owner.variant_choice.blockSignals(False)
             self.owner.refresh_preview();self.owner.log_line(str(self.owner.report))
-            self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems; transferred {self.owner.report.get('transferred_orange_sustains',0)} sustains across four frets. Medium is ready for export checks; Expert/Hard were not edited.")
+            self.status.setText(f"Removed {self.owner.report['removed_orange_gems']} Orange gems; transferred {self.owner.report.get('transferred_orange_sustains',0)} sustains across four frets. Three-fret Easy also created; all four difficulties populated. Review/export the new copy.")
             self.owner.audio.show_listen()
-        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:remove_orange_to_medium(song,difficulty,strict=False,randomize_orange_sustains=transfer_sustains,sustain_seed=seed),ready)
+        self.owner.run_job('Copying selected difficulty without Orange…',lambda cancel:complete_conversion(song,difficulty,strict=False,randomize_orange_sustains=transfer_sustains,sustain_seed=seed),ready)
     def rebuild(self,*args):
         report=self.owner.report or {}
         if self.current:

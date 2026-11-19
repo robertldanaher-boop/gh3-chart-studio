@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.9.1 handoff
+# GH3 Chart Studio — 0.10.0 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_9_1.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.9.1 is authoritative.
+GH3_Chart_Studio_v0_10_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.10.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.9.1 update
+## Current 0.10.0 update
+
+Single/bulk four-fret conversion uses difficulty_set.complete_conversion: replaces Easy with 3 lanes, Medium with 4 lanes, fills missing/empty Hard/Expert from selected original source while retaining existing tracks. Excluded sustain transfer is seeded; Easy compatibility repairs logged. All-removed target fallback remaps authored event rhythm instead of empty output or placeholder. Export guards require all 4 slots and target fret limits when difficulty_completion report exists. Standard Clean Songs alone remains cleanup-only, no new difficulties. See M10_WINDOWS_GUIDE.md, M10_IMPLEMENTATION_LOG.md, M10_TEST_RESULTS.txt. 284 tests passed in 27.81s. Native Windows/game acceptance pending; no blanket crash guarantee. Next: Expert-only/Hard-only tests selecting all four slots in Dolphin.
+
+## Previous 0.9.1 update
 
 All song-folder exports use Artist - Song Title via shared export_folder_name/export_folder_path. No per-song numbering/timestamps/Medium/editor tags. Batch parent keeps timestamp. Case-insensitive collision detection appends (2), (3), etc. Windows-invalid characters sanitized; each identity component capped at 48 characters; metadata remains complete. Existing folders untouched. 280 tests passed in 25.67s. See docs/M9_1_RELEASE.md and M9_1_TEST_RESULTS.txt. No native Windows execution. Next: real collection naming acceptance.
 

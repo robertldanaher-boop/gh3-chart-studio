@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.9.1 — Wii chart workshop
+# GH3 Chart Studio 0.10.0 — Wii chart workshop
+
+**Complete converted difficulties:** Four-fret conversion now also creates three-fret Easy and fills missing Hard/Expert from the selected source. [Windows steps and behavior](docs/M10_WINDOWS_GUIDE.md).
 
 **Song folder naming:** exports use Artist - Song Title, with (2), (3), etc. only for collisions. [0.9.1 release and Windows steps](docs/M9_1_RELEASE.md).
 

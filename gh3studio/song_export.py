@@ -48,6 +48,9 @@ def prepare_medium(song, strip_markers=False, trim_sustains=False):
 
 def export_song_folder(song, report, destination, audio_path, source_path=None, *, clean_all=False, audio_padding_frames=0, editor_all=False):
     destination=Path(destination);audio_path=Path(audio_path)
+    if report.get('difficulty_completion') or report.get('conversion',{}).get('difficulty_completion'):
+        from .difficulty_set import check_complete_conversion
+        check_complete_conversion(song)
     if editor_all:
         from .chart_editor import check_editor_song
         check_editor_song(song)
