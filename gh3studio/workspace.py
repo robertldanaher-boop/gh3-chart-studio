@@ -35,6 +35,7 @@ class AdaptPanel(QWidget):
         body=QWidget();self.body=QVBoxLayout(body);self.body.setContentsMargins(0,0,8,0);self.body.setSpacing(10);self.scroll.setWidget(body)
         row=QHBoxLayout();self.body.addLayout(row)
         self.open_button=QPushButton('Choose chart…');self.open_button.clicked.connect(lambda:owner.start_guided('orange'));row.addWidget(self.open_button)
+        self.bulk_button=QPushButton('Bulk folder conversion…');self.bulk_button.clicked.connect(self.open_bulk);row.addWidget(self.bulk_button)
         self.identity=QLabel('No chart selected');self.identity.setWordWrap(True);self.identity.setObjectName('songTitle');row.addWidget(self.identity,1)
         row=QHBoxLayout();self.body.addLayout(row)
         row.addWidget(QLabel('Copy from'));self.source=QComboBox();self.source.setMinimumContentsLength(7);row.addWidget(self.source)
@@ -52,6 +53,11 @@ class AdaptPanel(QWidget):
         self.open_output=QPushButton('Open exported folder');self.open_output.clicked.connect(owner.audio.open_export_folder);footer.addWidget(self.open_output,1,0)
         self.export_button=QPushButton('Review / export song…');primary(self.export_button);self.export_button.clicked.connect(owner.start_export);footer.addWidget(self.export_button,1,1)
         self.source.currentTextChanged.connect(self.review_source)
+    def open_bulk(self):
+        from .bulk_gui import BulkDialog
+        if self.owner.busy():return
+        dialog=BulkDialog(self.owner,self);dialog.exec();dialog.deleteLater()
+
     def attach_preview(self):
         self.preview_host.addWidget(self.owner.playback)
         self.owner.playback.set_focused(True);self.owner.playback.show()

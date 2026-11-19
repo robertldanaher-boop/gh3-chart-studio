@@ -10,18 +10,24 @@ from .appearance import primary
 
 
 class CleanerPanel(QWidget):
-    def __init__(self,owner):
-        super().__init__();self.owner=owner;self.rows=[];self.root=None;self.last_output=None
+    def __init__(self,owner,four_fret=False):
+        super().__init__();self.four_fret=four_fret;self.owner=owner;self.rows=[];self.root=None;self.last_output=None
         from .workspace import StepStrip,heading
         outer=QVBoxLayout(self);outer.setContentsMargins(18,14,18,14);outer.setSpacing(8)
-        outer.addWidget(heading('Get your songs ready for GH3 Wii.',
+        outer.addWidget(heading('Bulk four-fret Medium' if four_fret else 'Get your songs ready for GH3 Wii.',
             'Scan a song folder or a collection. Review repairs, then export new chart + Ogg + song.ini folders.'))
+        self.bulk_source=QComboBox();self.bulk_source.addItems(['Expert then Hard','Expert','Hard'])
+        self.bulk_sustains=QCheckBox('Preserve Orange sustains on four frets');self.bulk_sustains.setChecked(True)
+        if four_fret:
+            outer.addWidget(QLabel('Source difficulty (changing this rescans the collection)'));outer.addWidget(self.bulk_source);outer.addWidget(self.bulk_sustains)
+            self.bulk_source.currentIndexChanged.connect(self.rescan_bulk);self.bulk_sustains.toggled.connect(self.rescan_bulk)
+        else:self.bulk_source.hide();self.bulk_sustains.hide()
         self.steps=StepStrip(['Find songs','Review & repair','Clean & export']);outer.addWidget(self.steps)
         scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll,1)
         body=QWidget();scroll.setWidget(body);content=QVBoxLayout(body);content.setContentsMargins(0,0,8,0);content.setSpacing(8)
         row=QHBoxLayout();content.addLayout(row)
         self.scan_button=QPushButton('Choose song folder…');self.scan_button.clicked.connect(self.browse);row.addWidget(self.scan_button)
-        self.source_label=QLabel('Or drop a folder anywhere in this workspace');self.source_label.setObjectName('muted');self.source_label.setWordWrap(True);row.addWidget(self.source_label,1)
+        self.source_label=QLabel('Choose a collection folder; all subfolders are scanned.' if four_fret else 'Or drop a folder anywhere in this workspace');self.source_label.setObjectName('muted');self.source_label.setWordWrap(True);row.addWidget(self.source_label,1)
         self.cancel_button=QPushButton('Cancel');self.cancel_button.clicked.connect(owner.cancel);row.addWidget(self.cancel_button)
         row=QHBoxLayout();content.addLayout(row)
         self.search=QLineEdit();self.search.setPlaceholderText('Find a song or artist…');self.search.textChanged.connect(self.filter_rows);row.addWidget(self.search,1)
@@ -52,12 +58,16 @@ class CleanerPanel(QWidget):
         row=QHBoxLayout();outer.addLayout(row);row.addWidget(QLabel('Save to'))
         self.output_path=QLineEdit();self.output_path.setPlaceholderText('Output location is set after scanning');row.addWidget(self.output_path,1)
         self.output_button=QPushButton('Change…');self.output_button.clicked.connect(self.choose_output);row.addWidget(self.output_button)
-        self.approve=QCheckBox('Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
+        self.approve=QCheckBox('Replace Medium and apply its listed repairs' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
         self.status=QLabel('Step 1 · Choose a folder. Charts, audio and metadata are matched inside each song folder.');self.status.setWordWrap(True);self.status.setObjectName('nextStep');outer.addWidget(self.status)
         row=QHBoxLayout();outer.addLayout(row)
         self.open_output=QPushButton('Open results / logs');self.open_output.clicked.connect(self.open_folder);row.addWidget(self.open_output)
         self.export_button=QPushButton('Start cleaning');primary(self.export_button);self.export_button.clicked.connect(self.browse_export);row.addWidget(self.export_button,1)
         self.table.itemChanged.connect(self.selection_changed);self.selection_changed()
+    def inspection_options(self):
+        return dict(medium_source=self.bulk_source.currentText(),preserve_sustains=self.bulk_sustains.isChecked()) if self.four_fret else {}
+    def rescan_bulk(self,*args):
+        if self.root and not self.owner.busy():self.scan(self.root)
     def filter_rows(self,*args):
         query=self.search.text().casefold().strip();mode=self.filter.currentIndex()
         for i,row in enumerate(self.rows):
@@ -73,6 +83,7 @@ class CleanerPanel(QWidget):
         blocked=sum(bool(r['errors']) for r in self.rows)
         self.selection_summary.setText(f'{checked} checked of {len(self.rows)} • {blocked} blocked / need help • Selection applies to the whole queue')
         self.export_button.setText(f'Start cleaning · {checked} '+('song' if checked==1 else 'songs') if checked else 'Start cleaning')
+        if self.four_fret:self.export_button.setText(f'Create Medium · {checked} songs')
     def set_checked(self,checked,ready_only=False):
         if self.owner.busy():return
         self.table.blockSignals(True)
@@ -85,8 +96,9 @@ class CleanerPanel(QWidget):
     def scan(self,path):
         if self.owner.busy():return
         self.owner.goal='clean'
-        self.root=Path(path).resolve();self.source_label.setText(self.root.name or str(self.root));self.source_label.setToolTip(str(self.root));self.steps.set_step(0);self.output_path.setText(str(self.root.parent/'GH3 Cleaned Output'));self.approve.setChecked(False);self.last_output=None;self.rows=[];self.render()
-        self.owner.run_job('Scanning charts and preparing cleanup review…',lambda cancel:scan_charts(self.root,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name)),self.scanned,True)
+        self.root=Path(path).resolve();self.source_label.setText(self.root.name or str(self.root));self.source_label.setToolTip(str(self.root));self.steps.set_step(0);self.output_path.setText(str(self.root.parent/('GH3 Four Fret Output' if self.four_fret else 'GH3 Cleaned Output')));self.approve.setChecked(False);self.last_output=None;self.rows=[];self.render()
+        options=self.inspection_options()
+        self.owner.run_job('Scanning charts and preparing cleanup review…',lambda cancel:scan_charts(self.root,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name),inspect_options=options),self.scanned,True)
     def scanned(self,rows):
         self.rows=rows;self.render();self.steps.set_step(1)
         self.status.setText(f'{len(rows)} song folders found; {sum(not r["errors"] for r in rows)} ready for review. Select each row to inspect changes. Cancelled scans may show partial results.')
@@ -118,7 +130,7 @@ class CleanerPanel(QWidget):
                'Song: '+(row['metadata'].get('Name','') or Path(row['path']).parent.name),
                'Artist: '+(row['metadata'].get('Artist','') or '(missing)'),
                'Audio: '+(Path(row['audio']).name if row['audio'] else '(needs matching recording)'),'',
-               'Scope: all guitar difficulties. Forced/tap markers and other instruments are omitted. Reported sustain repairs change holds.','']
+               ('Scope: replace Medium from Expert/Hard; retain other tracks. Listed Medium sustain repairs change holds.' if self.four_fret else 'Scope: all guitar difficulties. Forced/tap markers and other instruments are omitted. Reported sustain repairs change holds.'),'']
         if row.get('sync_values'):
             values=row['sync_values'];lines += [f"Stored Offset: {values['offset_seconds']:g} s; song.ini delay: {values['delay_ms']:g} ms",'Synchronization: '+('manually reviewed for this source' if row.get('sync_review') else ('automatic — song.ini delay only' if row.get('synchronization',{}).get('automatic') else 'no adjustment needed')),'']
         lines += ['• '+message for message in row['errors']]
@@ -147,7 +159,8 @@ class CleanerPanel(QWidget):
         def ready(value):
             self.rows[index]=value;self.render(preserve_selection=True);self.table.selectRow(index);self.show_details()
             self.status.setText('Edits retained in this review. '+('Chart still needs correction: '+ '; '.join(value['errors']) if value['errors'] else 'Ready for review and export.')+' Export writes these edits to a new folder; originals stay unchanged.')
-        self.owner.run_job('Rechecking selected song…',lambda cancel:inspect_chart(path,audio,metadata,sync_review=sync_review),ready)
+        options=self.inspection_options()
+        self.owner.run_job('Rechecking selected song…',lambda cancel:inspect_chart(path,audio,metadata,sync_review=sync_review,**options),ready)
     def review_sync(self):
         index=self.selected()
         if index is None or self.owner.busy():return
@@ -206,7 +219,7 @@ class CleanerPanel(QWidget):
         if not self.approve.isChecked():self.status.setText('Tick Apply the reviewed cleanup changes, then click START CLEANING.');return
         if not self.output_path.text().strip():self.status.setText('Set an output folder using Change output folder.');return
         from datetime import datetime
-        self.export_to(Path(self.output_path.text().strip())/('GH3 Cleaned - '+datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
+        self.export_to(Path(self.output_path.text().strip())/(('GH3 Four Fret - ' if self.four_fret else 'GH3 Cleaned - ')+datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
     def export_to(self,path):
         if self.owner.busy() or not self.approve.isChecked():return
         selected=[row for i,row in enumerate(self.rows) if self.table.item(i,0).checkState()==Qt.Checked]
@@ -230,7 +243,7 @@ class CleanerPanel(QWidget):
     def open_folder(self):
         if self.last_output:QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.last_output)))
     def update_busy(self,busy,cancellable):
-        for widget in (self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button,self.select_all,self.select_ready,self.select_none,self.output_path,self.output_button,self.save_report,self.search,self.filter,self.sync_button):widget.setEnabled(not busy)
+        for widget in (self.bulk_source,self.bulk_sustains,self.scan_button,self.metadata_button,self.audio_button,self.chart_button,self.table,self.approve,self.export_button,self.select_all,self.select_ready,self.select_none,self.output_path,self.output_button,self.save_report,self.search,self.filter,self.sync_button):widget.setEnabled(not busy)
         self.export_button.setEnabled(not busy and bool(self.rows))
         self.cancel_button.setEnabled(busy and cancellable)
         self.open_output.setEnabled(not busy and self.last_output is not None)

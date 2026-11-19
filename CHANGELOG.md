@@ -1,3 +1,9 @@
+# 0.9.0 — Bulk four-fret Medium
+
+- Recursive collections, Expert/Hard source policy and optional sustain transfer.
+- Shared queue selection, metadata/audio repair, worker progress, cancellation and per-song logs.
+- Medium-only conversion/repairs; source files unchanged and other tracks retained with shared sync translation.
+
 # 0.8.1 — Automatic song.ini delay
 
 - Clean Songs normalizes stored delay automatically, without per-song synchronization confirmation.

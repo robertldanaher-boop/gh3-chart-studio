@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.8.1 handoff
+# GH3 Chart Studio — 0.9.0 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_8_1.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.8.1 is authoritative.
+GH3_Chart_Studio_v0_9_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.9.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.8.1 update
+## Current 0.9.0 update
+
+Added bulk four-fret queue under Four-fret Medium, with recursive scan (2,000 song cap), Expert then Hard fallback/Expert only/Hard only, optional seeded Orange sustain transfer. Reuses CleanerPanel in four_fret mode and scan_charts inspect_options. inspect_chart medium_source branch preserves non-Medium tracks (shared sync translation still applies), prepares only Medium repairs; export_cleaned uses Medium export validation and records conversion details. Selection, per-song edits, failed-song continuation, cancellation and logs reused. See docs/M9_WINDOWS_GUIDE.md, M9_IMPLEMENTATION_LOG.md and M9_TEST_RESULTS.txt. 279 tests passed in 26.08s. No separate stems yet, no Windows/Dolphin acceptance of this release. Next: real nested collection acceptance.
+
+## Previous 0.8.1 update
 
 User says reviewed songs have correct timing and explicitly requests automatic Use song.ini delay without prompts until an in-game issue occurs. Clean Songs now normalizes offset/delay using delay alone; missing/zero delay = zero, chart Offset never added. Manual review takes precedence and hash expiry still applies. Automatic plans are recomputed from originals, not stored as manual overrides. Optional timing tool retained; details/log report automatic policy. Anchor conflicts, malformed timing and existing bounds remain distinct blockers. See M8_1_WINDOWS_GUIDE.md, M8_1_IMPLEMENTATION_LOG.md and M8_1_TEST_RESULTS.txt. 276 tests passed in 25.15s. No new dependency or native Windows/game testing. Next: collection acceptance in Dolphin, revisit timing only upon real issue.
 

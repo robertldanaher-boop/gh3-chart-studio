@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.8.1 — Wii chart workshop
+# GH3 Chart Studio 0.9.0 — Wii chart workshop
+
+**Bulk four-fret conversion:** Four-fret Medium → Bulk folder conversion scans nested song folders, copies Expert/Hard into Medium and exports new song folders with per-song logs. [Windows steps](docs/M9_WINDOWS_GUIDE.md).
 
 **Automatic timing:** Clean Songs now uses song.ini delay without a per-song timing prompt. Chart Offset is not added; missing delay means zero. Manual overrides remain under Timing tools (optional). See [0.8.1 Windows steps](docs/M8_1_WINDOWS_GUIDE.md).
 

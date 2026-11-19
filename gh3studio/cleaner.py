@@ -23,7 +23,7 @@ def fingerprint(path):
     return h.hexdigest()
 
 
-def inspect_chart(path,audio=None,metadata=None,sync_review=None):
+def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=None,preserve_sustains=True):
     path=Path(path).resolve()
     row={'path':str(path),'errors':[],'warnings':[],'changes':[],'metadata':{k:v for k,v in (metadata or {}).items() if k in FIELDS},'audio':str(audio) if audio else '','song':None,'hashes':{}}
     try:
@@ -88,22 +88,34 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None):
             row['synchronization']=plan;row['changes'].append(plan)
         if (offset or delay) and 'synchronization' not in row and sync_review is None:
             row['errors'].append('Automatic synchronization needs readable matching audio')
-        # Medium must never export Orange; preserve its sustains using seeded four-fret placement.
-        if any(n.lane==4 for n in song.tracks.get('Medium',[])):
-            song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=True,sustain_seed=0)
-            row['changes'].append({'action':'remove Medium Orange; transfer sustained Orange to four frets','removed':transfer['removed_orange_gems'],'transfers':transfer['sustain_transfers']})
-        clean,review=prepare_cleanup(song,strip_markers=True,trim_sustains=True)
-        row['changes']+=review['changes']
-        row['errors']+=review['remaining_errors']
-        if not any(clean.tracks.values()):row['errors'].append('Cleanup would leave no playable guitar notes')
-        row['warnings']+=song.warnings
-        row['warnings']+=['All guitar difficulties are cleaned. Forced/tap markers are removed; natural HOPO behavior may change.','Other instrument sections, stems and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
+        if medium_source is not None:
+            from .song_export import prepare_medium
+            source=next((d for d in ('Expert','Hard') if song.tracks.get(d)),None) if medium_source=='Expert then Hard' else medium_source
+            if source not in ('Expert','Hard') or not song.tracks.get(source):
+                raise ChartError('No '+medium_source+' source track available')
+            converted,conversion=remove_orange_to_medium(song,source,strict=False,randomize_orange_sustains=preserve_sustains,sustain_seed=0)
+            clean,review=prepare_medium(converted,strip_markers=True,trim_sustains=True)
+            row['conversion']=conversion
+            row['changes'].append({'action':'copy '+source+' to four-fret Medium','source_gems':conversion['source_gems'],'medium_gems':conversion['medium_gems'],'sustain_transfers':conversion['sustain_transfers']})
+            row['changes']+=review['changes'];row['errors']+=review['remaining_errors']
+            row['warnings']+=song.warnings+['Existing Medium is replaced in the output. Expert/Hard/Easy notes and phrases are retained; automatic timing translation affects all tracks together. Medium markers are removed and incompatible Medium sustains shortened as listed.']
+        else:
+            # Medium must never export Orange; preserve its sustains using seeded four-fret placement.
+            if any(n.lane==4 for n in song.tracks.get('Medium',[])):
+                song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=True,sustain_seed=0)
+                row['changes'].append({'action':'remove Medium Orange; transfer sustained Orange to four frets','removed':transfer['removed_orange_gems'],'transfers':transfer['sustain_transfers']})
+            clean,review=prepare_cleanup(song,strip_markers=True,trim_sustains=True)
+            row['changes']+=review['changes']
+            row['errors']+=review['remaining_errors']
+            if not any(clean.tracks.values()):row['errors'].append('Cleanup would leave no playable guitar notes')
+            row['warnings']+=song.warnings
+            row['warnings']+=['All guitar difficulties are cleaned. Forced/tap markers are removed; natural HOPO behavior may change.','Other instrument sections, stems and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
         row['song']=clean if not row['errors'] else None
     except Exception as exc:row['errors'].append(str(exc))
     return row
 
 
-def scan_charts(root,cancel=lambda:False,progress=lambda done,total,name:None):
+def scan_charts(root,cancel=lambda:False,progress=lambda done,total,name:None,*,inspect_options=None):
     root=Path(root).resolve()
     if not root.is_dir():raise ChartError('Choose a song folder or parent directory')
     groups={}
@@ -123,7 +135,7 @@ def scan_charts(root,cancel=lambda:False,progress=lambda done,total,name:None):
         if len(choices)!=1:
             rows.append({'path':str(folder),'errors':['Multiple chart candidates; select a chart file for this row'],'warnings':[],'changes':[],'metadata':{},'audio':'','song':None,'hashes':{}})
             continue
-        row=inspect_chart(choices[0])
+        row=inspect_chart(choices[0],**(inspect_options or {}))
         if len(paths)>1:row['warnings'].append('Selected '+choices[0].name+'; other chart/MIDI alternatives in this folder were not exported.')
         rows.append(row)
     return rows
@@ -152,12 +164,14 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             name=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',song.metadata['Artist']+' - '+song.metadata['Name']).strip(' .')[:100]
             folder=dest/f'{index:04d} - {name}'
             report={'operation':'clean-all-guitar-difficulties','cleanup_changes':row['changes'],'warnings':row['warnings'],'source_hashes':row['hashes']}
+            if row.get('conversion'):
+                report['operation']='bulk-four-fret-medium';report['conversion']=row['conversion']
             if row.get('sync_source'):report['source_ini_metadata']=dict(row['sync_source'].ini_metadata)
             sync=row.get('synchronization',{})
             if sync:
                 report['synchronization']=sync
                 log('SYNCHRONIZATION | '+json.dumps(sync,ensure_ascii=True))
-            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True,audio_padding_frames=sync.get('audio_padding_frames',0))
+            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=not bool(row.get('conversion')),audio_padding_frames=sync.get('audio_padding_frames',0))
             if details['audio_export'].get('fallback'):
                 result['audio_recovered']=True
                 log('AUDIO RECOVERED | '+row['audio']+' | '+json.dumps(details['audio_export']['fallback']))
