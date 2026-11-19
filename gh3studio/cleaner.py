@@ -145,8 +145,7 @@ def scan_charts(root,cancel=lambda:False,progress=lambda done,total,name:None,*,
 def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lambda done,total,name:None):
     root=Path(source_root).resolve();dest=Path(destination).resolve()
     if dest==root or dest.is_relative_to(root):raise ChartError('Choose an output directory outside the scanned source tree')
-    if dest.exists():raise ChartError('Choose a new output folder; existing folders are never overwritten')
-    dest.mkdir(parents=True)
+    dest.mkdir(parents=True,exist_ok=True)
     log_path=dest/'cleanup.log'
     def log(message):
         with log_path.open('a',encoding='utf-8') as stream:
@@ -163,7 +162,7 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             if any(fingerprint(p)!=digest for p,digest in row['hashes'].items()):raise ChartError('Source changed after scan; rescan before export')
             song=copy.deepcopy(row['song'])
             from .song_identity import export_folder_path
-            folder=export_folder_path(dest,song.metadata)
+            folder=export_folder_path(dest,song.metadata,row['path'])
             report={'operation':'clean-all-guitar-difficulties','cleanup_changes':row['changes'],'warnings':row['warnings'],'source_hashes':row['hashes']}
             if row.get('conversion'):
                 report['operation']='bulk-four-fret-medium';report['conversion']=row['conversion']
@@ -172,7 +171,7 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             if sync:
                 report['synchronization']=sync
                 log('SYNCHRONIZATION | '+json.dumps(sync,ensure_ascii=True))
-            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=not bool(row.get('conversion')),audio_padding_frames=sync.get('audio_padding_frames',0))
+            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=not bool(row.get('conversion')),audio_padding_frames=sync.get('audio_padding_frames',0),overwrite=True)
             if details['audio_export'].get('fallback'):
                 result['audio_recovered']=True
                 log('AUDIO RECOVERED | '+row['audio']+' | '+json.dumps(details['audio_export']['fallback']))

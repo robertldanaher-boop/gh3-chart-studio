@@ -46,7 +46,7 @@ def prepare_medium(song, strip_markers=False, trim_sustains=False):
     return result,review
 
 
-def export_song_folder(song, report, destination, audio_path, source_path=None, *, clean_all=False, audio_padding_frames=0, editor_all=False):
+def export_song_folder(song, report, destination, audio_path, source_path=None, *, clean_all=False, audio_padding_frames=0, editor_all=False, overwrite=False):
     destination=Path(destination);audio_path=Path(audio_path)
     if report.get('difficulty_completion') or report.get('conversion',{}).get('difficulty_completion'):
         from .difficulty_set import check_complete_conversion
@@ -68,7 +68,8 @@ def export_song_folder(song, report, destination, audio_path, source_path=None, 
         checks={'remaining_errors':errors}
     else:_,checks=prepare_medium(song)
     if checks['remaining_errors']:raise ChartError('\n'.join(checks['remaining_errors']))
-    if destination.exists():raise ChartError('Output folder already exists; choose a new folder')
+    if destination.exists() and not overwrite:raise ChartError('Output folder already exists; choose a new folder')
+    if overwrite and any(Path(p).resolve().is_relative_to(destination.resolve()) for p in (audio_path,source_path) if p):raise ChartError('Choose an output folder separate from the input song')
     if not audio_path.is_file():raise ChartError('Select the matching full-mix audio file')
     destination.parent.mkdir(parents=True,exist_ok=True)
     stage=Path(tempfile.mkdtemp(prefix='.gh3-song-',dir=destination.parent))
@@ -107,7 +108,7 @@ def export_song_folder(song, report, destination, audio_path, source_path=None, 
             warnings[0]='Edited difficulties passed structural checks; manually verify timing, sustains and HOPOs in game.'
             warnings[1]='All difficulties reflect the editor working copy. Source files are unchanged.'
         if audio_padding_frames:warnings[2]='Audio has reviewed leading silence; no source samples were trimmed. Vorbis was re-encoded. See synchronization and audio_export details.'
-        details=dict(report,song_identity={field:song.metadata.get(field,'') for field in FIELDS},source_ini_metadata=report.get('source_ini_metadata',dict(song.ini_metadata)),audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
+        details=dict(report,source_chart_path=str(Path(source_path).resolve()) if source_path else None,song_identity={field:song.metadata.get(field,'') for field in FIELDS},source_ini_metadata=report.get('source_ini_metadata',dict(song.ini_metadata)),audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
         def digest(path):
             h=hashlib.sha256()
             with Path(path).open('rb') as f:
@@ -129,7 +130,8 @@ def export_song_folder(song, report, destination, audio_path, source_path=None, 
         if editor_all:
             readme=stage/'IMPORT_README.txt'
             readme.write_text(readme.read_text(encoding='utf-8').replace('Use the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.','All included difficulties reflect the editor working copy; see validation.json for edit history.'),encoding='utf-8')
-        stage.rename(destination)
+        from .output_replace import publish
+        publish(stage,destination,overwrite)
         return details
     except Exception:
         shutil.rmtree(stage,ignore_errors=True)

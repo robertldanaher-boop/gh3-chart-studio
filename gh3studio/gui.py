@@ -202,6 +202,7 @@ class Window(QMainWindow):
     def busy(self): return self.worker is not None
     def update_buttons(self):
         busy=self.busy()
+        if hasattr(self,'adapt') and hasattr(self.adapt,'bulk'):self.adapt.bulk.update_busy(busy,getattr(self,'cancellable',False))
         if hasattr(self,'cleaner'):self.cleaner.update_busy(busy,getattr(self,'cancellable',False))
         self.progress.setVisible(busy)
         if hasattr(self,'audio'):self.audio.progress.setVisible(busy)
@@ -256,6 +257,7 @@ class Window(QMainWindow):
     @Slot(str)
     def job_failed(self,error):
         self.log_line('ERROR — '+error)
+        if hasattr(self,'adapt') and self.adapt.mode.currentIndex()==1:self.adapt.bulk.status.setText('Operation failed: '+error)
         self.operation_label.setText('Could not complete: '+error)
         if hasattr(self,'adapt'):self.adapt.next_step.setText('Needs attention: '+error)
         if hasattr(self,'cleaner') and self.goal=='clean':self.cleaner.status.setText('Operation failed: '+error)
@@ -351,14 +353,14 @@ class Window(QMainWindow):
         if not dialog.exec():dialog.deleteLater();return
         prepared,review,audio=dialog.prepared,dialog.review,dialog.audio.text()
         dialog.deleteLater()
-        parent=QFileDialog.getExistingDirectory(self,'Choose parent folder for a NEW song folder')
+        parent=QFileDialog.getExistingDirectory(self,'Choose output parent (existing song export will be updated)')
         if not parent:return
         import copy
         report=copy.deepcopy(self.report);report['medium_export_cleanup']=review
         if review.get('hopo_assistance'):report['hopo_assistance']=review['hopo_assistance']
         if any(c['action']=='shorten sustain' for c in review['changes']):report['retained_notes_exact']=False
         from .song_identity import export_folder_path
-        self.export_song_to(export_folder_path(parent,prepared.metadata),audio,prepared,report)
+        self.export_song_to(export_folder_path(parent,prepared.metadata,self.path),audio,prepared,report)
     def export_song_to(self,destination,audio,song=None,report=None):
         from .song_export import export_song_folder
         song=song if song is not None else self.converted
@@ -372,7 +374,7 @@ class Window(QMainWindow):
             if report.get('hopo_assistance'):
                 self.playback.threshold.setValue(1/2.95)
                 self.playback.status.setText('Exported with HOPO assistance. Set TheGHOST HOPO measure to 2.95 and verify in-game. '+str(report['hopo_assistance']['estimated_hopo_percent'])+'% estimated HOPO events.')
-        self.run_job('Exporting chart, full-mix audio and song.ini…',lambda cancel:export_song_folder(song,report,destination,audio,self.path),ready)
+        self.run_job('Exporting chart, full-mix audio and song.ini…',lambda cancel:export_song_folder(song,report,destination,audio,self.path,overwrite=True),ready)
     def export_to(self,destination):
         self.run_job('Writing and reopening both exports…',lambda cancel:export_bundle(self.converted,self.report,destination,self.path),
                      lambda details:self.log_line('Export verified: '+str(destination)+'\n'+ '\n'.join(details['warnings'])))

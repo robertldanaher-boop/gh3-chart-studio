@@ -149,17 +149,17 @@ class ChartEditorDialog(QDialog):
         if not Path(audio).is_file():
             audio,_=QFileDialog.getOpenFileName(self,'Choose matching audio','','Audio (*.ogg *.opus *.mp3 *.wav *.flac)')
             if not audio:return
-        parent=QFileDialog.getExistingDirectory(self,'Choose parent folder for NEW edited song folder')
+        parent=QFileDialog.getExistingDirectory(self,'Choose output parent (existing song export will be updated)')
         if not parent:return
         from .song_export import export_song_folder
         from .song_identity import export_folder_path
-        destination=export_folder_path(parent,self.session.song.metadata)
+        destination=export_folder_path(parent,self.session.song.metadata,self.panel.owner.path)
         self.status.setText('Exporting edited chart and Ogg audio…')
         # Use the application's worker so audio conversion does not block the UI.
         owner=self.panel.owner
         def ready(result):
             self.exported=True;self.status.setText('Exported: '+str(destination));owner.log_line('Editor export: '+str(destination))
-        owner.run_job('Exporting edited song…',lambda cancel:export_song_folder(self.session.song,{'editor_edits':self.session.log,'warnings':['Manual HOPO edits require TheGHOST measure 2.95; verify in game.']},destination,audio,owner.path,editor_all=True),ready)
+        owner.run_job('Exporting edited song…',lambda cancel:export_song_folder(self.session.song,{'editor_edits':self.session.log,'warnings':['Manual HOPO edits require TheGHOST measure 2.95; verify in game.']},destination,audio,owner.path,editor_all=True,overwrite=True),ready)
         # Prevent further edits while worker holds the snapshot; modal progress belongs to owner.
         self.setEnabled(False)
         self.poll=QTimer(self);self.poll.timeout.connect(self.export_finished);self.poll.start(100)

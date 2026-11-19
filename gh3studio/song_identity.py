@@ -27,11 +27,19 @@ def export_folder_name(metadata,now=None):
     return part(metadata.get('Artist',''),'Unknown Artist')+' - '+part(metadata.get('Name',''),'Untitled Song')
 
 
-def export_folder_path(parent,metadata):
+def export_folder_path(parent,metadata,source_path=None):
     """Choose a nonexisting name, treating case-only collisions like Windows."""
     parent=Path(parent);stem=export_folder_name(metadata)
-    occupied={p.name.casefold() for p in parent.iterdir()} if parent.exists() else set()
+    occupied={p.name.casefold():p for p in parent.iterdir()} if parent.exists() else {}
     name=stem;number=2
     while name.casefold() in occupied:
+        if source_path:
+            import json
+            existing=occupied[name.casefold()]
+            try:
+                details=json.loads((existing/'validation.json').read_text(encoding='utf-8'))
+                source=str(Path(source_path).resolve())
+                if details.get('source_chart_path')==source or source in details.get('source_hashes',{}):return existing
+            except (OSError,ValueError):pass
         name=f'{stem} ({number})';number+=1
     return parent/name

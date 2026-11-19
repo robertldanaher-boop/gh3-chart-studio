@@ -1,3 +1,9 @@
+# 0.11.0 — Embedded bulk workflow and reusable exports
+
+- Removed bulk popup; main Four-fret workspace switches between single-song and collection views.
+- Stable output directories; validated replacement with normal-error rollback, preserved extras and append-only run log.
+- Recognize source identities to update correct folders without overwriting unrelated same-title songs.
+
 # 0.10.0 — Three-fret Easy and complete difficulty slots
 
 - Single/bulk four-fret conversion now produces Easy G/R/Y and Medium G/R/Y/B.

@@ -64,7 +64,9 @@ def test_source_change_and_per_song_failure_do_not_overwrite(tmp_path):
     dest=tmp_path/'output';results=export_cleaned(rows,dest,source)
     assert [r['status'] for r in results]==['failed','exported']
     assert 'changed' in results[0]['error']
-    with pytest.raises(ChartError):export_cleaned(rows,dest,source)
+    repeated=export_cleaned(rows,dest,source)
+    assert [r['status'] for r in repeated]==['failed','exported']
+    assert repeated[1]['folder']==results[1]['folder']
     with pytest.raises(ChartError):export_cleaned(rows,source/'out',source)
 
 

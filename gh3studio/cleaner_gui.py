@@ -15,7 +15,7 @@ class CleanerPanel(QWidget):
         from .workspace import StepStrip,heading
         outer=QVBoxLayout(self);outer.setContentsMargins(18,14,18,14);outer.setSpacing(8)
         outer.addWidget(heading('Bulk four-fret Medium' if four_fret else 'Get your songs ready for GH3 Wii.',
-            'Scan a song folder or a collection. Review repairs, then export new chart + Ogg + song.ini folders.'))
+            'Scan a song folder or a collection. Review repairs, then export or update chart + Ogg + song.ini folders.'))
         self.bulk_source=QComboBox();self.bulk_source.addItems(['Expert then Hard','Expert','Hard'])
         self.bulk_sustains=QCheckBox('Preserve Orange sustains on four frets');self.bulk_sustains.setChecked(True)
         if four_fret:
@@ -36,7 +36,7 @@ class CleanerPanel(QWidget):
         self.select_ready=QPushButton('Ready only');self.select_ready.clicked.connect(lambda:self.set_checked(True,ready_only=True));row.addWidget(self.select_ready)
         self.select_none=QPushButton('Clear');self.select_none.clicked.connect(lambda:self.set_checked(False));row.addWidget(self.select_none)
         self.selection_summary=QLabel();self.selection_summary.setObjectName('muted');self.selection_summary.setWordWrap(True);content.addWidget(self.selection_summary)
-        split=QSplitter(Qt.Horizontal);split.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Ignored);content.addWidget(split,1)
+        split=QSplitter(Qt.Horizontal);split.setMinimumHeight(220);split.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Ignored);content.addWidget(split,1)
         self.table=QTableWidget(0,5);self.table.setHorizontalHeaderLabels(['Use','Song','Artist','Status / action needed','Source'])
         self.table.setColumnHidden(4,True);self.table.verticalHeader().hide();self.table.verticalHeader().setDefaultSectionSize(36);self.table.setAlternatingRowColors(True);self.table.setShowGrid(False)
         self.table.setColumnWidth(0,44);self.table.setColumnWidth(1,175);self.table.setColumnWidth(2,120)
@@ -56,7 +56,7 @@ class CleanerPanel(QWidget):
         self.sync_button=QPushButton('Timing tools (optional)…');self.sync_button.clicked.connect(self.review_sync);row.addWidget(self.sync_button)
         hint=QLabel('song.ini delay is applied automatically. Open timing tools only to override it.');hint.setWordWrap(True);row.addWidget(hint,1)
         row=QHBoxLayout();outer.addLayout(row);row.addWidget(QLabel('Save to'))
-        self.output_path=QLineEdit();self.output_path.setPlaceholderText('Output location is set after scanning');row.addWidget(self.output_path,1)
+        self.output_path=QLineEdit();self.output_path.setPlaceholderText('Existing exports here will be updated');row.addWidget(self.output_path,1)
         self.output_button=QPushButton('Change…');self.output_button.clicked.connect(self.choose_output);row.addWidget(self.output_button)
         self.approve=QCheckBox('Replace Medium + Easy; fill missing slots' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
         self.status=QLabel('Step 1 · Choose a folder. Charts, audio and metadata are matched inside each song folder.');self.status.setWordWrap(True);self.status.setObjectName('nextStep');outer.addWidget(self.status)
@@ -218,15 +218,13 @@ class CleanerPanel(QWidget):
         if not any(self.table.item(i,0).checkState()==Qt.Checked for i in range(len(self.rows))):self.status.setText('No songs checked. Click Select all or check individual rows.');return
         if not self.approve.isChecked():self.status.setText('Tick Apply the reviewed cleanup changes, then click START CLEANING.');return
         if not self.output_path.text().strip():self.status.setText('Set an output folder using Change output folder.');return
-        from datetime import datetime
-        self.export_to(Path(self.output_path.text().strip())/(('GH3 Four Fret - ' if self.four_fret else 'GH3 Cleaned - ')+datetime.now().strftime('%Y%m%d_%H%M%S_%f')))
+        self.export_to(Path(self.output_path.text().strip()))
     def export_to(self,path):
         if self.owner.busy() or not self.approve.isChecked():return
         selected=[row for i,row in enumerate(self.rows) if self.table.item(i,0).checkState()==Qt.Checked]
         if not selected:self.status.setText('Check at least one song.');return
         path=Path(path).resolve()
         if path==self.root or path.is_relative_to(self.root):self.status.setText('Cannot start: output must be outside the scanned source folder. Change output folder above.');return
-        if path.exists():self.status.setText('Cannot start: output folder already exists. Choose a new output location.');return
         self.owner.goal='clean';self.steps.set_step(2)
         self.status.setText(f'Starting cleanup of {len(selected)} checked songs. Output: {path}')
         def ready(results):

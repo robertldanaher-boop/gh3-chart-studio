@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.10.0 — Wii chart workshop
+# GH3 Chart Studio 0.11.0 — Wii chart workshop
+
+**One workspace, reusable exports:** Choose One song or Folder collection within Four-fret Medium. Repeated runs update recognized Artist - Song Title output folders without another timestamped directory. [Windows steps](docs/M11_WINDOWS_GUIDE.md).
 
 **Complete converted difficulties:** Four-fret conversion now also creates three-fret Easy and fills missing Hard/Expert from the selected source. [Windows steps and behavior](docs/M10_WINDOWS_GUIDE.md).
 

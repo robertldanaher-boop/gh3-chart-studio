@@ -1,7 +1,7 @@
 """Focused chart workflows; delegates musical edits to existing tested services."""
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QWidget,QLabel,QVBoxLayout,QHBoxLayout,QPushButton,
-    QComboBox,QCheckBox,QScrollArea,QFrame,QSizePolicy,QGridLayout)
+    QComboBox,QCheckBox,QScrollArea,QFrame,QSizePolicy,QGridLayout,QStackedWidget)
 from .appearance import primary
 
 
@@ -35,7 +35,6 @@ class AdaptPanel(QWidget):
         body=QWidget();self.body=QVBoxLayout(body);self.body.setContentsMargins(0,0,8,0);self.body.setSpacing(10);self.scroll.setWidget(body)
         row=QHBoxLayout();self.body.addLayout(row)
         self.open_button=QPushButton('Choose chart…');self.open_button.clicked.connect(lambda:owner.start_guided('orange'));row.addWidget(self.open_button)
-        self.bulk_button=QPushButton('Bulk folder conversion…');self.bulk_button.clicked.connect(self.open_bulk);row.addWidget(self.bulk_button)
         self.identity=QLabel('No chart selected');self.identity.setWordWrap(True);self.identity.setObjectName('songTitle');row.addWidget(self.identity,1)
         row=QHBoxLayout();self.body.addLayout(row)
         row.addWidget(QLabel('Copy from'));self.source=QComboBox();self.source.setMinimumContentsLength(7);row.addWidget(self.source)
@@ -53,10 +52,17 @@ class AdaptPanel(QWidget):
         self.open_output=QPushButton('Open exported folder');self.open_output.clicked.connect(owner.audio.open_export_folder);footer.addWidget(self.open_output,1,0)
         self.export_button=QPushButton('Review / export song…');primary(self.export_button);self.export_button.clicked.connect(owner.start_export);footer.addWidget(self.export_button,1,1)
         self.source.currentTextChanged.connect(self.review_source)
+        # One workspace with two task views, no modal duplicate queue.
+        single=QWidget();single.setLayout(outer)
+        shell=QVBoxLayout(self);self.mode=QComboBox();self.mode.addItems(['One song · preview and edit','Folder collection · convert selected songs'])
+        shell.addWidget(self.mode);self.pages=QStackedWidget();shell.addWidget(self.pages)
+        from .cleaner_gui import CleanerPanel
+        self.bulk=CleanerPanel(owner,four_fret=True)
+        self.pages.addWidget(single);self.pages.addWidget(self.bulk)
+        self.mode.currentIndexChanged.connect(self.pages.setCurrentIndex)
+
     def open_bulk(self):
-        from .bulk_gui import BulkDialog
-        if self.owner.busy():return
-        dialog=BulkDialog(self.owner,self);dialog.exec();dialog.deleteLater()
+        self.mode.setCurrentIndex(1)
 
     def attach_preview(self):
         self.preview_host.addWidget(self.owner.playback)
@@ -73,7 +79,9 @@ class AdaptPanel(QWidget):
         self.owner.goal='orange';self.owner.playback.orange_sustains.setChecked(self.preserve.isChecked())
         self.owner.playback.remove_orange(source=(self.owner.song,self.source.currentText()))
     def update_state(self):
-        song=self.owner.song;busy=self.owner.busy();output=self.owner.converted;report=self.owner.report or {}
+        song=self.owner.song;busy=self.owner.busy();
+        self.mode.setEnabled(not busy)
+        output=self.owner.converted;report=self.owner.report or {}
         if self.loaded_song is not song:
             self.loaded_song=song;self.source.blockSignals(True);self.source.clear()
             self.source.addItems([d for d in ('Expert','Hard') if song and song.tracks.get(d)])

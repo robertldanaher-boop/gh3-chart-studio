@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.10.0 handoff
+# GH3 Chart Studio — 0.11.0 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_10_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.10.0 is authoritative.
+GH3_Chart_Studio_v0_11_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.10.0 update
+## Current 0.11.0 update
+
+BulkDialog removed. AdaptPanel contains single/collection pages and a mode selector; embedded CleanerPanel shares owner worker busy/errors. Stable Save to output parent; no timestamp subfolder per run. export_folder_path recognizes same source path via validation.json or older source_hashes and reuses destination; separate songs still suffix. export_song_folder overwrite flow stages/validates, preserves extras, temporarily renames previous output and restores on normal installation failure. Old notes.mid removed as managed stale output. Original inputs protected; unknown/unmatched folders not overwritten. Log appends, summary latest. See M11_WINDOWS_GUIDE.md, M11_IMPLEMENTATION_LOG.md and M11_TEST_RESULTS.txt. 287 tests passed in 27.81s. Native Windows locks/Dolphin acceptance pending; test two consecutive collection runs.
+
+## Previous 0.10.0 update
 
 Single/bulk four-fret conversion uses difficulty_set.complete_conversion: replaces Easy with 3 lanes, Medium with 4 lanes, fills missing/empty Hard/Expert from selected original source while retaining existing tracks. Excluded sustain transfer is seeded; Easy compatibility repairs logged. All-removed target fallback remaps authored event rhythm instead of empty output or placeholder. Export guards require all 4 slots and target fret limits when difficulty_completion report exists. Standard Clean Songs alone remains cleanup-only, no new difficulties. See M10_WINDOWS_GUIDE.md, M10_IMPLEMENTATION_LOG.md, M10_TEST_RESULTS.txt. 284 tests passed in 27.81s. Native Windows/game acceptance pending; no blanket crash guarantee. Next: Expert-only/Hard-only tests selecting all four slots in Dolphin.
 

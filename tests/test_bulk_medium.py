@@ -46,12 +46,12 @@ def test_bulk_gui_scan_and_export(tmp_path):
     from test_gui import wait
     from PySide6.QtWidgets import QApplication
     from gh3studio.gui import Window
-    from gh3studio.bulk_gui import BulkDialog
     app=QApplication.instance() or QApplication([])
     root=tmp_path/'collection';fixture(root/'artist'/'song',tracks={'Expert':[Note(0,0),Note(192,4,96)]})
-    w=Window();d=BulkDialog(w);d.show();d.panel.scan(root);wait(w);app.processEvents()
-    assert len(d.panel.rows)==1 and not d.panel.rows[0]['errors']
-    d.panel.set_checked(True);d.panel.approve.setChecked(True);d.panel.export_to(tmp_path/'out');wait(w)
+    w=Window();w.show();w.adapt.open_bulk();panel=w.adapt.bulk;panel.scan(root);wait(w);app.processEvents()
+    assert len(panel.rows)==1 and not panel.rows[0]['errors']
+    panel.set_checked(True);panel.approve.setChecked(True);panel.export_to(tmp_path/'out');wait(w)
     assert list((tmp_path/'out').glob('*/notes.chart'))
     assert w.song is None and w.converted is None
-    d.reject();w.close();app.processEvents()
+    assert w.adapt.pages.currentWidget() is panel
+    w.close();app.processEvents()
