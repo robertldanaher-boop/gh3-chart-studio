@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.11.2 handoff
+# GH3 Chart Studio — 0.11.3 handoff
 
 Prepared November 19, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_11_2.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.2 is authoritative.
+GH3_Chart_Studio_v0_11_3.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.3 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.11.2 update
+## Current 0.11.3 update
+
+Added persistent Choose folder button in AdaptPanel mode row. Window.start_medium_collection handles picker, workspace selection and recursive bulk scan. start_guided orange with directory and directory drops on adapt now route here. CleanerPanel.scan retains orange goal in four_fret mode. Chart file opens explicitly switch to single-song page. Three route regressions cover nested Expert/Hard song folders, populated Medium/Easy lane restrictions, no clean queue misrouting. See M11_3_RELEASE.md and M11_3_TEST_RESULTS.txt. Windows confirmation pending.
+
+## Previous 0.11.2 update
 
 Windows v0.11.1: 287 passed, 1 skipped, 1 failed: long wrapped source hint allocated 57px but needed 81px. Source controls now inside collection scroll content; hint vertical QSizePolicy.Minimum prevents compression while scroll contains minimum height. Footer remains fixed. Tests unchanged, no bypass. See docs/M11_2_RELEASE.md and M11_2_TEST_RESULTS.txt. Native Windows confirmation pending.
 

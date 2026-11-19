@@ -173,6 +173,8 @@ class Window(QMainWindow):
             if path is None:path=QFileDialog.getExistingDirectory(self,'Choose song folder or parent directory')
             if not path:return False
             self.goal='clean';self.tabs.setCurrentWidget(self.cleaner);self.cleaner.scan(path);return True
+        if goal=='orange' and path is not None and Path(path).is_dir():
+            return self.start_medium_collection(path)
         if goal not in ('orange','audio','refine'):raise ValueError('Unknown workflow')
         if path is None:
             title='Choose a recording to chart' if goal=='audio' else 'Choose the chart to work on'
@@ -189,8 +191,14 @@ class Window(QMainWindow):
         else:
             self.tabs.setTabVisible(self.tabs.indexOf(self.converter),goal=='refine')
             self.tabs.setCurrentWidget(self.adapt if goal=='orange' else self.converter)
-            if goal=='orange':self.audio.show_listen()
+            if goal=='orange':self.adapt.mode.setCurrentIndex(0);self.audio.show_listen()
             self.open_path(path)
+        return True
+    def start_medium_collection(self,path=None):
+        if self.busy():return False
+        if path is None:path=QFileDialog.getExistingDirectory(self,'Choose song folder or parent collection')
+        if not path:return False
+        self.enter_workspace('orange');self.adapt.open_bulk();self.adapt.bulk.scan(path)
         return True
     def resume_workflow(self):
         if self.goal=='clean':self.tabs.setCurrentWidget(self.cleaner)
@@ -418,6 +426,7 @@ class Window(QMainWindow):
         if len(paths)!=1: self.log_line('Drop one chart file or one parent folder containing your songs.'); return
         if Path(paths[0]).is_dir():
             if self.tabs.currentWidget() is self.library:self.library.scan(paths[0])
+            elif self.tabs.currentWidget() is self.adapt:self.start_medium_collection(paths[0])
             else:self.start_guided('clean',paths[0])
             event.acceptProposedAction(); return
         if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus'):

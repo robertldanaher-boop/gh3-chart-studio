@@ -1,3 +1,9 @@
+# 0.11.3 — Direct collection import for challenging Medium
+
+- Visible Choose folder action in Four-fret workspace; recursively scans nested song folders.
+- Folder drops and guided folder paths route to the conversion queue, not Clean songs.
+- Preserve orange workflow identity during scans; chart-file opens return to single-song view.
+
 # 0.11.2 — Prevent clipped collection help
 
 - Move collection source settings into the scroll area; wrapped explanation cannot shrink below its requested height.

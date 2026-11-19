@@ -54,8 +54,12 @@ class AdaptPanel(QWidget):
         self.source.currentTextChanged.connect(self.review_source)
         # One workspace with two task views, no modal duplicate queue.
         single=QWidget();single.setLayout(outer)
-        shell=QVBoxLayout(self);self.mode=QComboBox();self.mode.addItems(['One song · preview and edit','Folder collection · convert selected songs'])
-        shell.addWidget(self.mode);self.pages=QStackedWidget();shell.addWidget(self.pages)
+        shell=QVBoxLayout(self);self.mode=QComboBox();self.mode.addItems(['One song · preview','Folder collection · bulk'])
+        mode_row=QHBoxLayout();shell.addLayout(mode_row);mode_row.addWidget(self.mode,1)
+        self.folder_button=QPushButton('Choose folder…');self.folder_button.clicked.connect(lambda:owner.start_medium_collection())
+        self.folder_button.setToolTip('Scan this folder and all nested song folders for four-fret conversion')
+        mode_row.addWidget(self.folder_button)
+        self.pages=QStackedWidget();shell.addWidget(self.pages)
         from .cleaner_gui import CleanerPanel
         self.bulk=CleanerPanel(owner,four_fret=True)
         self.pages.addWidget(single);self.pages.addWidget(self.bulk)
@@ -80,7 +84,7 @@ class AdaptPanel(QWidget):
         self.owner.playback.remove_orange(source=(self.owner.song,self.source.currentText()))
     def update_state(self):
         song=self.owner.song;busy=self.owner.busy();
-        self.mode.setEnabled(not busy)
+        self.mode.setEnabled(not busy);self.folder_button.setEnabled(not busy)
         output=self.owner.converted;report=self.owner.report or {}
         if self.loaded_song is not song:
             self.loaded_song=song;self.source.blockSignals(True);self.source.clear()

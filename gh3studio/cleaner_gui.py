@@ -102,7 +102,7 @@ class CleanerPanel(QWidget):
         if path:self.scan(path)
     def scan(self,path):
         if self.owner.busy():return
-        self.owner.goal='clean'
+        self.owner.goal='orange' if self.four_fret else 'clean'
         self.root=Path(path).resolve();self.source_label.setText(self.root.name or str(self.root));self.source_label.setToolTip(str(self.root));self.steps.set_step(0);self.output_path.setText(str(self.root.parent/('GH3 Four Fret Output' if self.four_fret else 'GH3 Cleaned Output')));self.approve.setChecked(False);self.last_output=None;self.rows=[];self.render()
         options=self.inspection_options()
         self.owner.run_job('Scanning charts and preparing cleanup review…',lambda cancel:scan_charts(self.root,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name),inspect_options=options),self.scanned,True)
