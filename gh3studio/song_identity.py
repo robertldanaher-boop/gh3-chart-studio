@@ -1,6 +1,5 @@
 """Song identity shared by the export dialog, folder name and metadata writers."""
 import re
-from datetime import datetime
 from pathlib import Path
 import soundfile as sf
 
@@ -21,7 +20,18 @@ def fill_from_audio(metadata,audio_path):
 
 
 def export_folder_name(metadata,now=None):
-    title=metadata.get('Name','').strip() or 'Untitled Song'
-    artist=metadata.get('Artist','').strip() or 'Unknown Artist'
-    stem=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',f'{artist} - {title}').strip(' .')[:100].rstrip(' .')
-    return f'{stem} [Medium] - {(now or datetime.now()).strftime("%Y%m%d_%H%M%S_%f")}'
+    """Windows-safe identity; metadata itself is never sanitized or truncated."""
+    def part(value,fallback):
+        value=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',value.strip())
+        return value[:48].rstrip(' .') or fallback
+    return part(metadata.get('Artist',''),'Unknown Artist')+' - '+part(metadata.get('Name',''),'Untitled Song')
+
+
+def export_folder_path(parent,metadata):
+    """Choose a nonexisting name, treating case-only collisions like Windows."""
+    parent=Path(parent);stem=export_folder_name(metadata)
+    occupied={p.name.casefold() for p in parent.iterdir()} if parent.exists() else set()
+    name=stem;number=2
+    while name.casefold() in occupied:
+        name=f'{stem} ({number})';number+=1
+    return parent/name

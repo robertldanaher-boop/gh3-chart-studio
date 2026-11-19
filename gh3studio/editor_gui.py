@@ -152,9 +152,8 @@ class ChartEditorDialog(QDialog):
         parent=QFileDialog.getExistingDirectory(self,'Choose parent folder for NEW edited song folder')
         if not parent:return
         from .song_export import export_song_folder
-        from .song_identity import export_folder_name
-        from datetime import datetime
-        destination=Path(parent)/(export_folder_name(self.session.song.metadata)+' - Edited '+datetime.now().strftime('%Y%m%d_%H%M%S_%f'))
+        from .song_identity import export_folder_path
+        destination=export_folder_path(parent,self.session.song.metadata)
         self.status.setText('Exporting edited chart and Ogg audio…')
         # Use the application's worker so audio conversion does not block the UI.
         owner=self.panel.owner

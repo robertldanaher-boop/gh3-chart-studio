@@ -1,3 +1,8 @@
+# 0.9.1 — Song identity folder names
+
+- All song-folder exports use Artist - Song Title; no numbered prefix or timestamp.
+- Case-insensitive collision suffixes protect existing files; metadata remains intact.
+
 # 0.9.0 — Bulk four-fret Medium
 
 - Recursive collections, Expert/Hard source policy and optional sustain transfer.

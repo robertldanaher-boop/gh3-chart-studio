@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.9.0 — Wii chart workshop
+# GH3 Chart Studio 0.9.1 — Wii chart workshop
+
+**Song folder naming:** exports use Artist - Song Title, with (2), (3), etc. only for collisions. [0.9.1 release and Windows steps](docs/M9_1_RELEASE.md).
 
 **Bulk four-fret conversion:** Four-fret Medium → Bulk folder conversion scans nested song folders, copies Expert/Hard into Medium and exports new song folders with per-song logs. [Windows steps](docs/M9_WINDOWS_GUIDE.md).
 

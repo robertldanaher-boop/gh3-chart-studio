@@ -12,7 +12,7 @@ from gh3studio.song_export import export_song_folder
 
 def test_windows_folder_uses_unicode_identity_with_safe_characters():
     name=export_folder_name({'Artist':'Björk / Artist','Name':'Song: "Title"?'},datetime(2026,11,15,6,0))
-    assert name=='Björk _ Artist - Song_ _Title__ [Medium] - 20261115_060000_000000'
+    assert name=='Björk _ Artist - Song_ _Title__'
     assert len(export_folder_name({'Artist':'a'*300,'Name':'b'*300}))<150
 
 
@@ -47,3 +47,13 @@ def test_audio_tags_fill_missing_fields_without_overwriting_chart(tmp_path):
     assert (tmp_path/'out/song.ogg').read_bytes()==source_bytes
     assert report['audio_export']['metadata_warnings']
     assert read_chart(tmp_path/'out/notes.chart').metadata['Artist']=='Authored artist'
+
+
+def test_folder_collisions_keep_existing_files(tmp_path):
+    from gh3studio.song_identity import export_folder_path
+    metadata={'Artist':'Artist','Name':'Song'}
+    assert export_folder_path(tmp_path,metadata).name=='Artist - Song'
+    (tmp_path/'artist - song').mkdir()
+    (tmp_path/'Artist - Song (2)').write_text('leave alone')
+    assert export_folder_path(tmp_path,metadata).name=='Artist - Song (3)'
+    assert (tmp_path/'Artist - Song (2)').read_text()=='leave alone'

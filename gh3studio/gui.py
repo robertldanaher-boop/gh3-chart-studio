@@ -357,9 +357,8 @@ class Window(QMainWindow):
         report=copy.deepcopy(self.report);report['medium_export_cleanup']=review
         if review.get('hopo_assistance'):report['hopo_assistance']=review['hopo_assistance']
         if any(c['action']=='shorten sustain' for c in review['changes']):report['retained_notes_exact']=False
-        from .song_identity import export_folder_name
-        name=export_folder_name(prepared.metadata)
-        self.export_song_to(Path(parent)/name,audio,prepared,report)
+        from .song_identity import export_folder_path
+        self.export_song_to(export_folder_path(parent,prepared.metadata),audio,prepared,report)
     def export_song_to(self,destination,audio,song=None,report=None):
         from .song_export import export_song_folder
         song=song if song is not None else self.converted

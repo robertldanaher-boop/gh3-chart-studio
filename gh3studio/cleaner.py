@@ -5,7 +5,6 @@ import json
 import traceback
 from datetime import datetime
 from pathlib import Path
-import re
 import soundfile as sf
 from .service import load
 from .editing import prepare_cleanup, remove_orange_to_medium
@@ -161,8 +160,8 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             if row['errors'] or row['song'] is None:raise ChartError('; '.join(row['errors']) or 'No parsed chart is available')
             if any(fingerprint(p)!=digest for p,digest in row['hashes'].items()):raise ChartError('Source changed after scan; rescan before export')
             song=copy.deepcopy(row['song'])
-            name=re.sub(r'[<>:"/\\|?*\x00-\x1f]','_',song.metadata['Artist']+' - '+song.metadata['Name']).strip(' .')[:100]
-            folder=dest/f'{index:04d} - {name}'
+            from .song_identity import export_folder_path
+            folder=export_folder_path(dest,song.metadata)
             report={'operation':'clean-all-guitar-difficulties','cleanup_changes':row['changes'],'warnings':row['warnings'],'source_hashes':row['hashes']}
             if row.get('conversion'):
                 report['operation']='bulk-four-fret-medium';report['conversion']=row['conversion']

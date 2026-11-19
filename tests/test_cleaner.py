@@ -25,6 +25,7 @@ def test_recursive_export_all_difficulties_without_inventing_medium(tmp_path):
     assert all(r['changes'] for r in rows)
     results=export_cleaned(rows,tmp_path/'cleaned',source)
     assert all(r['status']=='exported' for r in results)
+    assert {Path(r['folder']).name for r in results}=={'Artist - Song †','Artist - Song † (2)'}
     for result in results:
         folder=Path(result['folder']);song=read_chart(folder/'notes.chart')
         assert set(song.tracks)=={'Expert','Hard'}

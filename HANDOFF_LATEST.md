@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.9.0 handoff
+# GH3 Chart Studio — 0.9.1 handoff
 
 Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_9_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.9.0 is authoritative.
+GH3_Chart_Studio_v0_9_1.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.9.1 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.9.0 update
+## Current 0.9.1 update
+
+All song-folder exports use Artist - Song Title via shared export_folder_name/export_folder_path. No per-song numbering/timestamps/Medium/editor tags. Batch parent keeps timestamp. Case-insensitive collision detection appends (2), (3), etc. Windows-invalid characters sanitized; each identity component capped at 48 characters; metadata remains complete. Existing folders untouched. 280 tests passed in 25.67s. See docs/M9_1_RELEASE.md and M9_1_TEST_RESULTS.txt. No native Windows execution. Next: real collection naming acceptance.
+
+## Previous 0.9.0 update
 
 Added bulk four-fret queue under Four-fret Medium, with recursive scan (2,000 song cap), Expert then Hard fallback/Expert only/Hard only, optional seeded Orange sustain transfer. Reuses CleanerPanel in four_fret mode and scan_charts inspect_options. inspect_chart medium_source branch preserves non-Medium tracks (shared sync translation still applies), prepares only Medium repairs; export_cleaned uses Medium export validation and records conversion details. Selection, per-song edits, failed-song continuation, cancellation and logs reused. See docs/M9_WINDOWS_GUIDE.md, M9_IMPLEMENTATION_LOG.md and M9_TEST_RESULTS.txt. 279 tests passed in 26.08s. No separate stems yet, no Windows/Dolphin acceptance of this release. Next: real nested collection acceptance.
 
