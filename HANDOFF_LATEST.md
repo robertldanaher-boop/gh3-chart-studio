@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.11.0 handoff
+# GH3 Chart Studio — 0.11.1 handoff
 
-Prepared November 18, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_11_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.0 is authoritative.
+Prepared November 19, 2026 for Bob Danaher. Give the next assistant this file and
+GH3_Chart_Studio_v0_11_1.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.1 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.11.0 update
+## Current 0.11.1 update
+
+User Windows startup log: 3 failed, 283 passed, 1 skipped; all failures were large-text width assertions (1094px instead of 1024). Diagnostic tree identifies the hidden bulk source explanation with a 1008px minimum width, propagating through stacked pages. cleaner_gui.py now gives this QLabel a stable name and word wrapping. Regression test stretches the explanation through text length independent of installed fonts, checks hidden and active collection view, fully visible export controls and return to single-song view. No test bypass or dependency/conversion changes. See docs/M11_1_RELEASE.md and M11_1_TEST_RESULTS.txt. Focused suite: 12 passed in 3.23s; full suite: 289 passed in 26.51s (Linux/Python3.11.18/Qt offscreen). Native Windows/Dolphin execution remains pending.
+
+## Previous 0.11.0 update
 
 BulkDialog removed. AdaptPanel contains single/collection pages and a mode selector; embedded CleanerPanel shares owner worker busy/errors. Stable Save to output parent; no timestamp subfolder per run. export_folder_path recognizes same source path via validation.json or older source_hashes and reuses destination; separate songs still suffix. export_song_folder overwrite flow stages/validates, preserves extras, temporarily renames previous output and restores on normal installation failure. Old notes.mid removed as managed stale output. Original inputs protected; unknown/unmatched folders not overwritten. Log appends, summary latest. See M11_WINDOWS_GUIDE.md, M11_IMPLEMENTATION_LOG.md and M11_TEST_RESULTS.txt. 287 tests passed in 27.81s. Native Windows locks/Dolphin acceptance pending; test two consecutive collection runs.
 

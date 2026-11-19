@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.11.0 — Wii chart workshop
+# GH3 Chart Studio 0.11.1 — Wii chart workshop
+
+**Startup layout fix:** The collection source explanation now wraps at large text sizes, preventing a hidden page from widening the entire window. [Fix details and Windows test steps](docs/M11_1_RELEASE.md).
 
 **One workspace, reusable exports:** Choose One song or Folder collection within Four-fret Medium. Repeated runs update recognized Artist - Song Title output folders without another timestamped directory. [Windows steps](docs/M11_WINDOWS_GUIDE.md).
 

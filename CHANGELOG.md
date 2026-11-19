@@ -1,3 +1,9 @@
+# 0.11.1 — Large-text startup layout fix
+
+- Wrap collection source-difficulty help text so hidden/active pages fit small windows.
+- Regression coverage checks long help text, both collection and single-song views, and visible export controls.
+- Keep startup tests enabled; no dependency or chart/audio processing changes.
+
 # 0.11.0 — Embedded bulk workflow and reusable exports
 
 - Removed bulk popup; main Four-fret workspace switches between single-song and collection views.

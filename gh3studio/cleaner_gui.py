@@ -19,7 +19,11 @@ class CleanerPanel(QWidget):
         self.bulk_source=QComboBox();self.bulk_source.addItems(['Expert then Hard','Expert','Hard'])
         self.bulk_sustains=QCheckBox('Preserve Orange sustains on four frets');self.bulk_sustains.setChecked(True)
         if four_fret:
-            outer.addWidget(QLabel('Source difficulty (changing this rescans the collection)'));outer.addWidget(self.bulk_source);outer.addWidget(self.bulk_sustains)
+            # Hidden stacked pages also contribute their minimum width to the window.
+            # Keep this explanation wrappable with Windows fonts and larger text.
+            self.bulk_source_hint=QLabel('Source difficulty (changing this rescans the collection)')
+            self.bulk_source_hint.setObjectName('bulkSourceHint');self.bulk_source_hint.setWordWrap(True)
+            outer.addWidget(self.bulk_source_hint);outer.addWidget(self.bulk_source);outer.addWidget(self.bulk_sustains)
             self.bulk_source.currentIndexChanged.connect(self.rescan_bulk);self.bulk_sustains.toggled.connect(self.rescan_bulk)
         else:self.bulk_source.hide();self.bulk_sustains.hide()
         self.steps=StepStrip(['Find songs','Review & repair','Clean & export']);outer.addWidget(self.steps)

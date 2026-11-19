@@ -123,3 +123,26 @@ def test_wider_font_metrics_fit_all_workspaces_and_export_actions(app,large_text
         assert button.visibleRegion().boundingRect()==button.rect()
         assert button.width()>=button.minimumSizeHint().width()
     w.close()
+
+
+@pytest.mark.parametrize('large_text',[False,True])
+def test_collection_source_hint_wraps_without_widening_hidden_or_active_page(app,large_text):
+    w=Window()
+    if large_text:w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
+    panel=w.adapt.bulk;hint=panel.bulk_source_hint
+    # Reproduce the >1000px unwrapped hint from the Windows startup log,
+    # independent of which fonts are installed on the test machine.
+    hint.setText(hint.text()+' — source selection applies to every song in this collection'*2)
+    w.resize(1024,700);w.show();app.processEvents()
+    assert hint.fontMetrics().horizontalAdvance(hint.text())>1024
+    assert w.width()<=1024 and w.height()<=700, w.layout_report()
+    w.enter_workspace('orange');w.adapt.open_bulk();app.processEvents()
+    assert w.width()<=1024 and w.height()<=700, w.layout_report()
+    assert hint.height()>=hint.heightForWidth(hint.width())
+    for button in (panel.export_button,panel.open_output,panel.output_button):
+        assert button.visibleRegion().boundingRect()==button.rect()
+        assert button.width()>=button.minimumSizeHint().width()
+    # Switching back must retain accessible single-song export actions.
+    w.adapt.mode.setCurrentIndex(0);app.processEvents()
+    assert w.adapt.export_button.visibleRegion().boundingRect()==w.adapt.export_button.rect()
+    w.close()
