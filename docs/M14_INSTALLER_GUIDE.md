@@ -57,3 +57,12 @@ Local: install Inno Setup 6.3+, run installer\build_installer.cmd.
   FFmpeg GPL source obligations).
 - Built and tested on Windows only through GitHub Actions or Bob's PC; the
   authoring environment had no Windows, Inno Setup or PySide6.
+
+
+## Updates (0.18.0)
+Publishing: for each version on main, create a GitHub release whose tag equals the
+app version (v0.18.0, v0.18.1, ...). GitHub attaches "Source code (zip)"
+automatically; that is what the app downloads. The repository must be public (or
+releases must be published to a public repository and REPOSITORY in
+gh3studio/updates.py changed) for installed copies to see releases.
+In the app: About -> Check for updates, or the daily check -> Download and install.

@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.17.0 handoff
+# GH3 Chart Studio — 0.18.0 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_17_0.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_0.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,23 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.17.0 update — track-number prefixes
+## Current 0.18.0 update — in-app download and install
+
+Bob asked how to have the app check for updates, pull them from GitHub and
+install. updates.py: UpdateResult.source_zip_url from release zipball_url;
+download_update (urllib, 200 MB cap, cancel), extract_update (testzip, zip-slip
+refusal, exactly one folder with "Install GH3 Chart Studio.cmd" +
+gh3studio/__init__.py, version must equal the release), launch_installer (cmd /c,
+DETACHED_PROCESS). updates_gui: prompt "Download and install" -> INSTALL ->
+start_install (refuses while the owning Window is busy) -> _DownloadThread with
+QProgressDialog -> launch -> quit_app. install.ps1 waits up to 30 s for the
+running app to exit. Tests: test_updates (zipball, extraction safety, version
+mismatch, launcher args, GUI install + failure flows; Qt cases skipped here).
+DEPENDENCIES ON BOB: repository must be public (still private as of Nov 20) and
+he must publish a GitHub release per version with tag == app version (Claude's
+session cannot push tags). 0.18.0 must be installed by hand once.
+
+## Previous 0.17.0 update — track-number prefixes
 
 Bob: 0.16.7 installed and running (Nov 20 ~11:44); the conftest disposal fix
 resolved the install-time freezes. He is doing more testing.

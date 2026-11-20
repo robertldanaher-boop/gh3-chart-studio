@@ -1,3 +1,10 @@
+# 0.18.0 — Download and install updates from inside the app
+
+- When a newer GitHub release exists (daily check, or About -> Check for updates), the prompt offers Download and install.
+- The app downloads the release's source ZIP (GitHub creates it automatically for every release), checks it is undamaged, has no unsafe paths and is exactly the announced version, closes, and starts "Install GH3 Chart Studio.cmd" from it. The installer waits up to 30 s for the app to close, then installs as usual (setup and tests once; Start menu entries kept).
+- Download problems are reported and the app stays open. A running job blocks the update until it finishes.
+- Requirement: the app must be able to see the releases. While the repository is private, the check reports that no public release was found.
+
 # 0.17.0 — Remove track-number prefixes from Artist and Title
 
 - Bob: 0.16.7 installed and running. Renaming tools add "1. ", "3." etc. to Artist or Title to mark track order; almost no artist names contain such numbers.

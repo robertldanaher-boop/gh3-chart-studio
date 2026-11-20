@@ -49,8 +49,13 @@ try {
         "$AppName setup", 'OKCancel', 'Question')
     if ($answer -ne 'OK') { exit 1 }
 
-    $running = Get-CimInstance Win32_Process -Filter "Name='pythonw.exe' OR Name='python.exe'" -ErrorAction SilentlyContinue |
-        Where-Object { $_.CommandLine -and $_.CommandLine -like "*$Target*" }
+    # When started by the app's "Download and install", the app is still closing: wait up to 30 s.
+    $deadline = (Get-Date).AddSeconds(30)
+    do {
+        $running = Get-CimInstance Win32_Process -Filter "Name='pythonw.exe' OR Name='python.exe'" -ErrorAction SilentlyContinue |
+            Where-Object { $_.CommandLine -and $_.CommandLine -like "*$Target*" }
+        if ($running) { Start-Sleep -Milliseconds 500 }
+    } while ($running -and (Get-Date) -lt $deadline)
     if ($running) { throw "$AppName is running. Close it, then run the installer again." }
 
     # Same-folder reinstall (e.g. running this from the installed copy): skip copying.
