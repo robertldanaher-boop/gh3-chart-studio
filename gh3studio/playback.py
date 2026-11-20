@@ -135,7 +135,8 @@ class PlaybackPanel(QWidget):
             self.clear_audio();self.label.setText('Audio file not found: '+str(path));self.owner.log_line(self.label.text());return False
         self.pending_play=False;self.audio_name=path.name
         current=self.player.source()
-        if not current.isEmpty() and current.isLocalFile() and Path(current.toLocalFile()).resolve()==path:
+        if (not current.isEmpty() and current.isLocalFile() and Path(current.toLocalFile()).resolve()==path
+                and self.player.mediaStatus() not in (QMediaPlayer.InvalidMedia,QMediaPlayer.NoMedia)):
             # Same recording already loaded: re-setting the source tears down and
             # rebuilds Qt's FFmpeg backend, which intermittently deadlocked on Windows
             # (test_external_stem_analyzed_original_mix_retained hang). Keep it.

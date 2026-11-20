@@ -58,8 +58,8 @@ def find_song_audio(chart_path, metadata=None):
     metadata = metadata or {}
     files = _audio_files(folder)
     notes, left_out = [], []
-    by_role = {}
-    # Chart [Song] stream entries name files explicitly.
+    by_role, explicit = {}, set()
+    # Chart [Song] stream entries name files explicitly; they win over name matches.
     for key, role in STREAM_KEYS.items():
         value = str(metadata.get(key, '')).replace('\\', '/').strip()
         if not value:
@@ -67,6 +67,7 @@ def find_song_audio(chart_path, metadata=None):
         candidate = (folder / value).resolve()
         if candidate.is_relative_to(folder) and candidate.is_file() and candidate.suffix.lower() in AUDIO_SUFFIXES:
             by_role.setdefault(role, [candidate])
+            explicit.add(candidate)
     # Conventional file names.
     for path in files:
         role = path.stem.lower().replace(' ', '_')
@@ -75,7 +76,7 @@ def find_song_audio(chart_path, metadata=None):
                 by_role.setdefault(role, []).append(path)
     chosen = {}
     for role, paths in by_role.items():
-        paths = sorted(set(paths), key=lambda p: AUDIO_SUFFIXES.index(p.suffix.lower()))
+        paths = sorted(set(paths), key=lambda p: (p not in explicit, AUDIO_SUFFIXES.index(p.suffix.lower())))
         chosen[role] = paths[0]
         if len(paths) > 1:
             notes.append(f'{role}: used {paths[0].name}; ignored duplicate ' + ', '.join(p.name for p in paths[1:]))
@@ -362,4 +363,19 @@ def cached_mix(paths, roles=None, cancel=lambda: False):
     report = mix_stems(paths, partial, cancel=cancel, roles=roles)
     partial.replace(wav)
     meta.write_text(json.dumps(report), encoding='utf-8')
+    prune_cache(folder, keep={wav.name, meta.name})
     return wav, report
+
+
+def prune_cache(folder, keep=(), newest=6):
+    """Keep the most recent cached mixes; delete older ones (skip files in use)."""
+    mixes = sorted((p for p in Path(folder).glob('*.wav') if not p.name.endswith('.partial.wav')),
+                   key=lambda p: p.stat().st_mtime, reverse=True)
+    for old in mixes[newest:]:
+        if old.name in keep:
+            continue
+        for item in (old, old.with_suffix('.json')):
+            try:
+                item.unlink()
+            except OSError:
+                pass  # still open in the player; removed on a later pass

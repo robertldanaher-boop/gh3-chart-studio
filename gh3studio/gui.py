@@ -330,6 +330,9 @@ class Window(QMainWindow):
             from .stems import find_song_audio,cached_mix
             plan=find_song_audio(path,song.metadata);recording=None;mix=None
             if plan['kind']=='stems':
+                # The temporary mix carries no tags: fill missing title/artist from the main track.
+                from .song_identity import fill_from_audio
+                song.metadata.update(fill_from_audio(song.metadata,plan['paths'][0]))
                 try:recording,mix=cached_mix(plan['paths'],plan['roles'],cancel)
                 except Exception as exc:mix={'error':str(exc)}
             elif plan['kind']=='single':recording=plan['paths'][0]

@@ -163,3 +163,25 @@ def test_real_files_mix_and_encode_round_trip(tmp_path):
     assert (info.samplerate, info.channels) == (rate, 2) and abs(info.frames - rate) < 2048
     assert all(len(s['sha256']) == 64 for s in report['stems'])
     assert report['stems'][1]['role'] == 'guitar'
+
+
+def test_explicit_stream_beats_conventional_duplicate(tmp_path):
+    chart = folder_with(tmp_path, 'song.ogg', 'backing.mp3', 'guitar.ogg')
+    plan = find_song_audio(chart, {'MusicStream': 'backing.mp3'})
+    assert [p.name for p in plan['paths']] == ['backing.mp3', 'guitar.ogg']
+    assert any('song.ogg' in note for note in plan['notes'])
+
+
+def test_cache_prune_keeps_newest_and_current(tmp_path):
+    import os, time
+    from gh3studio.stems import prune_cache
+    for i in range(9):
+        wav = tmp_path / f'm{i}.wav'
+        wav.write_bytes(b'x')
+        (tmp_path / f'm{i}.json').write_text('{}')
+        os.utime(wav, (time.time() - 100 + i, time.time() - 100 + i))
+    (tmp_path / 'x.partial.wav').write_bytes(b'x')
+    prune_cache(tmp_path, keep={'m0.wav'}, newest=3)
+    left = sorted(p.name for p in tmp_path.glob('*.wav'))
+    assert left == ['m0.wav', 'm6.wav', 'm7.wav', 'm8.wav', 'x.partial.wav']
+    assert not (tmp_path / 'm3.json').exists() and (tmp_path / 'm8.json').exists()

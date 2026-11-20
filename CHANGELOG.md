@@ -1,3 +1,13 @@
+# 0.16.5 — Bug review fixes
+
+Review of everything changed since 0.13.1 (stems, lean export, playback, installer, updates):
+- Playback: the 0.16.4 "already loaded" shortcut would also skip a recording that had FAILED to load, so choosing it again could never retry. It now reloads unless the current load succeeded.
+- Separate tracks: a file named in the chart (MusicStream/GuitarStream...) now always wins over a same-role file found by name (e.g. MusicStream=backing.mp3 beside song.ogg used song.ogg before).
+- Separate tracks: cached preview mixes in the temp folder (tens of MB each) were never deleted; only the 6 most recent are kept now.
+- Single-song view: songs made of separate tracks lost title/artist tags from the main track (the temporary mix has none); they are filled from the main track again.
+
+Known minor gaps (not changed): mixing runs before a song's chart checks, so a blocked song still spends time mixing; editor exports of separate-track songs do not record audio_stems; script-installer shortcuts have no taskbar app ID (the Inno installer sets it).
+
 # 0.16.4 — Avoid reloading an already-open recording
 
 - Bob's install run of 0.16.2/0.16.3 hung for 60 s in test_external_stem_analyzed_original_mix_retained (restore_mix -> open_path -> show_analysis) and was cancelled. The same test passed in his two earlier runs that day and hung once before in 0.5.6: an intermittent Qt multimedia (FFmpeg backend) freeze.

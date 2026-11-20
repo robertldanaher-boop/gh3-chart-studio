@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.4 handoff
+# GH3 Chart Studio — 0.16.5 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_4.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_5.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,22 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.4 update — intermittent media hang mitigation
+## Current 0.16.5 update — bug review
+
+Bob asked for a bug review. Reviewed the 0.14-0.16.4 diff. Fixed:
+1. playback.open_audio same-source skip now requires mediaStatus not
+   InvalidMedia/NoMedia (else a failed load could never be retried).
+2. stems.find_song_audio: chart *Stream entries win over same-role name matches
+   (sort key: not explicit, then suffix preference).
+3. stems.prune_cache: keep 6 newest cached mixes in %TEMP%/gh3-chart-studio-mixes.
+4. gui.open_path: stem songs fill missing identity from paths[0] tags.
+Tests added: test_stems (explicit stream, prune), test_playback_source (retry).
+Known minor gaps left: mix before chart validation in export_song_folder wrapper;
+editor export lacks audio_stems; script-installer .lnk lacks AppUserModelID; Tk
+'installed'/'ready' auto-destroy after() can fire after a manual Close (harmless
+TclError). Evidence: test_stems 14 passed (local WAV shim); Qt tests not run here.
+
+## Previous 0.16.4 update — intermittent media hang mitigation
 
 Bob's install-time test run (start_windows.log 10:03, Python 3.11.9): everything
 through test_gui.py::test_guided_audio_review... passed, including all new stem
