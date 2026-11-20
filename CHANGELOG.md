@@ -1,3 +1,10 @@
+# 0.13.0 — Streamlined preparation interface
+
+- One primary Home action, Prepare my songs, with secondary Clean only.
+- Shared chart/folder toolbar; duplicate collection picker removed from view.
+- Clear Choose songs / Review / Export steps and combined action labels.
+- Home folder drops use combined preparation.
+
 # 0.12.0 — Convert and clean in one workflow
 
 - Four-fret conversion automatically cleans all four difficulties for single songs and collections.

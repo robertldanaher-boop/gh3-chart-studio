@@ -13,7 +13,7 @@ from test_cleaner import fixture
 def test_home_only_offers_essential_goals_and_reserve_is_reversible(app):
     w=Window();w.show();app.processEvents()
     assert set(w.welcome.actions)=={'clean','orange'}
-    assert [w.tabs.tabText(i) for i in range(w.tabs.count()) if w.tabs.isTabVisible(i)]==['Home','Clean songs','Four-fret Medium']
+    assert [w.tabs.tabText(i) for i in range(w.tabs.count()) if w.tabs.isTabVisible(i)]==['Home','Prepare songs','Clean only']
     w.welcome.actions['clean'].click();assert w.tabs.currentWidget() is w.cleaner
     w.open_reserved(w.library);assert w.tabs.currentWidget() is w.library and w.tabs.isTabVisible(w.tabs.indexOf(w.library))
     w.hide_reserved();assert w.tabs.currentWidget() is w.welcome
@@ -145,4 +145,16 @@ def test_collection_source_hint_wraps_without_widening_hidden_or_active_page(app
     # Switching back must retain accessible single-song export actions.
     w.adapt.mode.setCurrentIndex(0);app.processEvents()
     assert w.adapt.export_button.visibleRegion().boundingRect()==w.adapt.export_button.rect()
+    w.close()
+
+
+def test_shared_prepare_toolbar_replaces_duplicate_folder_picker(app):
+    w=Window();w.show();w.welcome.actions['orange'].click();app.processEvents()
+    assert w.welcome.actions['orange'].text()=='Prepare my songs'
+    for mode in (0,1):
+        w.adapt.mode.setCurrentIndex(mode);app.processEvents()
+        for button in (w.adapt.open_button,w.adapt.folder_button):
+            assert button.visibleRegion().boundingRect()==button.rect()
+        assert not w.adapt.bulk.scan_button.isVisible()
+    assert 'Prepare && export' in w.adapt.bulk.export_button.text()
     w.close()

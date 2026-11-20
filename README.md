@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.12.0 — Wii chart workshop
+# GH3 Chart Studio 0.13.0 — Wii chart workshop
+
+**Streamlined workspace:** Home → Prepare my songs. Choose chart or folder from one toolbar, review, then export. Clean only is the secondary option when you want to retain existing difficulty choices. [Windows steps](docs/M13_RELEASE.md).
 
 **Convert and clean together:** Make a challenging Medium now creates Medium + Easy, fills missing slots and cleans all four difficulties. Exported Hard/Expert receive compatibility repairs; originals remain unchanged. No separate Clean songs pass needed. [Windows steps](docs/M12_RELEASE.md).
 
@@ -19,8 +21,7 @@
 **New: interactive chart editor.** Right-click the playback preview or choose Edit displayed chart. Edit notes, sustains, star power and patterns in a working copy, then export a new song folder. See [Windows editor guide](docs/M8_WINDOWS_GUIDE.md) and [implementation details](docs/M8_IMPLEMENTATION_LOG.md).
 
 Prepare existing authored song folders for GH3 Wii, or create a challenging
-four-fret Medium from Expert/Hard. The primary interface has **Home**, **Clean
-songs** and **Four-fret Medium**. Audio generation and pattern tools remain under
+four-fret Medium from Expert/Hard. The primary interface has **Home**, **Clean only** and **Prepare songs**. Audio generation and pattern tools remain under
 **Tools in reserve**; they are not part of the main workflow.
 
 ## Start on Windows 10/11 x64
@@ -30,7 +31,7 @@ songs** and **Four-fret Medium**. Audio generation and pattern tools remain unde
    runs automated tests, and launches. Missing runtimes trigger the existing signed
    installer bootstrap; internet is needed for initial setup. See
    [bootstrap details](docs/M5_6_WINDOWS_GUIDE.md).
-3. Choose **Clean my songs** or **Make a challenging Medium** from Home.
+3. Choose **Prepare my songs** (conversion + cleanup) or **Clean only** from Home.
 4. Follow the numbered steps in the selected workspace.
 
 See [0.7.3 Windows test steps](docs/M7_3_WINDOWS_GUIDE.md), including small-window,

@@ -59,7 +59,7 @@ def test_bulk_gui_scan_and_export(tmp_path):
     w.close();app.processEvents()
 
 
-@pytest.mark.parametrize('route',['folder_button','drop','guided_path'])
+@pytest.mark.parametrize('route',['folder_button','drop','home_drop','guided_path'])
 def test_medium_collection_entry_routes_scan_nested_songs(tmp_path,monkeypatch,route):
     from test_gui import wait
     from PySide6.QtWidgets import QApplication,QFileDialog
@@ -75,7 +75,8 @@ def test_medium_collection_entry_routes_scan_nested_songs(tmp_path,monkeypatch,r
         monkeypatch.setattr(QFileDialog,'getExistingDirectory',lambda *args,**kwargs:str(root))
         assert w.adapt.folder_button.isVisible()
         w.adapt.folder_button.click()
-    elif route=='drop':
+    elif route in ('drop','home_drop'):
+        if route=='home_drop':w.tabs.setCurrentWidget(w.welcome)
         mime=QMimeData();mime.setUrls([QUrl.fromLocalFile(str(root))])
         event=QDropEvent(QPointF(50,50),Qt.CopyAction,mime,Qt.LeftButton,Qt.NoModifier)
         w.dropEvent(event);assert event.isAccepted()

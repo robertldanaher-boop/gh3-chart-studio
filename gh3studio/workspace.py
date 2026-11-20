@@ -28,18 +28,18 @@ class AdaptPanel(QWidget):
     def __init__(self,owner):
         super().__init__();self.owner=owner;self.loaded_song=None
         outer=QVBoxLayout(self);outer.setContentsMargins(18,14,18,14);outer.setSpacing(10)
-        outer.addWidget(heading('Four frets. Keep the challenge.',
+        outer.addWidget(heading('Prepare your song.',
             'Create Medium + Easy and clean all four difficulties in one step.'))
-        self.steps=StepStrip(['Choose chart','Create Medium','Listen & export']);outer.addWidget(self.steps)
+        self.steps=StepStrip(['Choose songs','Prepare & review','Export']);outer.addWidget(self.steps)
         self.scroll=QScrollArea();self.scroll.setWidgetResizable(True);outer.addWidget(self.scroll,1)
         body=QWidget();self.body=QVBoxLayout(body);self.body.setContentsMargins(0,0,8,0);self.body.setSpacing(10);self.scroll.setWidget(body)
         row=QHBoxLayout();self.body.addLayout(row)
-        self.open_button=QPushButton('Choose chart…');self.open_button.clicked.connect(lambda:owner.start_guided('orange'));row.addWidget(self.open_button)
+        self.open_button=QPushButton('Choose chart…');self.open_button.clicked.connect(lambda:owner.start_guided('orange'));
         self.identity=QLabel('No chart selected');self.identity.setWordWrap(True);self.identity.setObjectName('songTitle');row.addWidget(self.identity,1)
         row=QHBoxLayout();self.body.addLayout(row)
         row.addWidget(QLabel('Copy from'));self.source=QComboBox();self.source.setMinimumContentsLength(7);row.addWidget(self.source)
         arrow=QLabel('→  Medium · Green / Red / Yellow / Blue');arrow.setWordWrap(True);row.addWidget(arrow,1)
-        self.create_button=QPushButton('Create Medium + Easy');primary(self.create_button);self.create_button.clicked.connect(self.create_medium);row.addWidget(self.create_button)
+        self.create_button=QPushButton('Prepare song');primary(self.create_button);self.create_button.clicked.connect(self.create_medium);row.addWidget(self.create_button)
         self.preserve=QCheckBox('Keep Orange sustains on playable frets');self.preserve.setChecked(True)
         self.preserve.setToolTip('Use repeatable random placement among suitable frets. Orange taps are removed; sustain conflicts are reported before export.')
         self.body.addWidget(self.preserve)
@@ -54,14 +54,15 @@ class AdaptPanel(QWidget):
         self.source.currentTextChanged.connect(self.review_source)
         # One workspace with two task views, no modal duplicate queue.
         single=QWidget();single.setLayout(outer)
-        shell=QVBoxLayout(self);self.mode=QComboBox();self.mode.addItems(['One song · preview','Folder collection · bulk'])
-        mode_row=QHBoxLayout();shell.addLayout(mode_row);mode_row.addWidget(self.mode,1)
+        shell=QVBoxLayout(self);self.mode=QComboBox();self.mode.addItems(['One song','Collection'])
+        mode_row=QHBoxLayout();shell.addLayout(mode_row);mode_row.addWidget(self.mode,1);mode_row.addWidget(self.open_button)
         self.folder_button=QPushButton('Choose folder…');self.folder_button.clicked.connect(lambda:owner.start_medium_collection())
         self.folder_button.setToolTip('Scan this folder and all nested song folders for four-fret conversion')
         mode_row.addWidget(self.folder_button)
         self.pages=QStackedWidget();shell.addWidget(self.pages)
         from .cleaner_gui import CleanerPanel
         self.bulk=CleanerPanel(owner,four_fret=True)
+        self.bulk.scan_button.hide()  # Shared folder picker above serves both views.
         self.pages.addWidget(single);self.pages.addWidget(self.bulk)
         self.mode.currentIndexChanged.connect(self.pages.setCurrentIndex)
 
@@ -111,5 +112,5 @@ class AdaptPanel(QWidget):
                 'Medium is prepared. Compare tracks below, listen, then review metadata and compatibility before export.')
         elif song:
             self.summary.setText('Original files stay untouched. All difficulties are cleaned; sustain repairs are reported. No automatic density reduction.')
-            self.next_step.setText('Choose Expert or Hard, then Create four-fret Medium.' if self.source.count() else
+            self.next_step.setText('Choose Expert or Hard, then Prepare song.' if self.source.count() else
                 'This chart has no Expert or Hard notes. Use Clean songs to prepare its existing difficulties.')

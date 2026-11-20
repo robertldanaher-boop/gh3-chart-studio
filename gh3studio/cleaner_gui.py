@@ -14,20 +14,20 @@ class CleanerPanel(QWidget):
         super().__init__();self.four_fret=four_fret;self.owner=owner;self.rows=[];self.root=None;self.last_output=None
         from .workspace import StepStrip,heading
         outer=QVBoxLayout(self);outer.setContentsMargins(18,14,18,14);outer.setSpacing(8)
-        outer.addWidget(heading('Bulk four-fret Medium' if four_fret else 'Get your songs ready for GH3 Wii.',
-            'Scan a song folder or a collection. Review repairs, then export or update chart + Ogg + song.ini folders.'))
+        outer.addWidget(heading('Prepare your collection.' if four_fret else 'Clean existing difficulties.',
+            'Medium: 4 frets · Easy: 3 frets · All difficulties cleaned.' if four_fret else 'Repair compatibility without generating new difficulty tracks.'))
         self.bulk_source=QComboBox();self.bulk_source.addItems(['Expert then Hard','Expert','Hard'])
         self.bulk_sustains=QCheckBox('Preserve Orange sustains on four frets');self.bulk_sustains.setChecked(True)
         if four_fret:
             # Hidden stacked pages also contribute their minimum width to the window.
             # Keep this explanation wrappable with Windows fonts and larger text.
-            self.bulk_source_hint=QLabel('Source difficulty (changing this rescans the collection)')
+            self.bulk_source_hint=QLabel('Build Medium + Easy from (changing this rescans)')
             self.bulk_source_hint.setObjectName('bulkSourceHint');self.bulk_source_hint.setWordWrap(True)
             # A wrapped label must not shrink below its height-for-width hint.
             self.bulk_source_hint.setSizePolicy(QSizePolicy.Preferred,QSizePolicy.Minimum)
             self.bulk_source.currentIndexChanged.connect(self.rescan_bulk);self.bulk_sustains.toggled.connect(self.rescan_bulk)
         else:self.bulk_source.hide();self.bulk_sustains.hide()
-        self.steps=StepStrip(['Find songs','Review & repair','Clean & export']);outer.addWidget(self.steps)
+        self.steps=StepStrip(['Choose songs','Review','Export']);outer.addWidget(self.steps)
         scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll,1)
         body=QWidget();scroll.setWidget(body);content=QVBoxLayout(body);content.setContentsMargins(0,0,8,0);content.setSpacing(8)
         if four_fret:
@@ -65,7 +65,7 @@ class CleanerPanel(QWidget):
         row=QHBoxLayout();outer.addLayout(row);row.addWidget(QLabel('Save to'))
         self.output_path=QLineEdit();self.output_path.setPlaceholderText('Existing exports here will be updated');row.addWidget(self.output_path,1)
         self.output_button=QPushButton('Change…');self.output_button.clicked.connect(self.choose_output);row.addWidget(self.output_button)
-        self.approve=QCheckBox('Create Medium + Easy; clean all difficulties' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
+        self.approve=QCheckBox('Apply the reviewed conversion and repairs' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
         self.status=QLabel('Step 1 · Choose a folder. Charts, audio and metadata are matched inside each song folder.');self.status.setWordWrap(True);self.status.setObjectName('nextStep');outer.addWidget(self.status)
         row=QHBoxLayout();outer.addLayout(row)
         self.open_output=QPushButton('Open results / logs');self.open_output.clicked.connect(self.open_folder);row.addWidget(self.open_output)
@@ -90,13 +90,13 @@ class CleanerPanel(QWidget):
         blocked=sum(bool(r['errors']) for r in self.rows)
         self.selection_summary.setText(f'{checked} checked of {len(self.rows)} • {blocked} blocked / need help • Selection applies to the whole queue')
         self.export_button.setText(f'Start cleaning · {checked} '+('song' if checked==1 else 'songs') if checked else 'Start cleaning')
-        if self.four_fret:self.export_button.setText(f'Create Medium · {checked} songs')
+        if self.four_fret:self.export_button.setText(f'Prepare && export · {checked} songs')
     def set_checked(self,checked,ready_only=False):
         if self.owner.busy():return
         self.table.blockSignals(True)
         for i,row in enumerate(self.rows):self.table.item(i,0).setCheckState(Qt.Checked if checked and (not ready_only or not row['errors']) else Qt.Unchecked)
         self.table.blockSignals(False);self.approve.setChecked(False);self.selection_changed()
-        self.status.setText('Selection updated. Blocked songs cannot export; their reasons will be recorded in the results. Review changes, tick Apply, then START CLEANING.' if checked else 'Selection cleared.')
+        self.status.setText('Selection updated. Blocked songs cannot export; their reasons will be recorded in the results. Review changes, approve the reviewed changes, then export.' if checked else 'Selection cleared.')
     def browse(self):
         path=QFileDialog.getExistingDirectory(self,'Choose a song folder or parent directory')
         if path:self.scan(path)
@@ -223,7 +223,7 @@ class CleanerPanel(QWidget):
         if self.owner.busy():return
         if not self.rows:self.status.setText('Choose a folder to scan first.');return
         if not any(self.table.item(i,0).checkState()==Qt.Checked for i in range(len(self.rows))):self.status.setText('No songs checked. Click Select all or check individual rows.');return
-        if not self.approve.isChecked():self.status.setText('Tick Apply the reviewed cleanup changes, then click START CLEANING.');return
+        if not self.approve.isChecked():self.status.setText('Check the review approval above, then use the export button.');return
         if not self.output_path.text().strip():self.status.setText('Set an output folder using Change output folder.');return
         self.export_to(Path(self.output_path.text().strip()))
     def export_to(self,path):

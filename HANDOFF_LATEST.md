@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.12.0 handoff
+# GH3 Chart Studio — 0.13.0 handoff
 
 Prepared November 20, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_12_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.12.0 is authoritative.
+GH3_Chart_Studio_v0_13_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.13.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.12.0 update
+## Current 0.13.0 update
+
+Streamlined Home to primary Prepare my songs and secondary Clean only. Tabs Home/Prepare songs/Clean only. AdaptPanel shared Choose chart / Choose folder toolbar and One song/Collection selector; duplicate embedded folder picker hidden. Single action Prepare song, collection Prepare & export. Combined guidance and approval labels; Home folder drops route to combined scan. Internal original goal keys retained. 296 tests passed in 28.51s. See docs/M13_RELEASE.md and M13_TEST_RESULTS.txt. Native Windows confirmation pending.
+
+## Previous 0.12.0 update
 
 User authorized combining cleanup and conversion to eliminate separate passes. complete_conversion now cleans every output difficulty, strips original unsupported markers, repairs sustains, resolves agreeing anchors and blocks conflicting anchors. Original Song remains unchanged. Reports all_difficulty_cleanup, updated operation/status and source compatibility errors separately. Existing Hard/Expert no longer promised unchanged in output; valid notes remain intact and repairs logged. Bulk exports enforce clean_all. Combined single-song dialog hides redundant manual repair toggles, displays automatic repair list and normalizes timing using song.ini delay once when audio available; export passes corresponding audio padding and guards all tracks. Optional newly requested HOPO assistance uses existing editor validator after cleanup. Legacy reserved workflows retain their previous paths. 294 tests passed in 27.12s. See M12_RELEASE.md and M12_TEST_RESULTS.txt. Native Windows/Dolphin confirmation pending.
 

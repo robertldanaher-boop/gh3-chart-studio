@@ -476,10 +476,10 @@ def test_clean_goal_reviews_and_exports_folder(tmp_path,app):
     w.close()
 
 
-def test_folder_drop_on_start_routes_to_cleaner(tmp_path,app):
+def test_folder_drop_in_clean_only_routes_to_cleaner(tmp_path,app):
     from test_cleaner import fixture
     source=tmp_path/'songs';fixture(source/'one')
-    w=Window();w.show();mime=QMimeData();mime.setUrls([QUrl.fromLocalFile(str(source))])
+    w=Window();w.show();w.enter_workspace('clean');mime=QMimeData();mime.setUrls([QUrl.fromLocalFile(str(source))])
     event=QDropEvent(QPointF(10,10),Qt.CopyAction,mime,Qt.LeftButton,Qt.NoModifier)
     w.dropEvent(event);wait(w)
     assert w.tabs.currentWidget() is w.cleaner

@@ -54,21 +54,21 @@ class WelcomePanel(QWidget):
         body=QWidget();scroll.setWidget(body);layout=QVBoxLayout(body);layout.setContentsMargins(24,20,24,20);layout.setSpacing(14)
         eyebrow=QLabel('BUILT FOR YOUR GH3 WII COLLECTION');eyebrow.setObjectName('eyebrow');layout.addWidget(eyebrow)
         title=QLabel('Great charts. Your way to play.');title.setObjectName('hero');title.setWordWrap(True);layout.addWidget(title)
-        intro=QLabel('Start with songs that are already charted. We’ll help you prepare them for import or bring the challenge to four frets.');intro.setWordWrap(True);intro.setObjectName('muted');layout.addWidget(intro)
+        intro=QLabel('Start with songs that are already charted. Conversion and compatibility cleanup now happen together.');intro.setWordWrap(True);intro.setObjectName('muted');layout.addWidget(intro)
         layout.addWidget(FretMotif())
         cards=QHBoxLayout();cards.setSpacing(16);layout.addLayout(cards)
         for key,number,title,description,steps,action in [
-            ('clean','01','Clean songs for GH3 Wii','Check existing charts, match their audio and metadata, and export organized song folders.','One song or a collection · Recursive scanning','Clean my songs'),
-            ('orange','02','Create four-fret Medium','Start from Expert or Hard. Keep playable rhythms and sustains while removing Orange.','Authored charts · Source tracks preserved','Make a challenging Medium')]:
+            ('orange','01','Prepare songs for GH3 Wii','Create challenging four-fret Medium and three-fret Easy from Expert or Hard. Clean all difficulties and export chart, audio and metadata together.','Choose songs → Review → Export · One song or a collection','Prepare my songs')]:
             card=QFrame();card.setObjectName('card');col=QVBoxLayout(card);col.setContentsMargins(22,18,22,20);col.setSpacing(12)
             num=QLabel(number);num.setObjectName('cardNumber');col.addWidget(num)
             label=QLabel(title);label.setObjectName('cardTitle');label.setWordWrap(True);col.addWidget(label)
             label=QLabel(description);label.setObjectName('cardBody');label.setWordWrap(True);col.addWidget(label)
             col.addStretch();label=QLabel(steps);label.setWordWrap(True);label.setObjectName('muted');col.addWidget(label)
             button=QPushButton(action);primary(button);button.clicked.connect(lambda checked=False,g=key:owner.enter_workspace(g));col.addWidget(button);self.actions[key]=button;cards.addWidget(card,1)
+        clean=QPushButton('Clean only — keep existing difficulties');clean.clicked.connect(lambda:owner.enter_workspace('clean'));layout.addWidget(clean);self.actions['clean']=clean
         row=QHBoxLayout();layout.addLayout(row)
         self.resume=QPushButton('Continue current work');self.resume.clicked.connect(owner.resume_workflow);row.addWidget(self.resume);row.addStretch()
-        self.current=QLabel('Drop a song folder to clean it, or a chart file to create Medium.');self.current.setObjectName('muted');self.current.setWordWrap(True);layout.addWidget(self.current)
+        self.current=QLabel('Choose Prepare my songs, then select a chart or a collection folder.');self.current.setObjectName('muted');self.current.setWordWrap(True);layout.addWidget(self.current)
         note=QLabel('Original files stay untouched. Audio experiments and pattern tools are available under Tools in reserve.');note.setObjectName('muted');note.setWordWrap(True);layout.addWidget(note)
         layout.addStretch()
     def update_state(self):

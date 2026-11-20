@@ -125,8 +125,8 @@ class Window(QMainWindow):
         from .cleaner_gui import CleanerPanel
         self.cleaner=CleanerPanel(self);self.tabs.addTab(self.cleaner,'Clean charts')
         from .workspace import AdaptPanel
-        self.adapt=AdaptPanel(self);self.tabs.insertTab(0,self.adapt,'Four-fret Medium')
-        self.tabs.removeTab(self.tabs.indexOf(self.cleaner));self.tabs.insertTab(0,self.cleaner,'Clean songs')
+        self.adapt=AdaptPanel(self);self.tabs.insertTab(0,self.adapt,'Prepare songs')
+        self.tabs.removeTab(self.tabs.indexOf(self.cleaner));self.tabs.insertTab(1,self.cleaner,'Clean only')
         self.welcome=WelcomePanel(self);self.tabs.insertTab(0,self.welcome,'Home');self.tabs.setCurrentWidget(self.welcome)
         self.reserved=(self.converter,self.library,self.audio)
         for panel,label in ((self.converter,'Advanced converter'),(self.library,'Local pattern library'),(self.audio,'Audio drafting lab')):
@@ -427,7 +427,7 @@ class Window(QMainWindow):
         if len(paths)!=1: self.log_line('Drop one chart file or one parent folder containing your songs.'); return
         if Path(paths[0]).is_dir():
             if self.tabs.currentWidget() is self.library:self.library.scan(paths[0])
-            elif self.tabs.currentWidget() is self.adapt:self.start_medium_collection(paths[0])
+            elif self.tabs.currentWidget() in (self.welcome,self.adapt):self.start_medium_collection(paths[0])
             else:self.start_guided('clean',paths[0])
             event.acceptProposedAction(); return
         if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus'):
