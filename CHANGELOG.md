@@ -1,3 +1,10 @@
+# 0.11.4 — Windows open fully on screen
+
+- Main window now sizes itself to the screen's usable area (excluding the taskbar) and opens centred with its title bar visible, instead of a fixed 1180x840 that could push the title bar above the screen on smaller or scaled displays.
+- Dialogs (cleanup review, sync review, export review, editor, first-run notice, About) shrink to fit the screen when needed.
+- Startup progress window also fits small screens and opens centred.
+- Windows remain normal resizable windows; the 1024x700 layout limits and all existing tests are unchanged.
+
 # 0.11.3 — Direct collection import for challenging Medium
 
 - Visible Choose folder action in Four-fret workspace; recursively scans nested song folders.

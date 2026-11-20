@@ -3,6 +3,7 @@ from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QTextBrowser, QPushButton, QHBoxLayout, QMessageBox
 from .welcome import legal_notice_text
 from .appearance import apply_style, primary
+from .window_fit import fit_size
 
 ACCEPTED_KEY = 'onboarding/license_notice_accepted'
 
@@ -16,7 +17,7 @@ class FirstRunDialog(QDialog):
         super().__init__()
         self.settings = settings if settings is not None else QSettings('GH3ChartStudio', 'GH3ChartStudio')
         self.setWindowTitle('Welcome — License & disclaimer')
-        self.resize(780, 680)
+        fit_size(self,780,680)
         apply_style(self)
         layout = QVBoxLayout(self)
         heading = QLabel('Before you begin')

@@ -1,11 +1,28 @@
-# GH3 Chart Studio — 0.11.3 handoff
+# GH3 Chart Studio — 0.11.4 handoff
 
-Prepared November 19, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_11_3.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.3 is authoritative.
+Updated November 20, 2026 for Bob Danaher.
+
+## Source of truth: GitHub
+The project now lives at https://github.com/robertldanaher-boop/gh3-chart-studio
+(private). `main` carries the full history; work on branches and push there instead
+of passing ZIPs/bundles. Tag v0.11.3 = 2e287db (created on GitHub). Older tags
+v0.1.0–v0.11.2 are in repository.bundle attached to the v0.11.3 GitHub release.
+Claude sessions here could push branches but not tags (proxy 403); create tags via
+a GitHub release in the browser. Bob confirmed 0.11.3 works on Windows (Nov 20).
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.11.3 update
+## Current 0.11.4 update
+
+Bob: 0.11.3 works; window opened with title bar above screen top, could not move or
+resize. Cause: fixed 1180x840 main window (and 860x700 Tk startup) with no screen
+check. New gh3studio/window_fit.py fits main window to availableGeometry, centres it,
+keeps title bar on screen; dialogs clamp via fit_size; Tk startup clamps/centres.
+Layout minimum (1024x700) unchanged. Tests: tests/test_window_fit.py (8 pure cases
++ 1 Qt case). Executed here: Python 3.13 Linux, NO PySide6 — pure tests and
+test_minimal passed (11 passed, Qt case skipped). Full suite NOT run here; the
+startup test run on Windows is the first full verification. See docs/M11_4_RELEASE.md.
+
+## Previous 0.11.3 update
 
 Added persistent Choose folder button in AdaptPanel mode row. Window.start_medium_collection handles picker, workspace selection and recursive bulk scan. start_guided orange with directory and directory drops on adapt now route here. CleanerPanel.scan retains orange goal in four_fret mode. Chart file opens explicitly switch to single-song page. Three route regressions cover nested Expert/Hard song folders, populated Medium/Easy lane restrictions, no clean queue misrouting. See M11_3_RELEASE.md and M11_3_TEST_RESULTS.txt. Windows confirmation pending.
 

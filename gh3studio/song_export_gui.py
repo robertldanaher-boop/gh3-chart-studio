@@ -5,10 +5,11 @@ from PySide6.QtWidgets import QDialog,QVBoxLayout,QHBoxLayout,QLabel,QLineEdit,Q
 from .song_export import prepare_medium
 from .song_identity import FIELDS,fill_from_audio,export_folder_name
 from .hopo import prefer_hopos
+from .window_fit import fit_size
 
 class SongExportDialog(QDialog):
     def __init__(self,song,audio_path='',parent=None):
-        super().__init__(parent);self.song=song;self.setWindowTitle('Review & export your song');self.resize(820,700)
+        super().__init__(parent);self.song=song;self.setWindowTitle('Review & export your song');fit_size(self,820,700)
         outer=QVBoxLayout(self);scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll)
         content=QWidget();scroll.setWidget(content);layout=QVBoxLayout(content)
         from .workspace import heading

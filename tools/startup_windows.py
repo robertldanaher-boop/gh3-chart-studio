@@ -51,7 +51,10 @@ class Startup:
         self.root=root;self.events=queue.Queue();self.cancelled=threading.Event();self.process=None
         self.started=self.step_started=time.monotonic();self.step=0;self.test_percent=None;self.last_output=self.started
         self.estimates,self.historical=load_history(root/'startup_timings.json');self.durations=[];self.done=False;self.last_percent=0
-        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — opening the workshop');self.ui.geometry('860x700');self.ui.minsize(690,560);self.ui.configure(bg='#101722')
+        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — opening the workshop');
+        # Fit small/scaled screens: keep the title bar reachable (taskbar ~80px allowance).
+        sw,sh=self.ui.winfo_screenwidth(),self.ui.winfo_screenheight();w,h=min(860,sw-40),min(700,sh-120)
+        self.ui.geometry(f'{w}x{h}+{max(0,(sw-w)//2)}+{max(0,(sh-80-h)//2)}');self.ui.minsize(min(690,w),min(560,h));self.ui.configure(bg='#101722')
         style=ttk.Style(self.ui);style.theme_use('clam')
         style.configure('.',background='#101722',foreground='#e5edf7',font=('Segoe UI',10))
         style.configure('TButton',background='#263b51',foreground='#e5edf7',padding=(12,7),borderwidth=0)
