@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.3 handoff
+# GH3 Chart Studio — 0.16.4 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_3.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_4.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,22 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.3 update — Start menu Uninstall
+## Current 0.16.4 update — intermittent media hang mitigation
+
+Bob's install-time test run (start_windows.log 10:03, Python 3.11.9): everything
+through test_gui.py::test_guided_audio_review... passed, including all new stem
+and gh3_lean tests and test_separate_tracks_export_one_mixed_song_ogg (0.16.2
+fix confirmed on Windows). Then test_external_stem_analyzed_original_mix_retained
+hung: faulthandler 60 s dump shows main thread in audio_gui.show_analysis line
+109 (pages.setCurrentWidget) <- open_path <- restore_mix; one native thread with
+no Python frame. Bob cancelled. Same test hung once in 0.5.6 history; passed in
+Bob's two earlier runs on Nov 20. Mitigation: playback.open_audio skips
+player.setSource when the same local file is already loaded (restore_mix re-opens
+the current mix). Test: tests/test_playback_source.py. NOT proven: intermittent.
+Note pytest 8.3.5 faulthandler_timeout only dumps; a hung test blocks install
+until the user cancels (pytest-timeout is not in the lock).
+
+## Previous 0.16.3 update — Start menu Uninstall
 
 Bob asked for an uninstall option. install.ps1 now also creates "GH3 Chart
 Studio - Uninstall.lnk" (powershell -WindowStyle Hidden -ExecutionPolicy Bypass

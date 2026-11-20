@@ -134,6 +134,14 @@ class PlaybackPanel(QWidget):
         if not path.is_file():
             self.clear_audio();self.label.setText('Audio file not found: '+str(path));self.owner.log_line(self.label.text());return False
         self.pending_play=False;self.audio_name=path.name
+        current=self.player.source()
+        if not current.isEmpty() and current.isLocalFile() and Path(current.toLocalFile()).resolve()==path:
+            # Same recording already loaded: re-setting the source tears down and
+            # rebuilds Qt's FFmpeg backend, which intermittently deadlocked on Windows
+            # (test_external_stem_analyzed_original_mix_retained hang). Keep it.
+            self.player.pause();self.label.setText(path.name);self.label.setToolTip(str(path))
+            self.owner.log_line('Preview audio selected: '+str(path)+' (already loaded)')
+            return True
         self.player.pause();self.player.setSource(QUrl.fromLocalFile(str(path)));self.label.setText(path.name);self.label.setToolTip(str(path))
         self.media_status.setText('Loading recording…');self.owner.log_line('Preview audio selected: '+str(path))
         return True

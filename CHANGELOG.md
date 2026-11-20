@@ -1,3 +1,9 @@
+# 0.16.4 — Avoid reloading an already-open recording
+
+- Bob's install run of 0.16.2/0.16.3 hung for 60 s in test_external_stem_analyzed_original_mix_retained (restore_mix -> open_path -> show_analysis) and was cancelled. The same test passed in his two earlier runs that day and hung once before in 0.5.6: an intermittent Qt multimedia (FFmpeg backend) freeze.
+- Playback no longer re-sets the media source when the requested recording is already loaded; re-setting rebuilt the FFmpeg backend for no reason, the most likely trigger of the freeze. New test: tests/test_playback_source.py.
+- Not proven fixed: the hang is intermittent. If it recurs, the trace in start_windows.log is needed.
+
 # 0.16.3 — Uninstall in the Start menu
 
 - New Start menu entry "GH3 Chart Studio - Uninstall" (script installer and the Inno Setup installer). It removes the shortcuts, the Settings > Apps entry and the program folder, including its private Python environment. Songs and exported song folders are never touched.
