@@ -76,3 +76,8 @@ callbacks now route through explicit queued QObject slots on the main GUI thread
 and the GUI test QApplication lifetime is shared across tests. The final suite
 passed 53 tests. An additional 10 fresh pytest processes passed all 30 GUI tests,
 including 120 assertions that result callbacks execute on the main thread.
+
+
+## 2026-11-20 — v0.18.4 review fixes
+
+Implemented shared installer recovery transaction, guarded update completion and physical audio-stream deduplication. Added regression tests; 379 passed in 41.57s on Linux with real dependencies and PowerShell 7.4.6. Native Windows installer/Dolphin acceptance pending. Details and reproducible Windows steps: [M18_4_RELEASE.md](M18_4_RELEASE.md).

@@ -279,3 +279,41 @@ def test_startup_check_runs_every_launch_and_prompts_only_for_newer(tmp_path):
     finally:
         del os.environ['GH3_NO_UPDATE_CHECK']
     parent.deleteLater()
+
+
+def test_update_completion_does_not_interrupt_new_job():
+    from PySide6.QtWidgets import QApplication, QWidget
+    from gh3studio.updates_gui import UpdateChecker
+    app = QApplication.instance() or QApplication([])
+    class Owner(QWidget):
+        def busy(self):
+            return True
+    owner = Owner()
+    events = []
+    checker = UpdateChecker(owner, launch=lambda root: events.append('launch'),
+                            quit_app=lambda: events.append('quit'), notify=events.append)
+    checker.installing = True
+    checker._downloaded('downloaded-version')
+    assert len(events) == 1 and 'chart job is running' in events[0]
+    assert not checker.installing
+    owner.busy = lambda: False
+    owner.deleteLater()
+
+
+def test_cancel_after_download_does_not_launch_installer():
+    from PySide6.QtWidgets import QApplication, QWidget
+    from gh3studio.updates_gui import UpdateChecker
+    app = QApplication.instance() or QApplication([])
+    owner = QWidget()
+    events = []
+    checker = UpdateChecker(owner, launch=lambda root: events.append('launch'),
+                            quit_app=lambda: events.append('quit'), notify=events.append)
+    class Cancelled:
+        def isInterruptionRequested(self):
+            return True
+    checker.download_thread = Cancelled()
+    checker.installing = True
+    checker._downloaded('downloaded-version')
+    assert not events and not checker.installing
+    checker.download_thread = None
+    owner.deleteLater()

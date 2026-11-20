@@ -185,3 +185,40 @@ def test_cache_prune_keeps_newest_and_current(tmp_path):
     left = sorted(p.name for p in tmp_path.glob('*.wav'))
     assert left == ['m0.wav', 'm6.wav', 'm7.wav', 'm8.wav', 'x.partial.wav']
     assert not (tmp_path / 'm3.json').exists() and (tmp_path / 'm8.json').exists()
+
+
+def test_shared_stream_recording_is_not_doubled(tmp_path):
+    chart = folder_with(tmp_path, 'mix.wav')
+    plan = find_song_audio(chart, {'MusicStream': 'mix.wav', 'GuitarStream': './mix.wav'})
+    assert plan['kind'] == 'single'
+    assert plan['roles'] == ['song'] and len(plan['paths']) == 1
+    assert any('included once' in note for note in plan['notes'])
+
+
+def test_shared_stream_hardlink_retains_distinct_stems(tmp_path):
+    import os
+    chart = folder_with(tmp_path, 'song.wav', 'drums.wav')
+    os.link(tmp_path / 'song.wav', tmp_path / 'guitar.wav')
+    plan = find_song_audio(chart)
+    assert plan['roles'] == ['song', 'drums']
+    assert len(plan['paths']) == 2
+    assert any(item.get('role') == 'guitar' for item in plan['left_out'])
+
+
+def test_separate_identical_recordings_are_still_separate_stems(tmp_path):
+    chart = folder_with(tmp_path, 'song.wav', 'guitar.wav')
+    plan = find_song_audio(chart)
+    assert plan['roles'] == ['song', 'guitar']
+
+
+def test_shared_stream_export_mix_keeps_original_levels(tmp_path):
+    import soundfile as sf
+    chart = tmp_path / 'notes.chart'
+    chart.write_text('[Song]\n{\n}\n')
+    sf.write(tmp_path / 'backing.wav', np.full((128, 1), 0.2), 44100, subtype='FLOAT')
+    sf.write(tmp_path / 'drums.wav', np.full((128, 1), 0.1), 44100, subtype='FLOAT')
+    plan = find_song_audio(chart, {'MusicStream': 'backing.wav', 'GuitarStream': 'backing.wav'})
+    report = mix_stems(plan['paths'], tmp_path / 'mixed.wav', roles=plan['roles'])
+    samples, rate = sf.read(tmp_path / 'mixed.wav')
+    assert rate == 44100 and len(report['stems']) == 2
+    np.testing.assert_allclose(samples, 0.3, atol=2e-7)

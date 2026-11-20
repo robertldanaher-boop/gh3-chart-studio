@@ -13,7 +13,7 @@
       show up twice)
   No administrator rights are needed. Run it with "Install GH3 Chart Studio.cmd".
 #>
-param([switch]$NoDesktopIcon, [switch]$NoLaunch)
+param([switch]$NoDesktopIcon, [switch]$NoLaunch, [switch]$SkipConfirmation)
 
 $ErrorActionPreference = 'Stop'
 $AppName   = 'GH3 Chart Studio'
@@ -24,6 +24,9 @@ $Target    = Join-Path $env:LOCALAPPDATA "Programs\$AppName"
 $UninstallKey = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\$AppId"
 
 Add-Type -AssemblyName System.Windows.Forms
+. (Join-Path $PSScriptRoot 'transaction.ps1')
+$installLock = $null
+$stage = $null
 function Show-Message([string]$text, [string]$icon = 'Information') {
     [void][System.Windows.Forms.MessageBox]::Show($text, "$AppName setup", 'OK', $icon)
 }
@@ -41,6 +44,7 @@ try {
     if ([Environment]::Is64BitOperatingSystem -eq $false) { throw 'GH3 Chart Studio needs 64-bit Windows.' }
     $version = Get-AppVersion $Source
 
+    if (-not $SkipConfirmation) {
     $answer = [System.Windows.Forms.MessageBox]::Show(
         "Install $AppName $version for your Windows account?`n`n" +
         "Location: $Target`n`n" +
@@ -48,6 +52,7 @@ try {
         "This needs an internet connection and can take several minutes the first time.",
         "$AppName setup", 'OKCancel', 'Question')
     if ($answer -ne 'OK') { exit 1 }
+    }
 
     # When started by the app's "Download and install", the app is still closing: wait up to 30 s.
     $deadline = (Get-Date).AddSeconds(30)
@@ -58,29 +63,32 @@ try {
     } while ($running -and (Get-Date) -lt $deadline)
     if ($running) { throw "$AppName is running. Close it, then run the installer again." }
 
-    # Same-folder reinstall (e.g. running this from the installed copy): skip copying.
-    $sameFolder = ((Resolve-Path $Source).Path.TrimEnd('\') -ieq $Target.TrimEnd('\'))
-    if (-not $sameFolder) {
-        New-Item -ItemType Directory -Force -Path $Target | Out-Null
-        # Remove the previous version's code so deleted modules/tests never linger. Keep .venv.
-        foreach ($dir in 'gh3studio','tests','tools','docs','examples','licenses','presets','installer') {
-            $path = Join-Path $Target $dir
-            if (Test-Path $path) { Remove-Item -Recurse -Force $path }
+    # Serialize installers. An abandoned process releases the exclusive handle.
+    $parent = Split-Path -Parent $Target
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+    $lockPath = Join-Path $parent 'GH3 Chart Studio.install.lock'
+    $installLock = [System.IO.File]::Open($lockPath, 'OpenOrCreate', 'ReadWrite', 'None')
+
+    # Stage BEFORE moving any installed files; this also supports repair from
+    # inside Target. A fresh venv is built at Target, never moved after setup.
+    $stage = "$Target.staging-$([Guid]::NewGuid().ToString('N'))"
+    New-Item -ItemType Directory -Path $stage | Out-Null
+    $null = & robocopy $Source $stage /E /NFL /NDL /NJH /NJS /NP /R:1 /W:1 `
+        /XD .git .github .venv __pycache__ .pytest_cache output dist build `
+        /XF *.log *.pyc startup_timings.json repository.bundle *.zip
+    if ($LASTEXITCODE -ge 8) { throw "Copying the program files failed (robocopy exit $LASTEXITCODE). The installed version was not changed." }
+    $backup = Install-StagedProgram -Stage $stage -Target $Target -Validate {
+        param($installedRoot)
+        $setup = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') `
+            -ArgumentList '/c', "`"`"$installedRoot\START_WINDOWS.cmd`" --install`"" `
+            -WorkingDirectory $installedRoot -WindowStyle Hidden -Wait -PassThru
+        if ($setup.ExitCode -ne 0 -or -not (Test-Path (Join-Path $installedRoot '.venv\installed.json'))) {
+            throw "Setup or automated tests failed (exit $($setup.ExitCode))."
         }
-        Remove-Item -Force (Join-Path $Target '.venv\installed.json') -ErrorAction SilentlyContinue
-        $null = & robocopy $Source $Target /E /NFL /NDL /NJH /NJS /NP `
-            /XD .git .github .venv __pycache__ .pytest_cache output dist build `
-            /XF *.log *.pyc startup_timings.json repository.bundle *.zip
-        if ($LASTEXITCODE -ge 8) { throw "Copying the program files failed (robocopy exit $LASTEXITCODE)." }
     }
+    $stage = $null
 
-    # Setup + tests once. START_WINDOWS.cmd shows its own progress window.
-    $setup = Start-Process -FilePath (Join-Path $env:SystemRoot 'System32\cmd.exe') `
-        -ArgumentList '/c', "`"`"$Target\START_WINDOWS.cmd`" --install`"" `
-        -WorkingDirectory $Target -WindowStyle Hidden -Wait -PassThru
-    $setupOk = ($setup.ExitCode -eq 0) -and (Test-Path (Join-Path $Target '.venv\installed.json'))
-
-    # Shortcuts (created even if setup failed, so Repair is reachable).
+    # Publish shortcuts and registration only after successful setup and tests.
     $shell   = New-Object -ComObject WScript.Shell
     $icon    = Join-Path $Target 'gh3studio\assets\app.ico'
     $pythonw = Join-Path $Target '.venv\Scripts\pythonw.exe'
@@ -125,17 +133,16 @@ try {
     Set-ItemProperty -Path $UninstallKey -Name NoRepair -Value 1 -Type DWord
     Set-ItemProperty -Path $UninstallKey -Name EstimatedSize -Value $sizeKb -Type DWord
 
-    if ($setupOk) {
-        Show-Message "$AppName $version is installed.`n`nOpen it from the Start menu or the desktop icon."
-        if (-not $NoLaunch) { Start-Process -FilePath $pythonw -ArgumentList "`"$runApp`"" -WorkingDirectory $Target }
-        exit 0
-    }
-    Show-Message ("The program files and shortcuts were installed, but setup or the automated tests did not finish.`n`n" +
-        "Logs are in:`n$Target`n(start_windows.log and startup_bootstrap.log)`n`n" +
-        "Fix the cause (for example the internet connection), then run '$AppName - Repair' from the Start menu.") 'Warning'
-    exit 2
+    $backupNote = if ($backup) { "`n`nPrevious installation retained at:`n$backup" } else { '' }
+    Show-Message "$AppName $version is installed.`n`nOpen it from the Start menu or desktop icon.$backupNote"
+    if (-not $NoLaunch) { Start-Process -FilePath $pythonw -ArgumentList "`"$runApp`"" -WorkingDirectory $Target }
+    exit 0
 }
 catch {
     Show-Message ("Installation stopped:`n`n" + $_.Exception.Message) 'Error'
     exit 1
+}
+finally {
+    if ($stage -and (Test-Path -LiteralPath $stage)) { Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue }
+    if ($installLock) { $installLock.Dispose() }
 }

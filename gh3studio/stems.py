@@ -83,6 +83,21 @@ def find_song_audio(chart_path, metadata=None):
     for role, reason in LEFT_OUT.items():
         if role in chosen:
             left_out.append({'file': chosen.pop(role).name, 'reason': reason})
+    # Two stream roles may name the same recording (including hard links).
+    # Keep the first role in mix order; do not sum the same samples twice.
+    kept = []
+    for role in STEM_ORDER:
+        if role not in chosen:
+            continue
+        path = chosen[role]
+        duplicate = next((r for r in kept if path.samefile(chosen[r])), None)
+        if duplicate is not None:
+            reason = f'{role}: same audio file as {duplicate}; included once as {duplicate}'
+            notes.append(reason)
+            left_out.append({'file': path.name, 'role': role, 'reason': reason})
+            del chosen[role]
+        else:
+            kept.append(role)
     instruments = [r for r in STEM_ORDER if r in chosen and r in INSTRUMENT_STEMS]
     if len(instruments) == 1 and 'song' not in chosen:
         # A lone file named e.g. guitar.ogg is usually the whole song, mislabelled.

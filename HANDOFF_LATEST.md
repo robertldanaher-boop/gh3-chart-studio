@@ -1,10 +1,24 @@
-# GH3 Chart Studio — 0.18.3 handoff
+# GH3 Chart Studio — 0.18.4 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_3.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_4.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
+
+## Current 0.18.4 checkpoint — ChatGPT review fixes
+
+User asked to continue and provide a Claude handoff in case usage runs out. ChatGPT cannot inspect quota. This document is the handoff; no actual Claude session/handoff has occurred.
+
+Baseline: 535ac1eb56b5126d542c2b30e8b59f7b5bca22de, v0.18.3, verified against GitHub main before editing. Do not use older 0.13.0 checkouts. New release commit is in the ZIP's RELEASE_COMMIT.txt.
+
+Three review defects fixed: updater completion could quit during a chart job; stream-role aliases could mix one physical recording twice; script/compiled installers overwrote working code before new setup passed. Both installers now share `installer/transaction.ps1` via `install.ps1`, preserve the entire old app/venv, and restore on setup/test failure. Failed files/logs and successful-upgrade backups are retained as siblings. Read docs/M18_4_RELEASE.md for files changed, test evidence, limits and exact Windows acceptance steps.
+
+Final local suite: 379 passed in 41.57s, Linux/Python 3.11, real dependencies, PowerShell 7.4.6 transaction tests. Windows CI must be checked on the published commit. No native Windows installer UI or Dolphin test is claimed. GitHub Actions compiles Inno Setup after native Windows tests. Review that result before treating the EXE as built.
+
+Important remaining acceptance: Windows upgrade and injected failure rollback, compiled setup execution, full mix and sync in Dolphin. Power loss/forced process kill is not automatically recovered; preserve `.previous-*`. Repair remains in-place. No conversion algorithms changed; Medium must remain four frets, Easy three, and source Expert/Hard preserved. Users should upgrade from a fresh extracted folder outside the installed directory.
+
+If ChatGPT is interrupted, fetch main first and inspect this release's changes/tests. Do not disable startup tests or overwrite newer Claude work. Continue with Windows acceptance, not additional features. No quota prediction is possible.
 
 ## READ FIRST — version and source-of-truth rules
 
@@ -13,7 +27,7 @@ Two assistants worked from the same 0.11.3 at the same time: Claude made 0.11.4
 version numbers collided. 0.13.1 joins both lines. To prevent a repeat:
 
 1. GitHub `main` is the only starting point:
-   https://github.com/robertldanaher-boop/gh3-chart-studio (private).
+   https://github.com/robertldanaher-boop/gh3-chart-studio (public).
    If you can reach it, start from the newest `main`. If you cannot, start only
    from the newest ZIP/bundle Bob gives you, and check its commit against `main`
    with Bob before changing anything. Never start from an older ZIP.

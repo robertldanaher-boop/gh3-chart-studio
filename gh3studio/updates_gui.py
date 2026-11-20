@@ -165,6 +165,7 @@ class UpdateChecker(QObject):
         from PySide6.QtWidgets import QProgressDialog
         self.progress_dialog = QProgressDialog(f'Downloading version {result.latest}…', 'Cancel', 0, 0, self.parent_widget)
         self.progress_dialog.setWindowTitle('Updating GH3 Chart Studio')
+        self.progress_dialog.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog.setMinimumDuration(0)
         self.download_thread = _DownloadThread(result, self.download, self)
         self.progress_dialog.canceled.connect(self.download_thread.requestInterruption)
@@ -194,7 +195,19 @@ class UpdateChecker(QObject):
 
     @Slot(str)
     def _downloaded(self, root):
+        # A job or cancellation can arrive after the initial check, while the
+        # network worker is finishing. Never terminate that work to update.
+        cancelled = (self.download_thread is not None and
+                     self.download_thread.isInterruptionRequested())
         self._close_progress()
+        if cancelled:
+            self.installing = False
+            return
+        if self._owner_busy():
+            self.installing = False
+            self.notify('The update is ready, but a chart job is running. Finish or cancel it, '
+                        'then choose Check for updates again. Your work has not been interrupted.')
+            return
         try:
             self.launch(root)
         except Exception as exc:
@@ -210,7 +223,8 @@ class UpdateChecker(QObject):
     def _quit_app():
         from PySide6.QtWidgets import QApplication
         for widget in QApplication.topLevelWidgets():
-            widget.close()
+            if not widget.close():
+                return
         QApplication.quit()
 
     def shutdown(self):

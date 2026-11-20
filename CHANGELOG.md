@@ -1,3 +1,11 @@
+# 0.18.4 — Safer updates and correct shared audio streams
+
+- Script installer stages the complete payload before touching the installed app, retains the complete previous installation (including its environment), and restores it if setup or tests fail. Failed files/logs are retained separately. New dependencies are installed at the final path. Concurrent installers are locked out. Backups intentionally require manual removal after a successful upgrade.
+- Compiled installer delegates to that same transaction instead of deleting live files itself. Shortcuts/registration are published after setup passes.
+- Update download is modal; completion rechecks chart jobs and cancellation before launching the installer. App close rejection is respected.
+- Audio discovery includes each physical recording once across stream roles, including hard links. Distinct recordings remain distinct even when their bytes match. Exclusions are reported.
+- Added real PowerShell transaction and parser tests plus GUI update-race and audio-level regression tests. See docs/M18_4_RELEASE.md for evidence and Windows checks.
+
 # 0.18.3 — Next batch after an export shows its songs
 
 Bob: after finishing one folder, dropping the next folder did not produce songs.

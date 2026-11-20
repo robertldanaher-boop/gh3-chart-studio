@@ -1,7 +1,9 @@
 ; GH3 Chart Studio — Windows 10/11 installer (Inno Setup 6.3 or newer).
 ;
 ; Per-user install (no administrator prompt) to %LOCALAPPDATA%\Programs\GH3 Chart Studio.
-; During installation START_WINDOWS.cmd --install finds or installs Python 3.11 x64,
+; The compiled installer stages its payload in a temporary folder and calls the
+; same transactional PowerShell installer used by app updates. That installer
+; runs START_WINDOWS.cmd --install to find or install Python 3.11 x64,
 ; creates the private .venv, installs the hash-pinned dependencies and runs the full
 ; automated test suite ONCE. Start menu / desktop shortcuts then launch the studio
 ; directly with no setup or tests. "GH3 Chart Studio - Repair" repeats the setup.
@@ -29,6 +31,11 @@ AppUpdatesURL={#ReleasesURL}
 VersionInfoVersion={#AppVersion}
 DefaultDirName={localappdata}\Programs\{#AppName}
 DisableProgramGroupPage=yes
+DisableDirPage=yes
+CreateAppDir=no
+Uninstallable=no
+UsePreviousAppDir=no
+; install.ps1 owns shortcuts and the per-user uninstall registry entry.
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
@@ -54,49 +61,17 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 [Tasks]
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Shortcuts:"
 
-[InstallDelete]
-; Remove the previous version's code first so deleted modules/tests never linger.
-; The .venv is kept: unchanged dependencies are reused instead of downloaded again.
-Type: filesandordirs; Name: "{app}\gh3studio"
-Type: filesandordirs; Name: "{app}\tests"
-Type: filesandordirs; Name: "{app}\tools"
-Type: filesandordirs; Name: "{app}\docs"
-Type: filesandordirs; Name: "{app}\examples"
-Type: filesandordirs; Name: "{app}\licenses"
-Type: filesandordirs; Name: "{app}\presets"
-Type: files; Name: "{app}\.venv\installed.json"
-
 [Files]
-Source: "..\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; \
-  Excludes: ".git,.github,.venv,installer,dist,build,__pycache__,*.pyc,.pytest_cache,*.log,startup_timings.json,repository.bundle,*.zip,.startup-ready-*"
-
-[Icons]
-Name: "{autoprograms}\{#AppName}"; Filename: "{app}\.venv\Scripts\pythonw.exe"; \
-  Parameters: """{app}\run_app.py"""; WorkingDir: "{app}"; \
-  IconFilename: "{app}\gh3studio\assets\app.ico"; AppUserModelID: "{#AppUserModelID}"; \
-  Comment: "Clean charts and build four-fret Medium for Guitar Hero III Wii"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\.venv\Scripts\pythonw.exe"; \
-  Parameters: """{app}\run_app.py"""; WorkingDir: "{app}"; \
-  IconFilename: "{app}\gh3studio\assets\app.ico"; AppUserModelID: "{#AppUserModelID}"; Tasks: desktopicon
-Name: "{autoprograms}\{#AppName} - Repair"; Filename: "{app}\START_WINDOWS.cmd"; \
-  Parameters: "--install"; WorkingDir: "{app}"; IconFilename: "{app}\gh3studio\assets\app.ico"; \
-  Comment: "Re-run setup and the automated tests"
-Name: "{autoprograms}\{#AppName} - Uninstall"; Filename: "{uninstallexe}"; \
-  IconFilename: "{app}\gh3studio\assets\app.ico"; Comment: "Remove {#AppName} from this PC"
+; Never overwrite the live app from Inno Setup. The shared script stages,
+; validates at the final path, and restores the previous app on setup failure.
+Source: "..\*"; DestDir: "{tmp}\gh3-payload"; Flags: ignoreversion recursesubdirs createallsubdirs; \
+  Excludes: ".git,.github,.venv,dist,build,__pycache__,*.pyc,.pytest_cache,*.log,startup_timings.json,repository.bundle,*.zip,.startup-ready-*,installer\output"
 
 [Run]
-Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\run_app.py"""; WorkingDir: "{app}"; \
+Filename: "{localappdata}\Programs\GH3 Chart Studio\.venv\Scripts\pythonw.exe"; \
+  Parameters: """{localappdata}\Programs\GH3 Chart Studio\run_app.py"""; \
+  WorkingDir: "{localappdata}\Programs\GH3 Chart Studio"; \
   Description: "Open {#AppName} now"; Flags: postinstall nowait skipifsilent; Check: SetupSucceeded
-
-[UninstallDelete]
-Type: filesandordirs; Name: "{app}\.venv"
-Type: filesandordirs; Name: "{app}\gh3studio"
-Type: filesandordirs; Name: "{app}\tests"
-Type: filesandordirs; Name: "{app}\tools"
-Type: filesandordirs; Name: "{app}\.pytest_cache"
-Type: files; Name: "{app}\*.log"
-Type: files; Name: "{app}\startup_timings.json"
-Type: dirifempty; Name: "{app}"
 
 [Code]
 var
@@ -115,15 +90,15 @@ begin
   if CurStep = ssPostInstall then
   begin
     SetupOk := False;
-    WizardForm.StatusLabel.Caption := 'Setting up Python, dependencies and running the automated tests (several minutes on first install)...';
-    Command := '/c ""' + ExpandConstant('{app}\START_WINDOWS.cmd') + '" --install"';
-    if Exec(ExpandConstant('{cmd}'), Command, ExpandConstant('{app}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    WizardForm.StatusLabel.Caption := 'Installing and testing the update; the previous version is retained...';
+    Command := '-NoProfile -ExecutionPolicy Bypass -File "' +
+      ExpandConstant('{tmp}\gh3-payload\installer\install.ps1') + '" -NoLaunch -SkipConfirmation';
+    if not WizardIsTaskSelected('desktopicon') then
+      Command := Command + ' -NoDesktopIcon';
+    if Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), Command,
+      ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, ResultCode) then
       SetupOk := (ResultCode = 0);
     if not SetupOk then
-      MsgBox('The program files were installed, but setup or the automated tests did not finish.' + #13#10#13#10 +
-        'Logs are in:' + #13#10 + ExpandConstant('{app}') + #13#10 +
-        '(start_windows.log and startup_bootstrap.log)' + #13#10#13#10 +
-        'Fix the cause (for example the internet connection) and run "GH3 Chart Studio - Repair" from the Start menu.',
-        mbError, MB_OK);
+      RaiseException('Installation did not complete. See the installer error for recovery status and diagnostic file location.');
   end;
 end;
