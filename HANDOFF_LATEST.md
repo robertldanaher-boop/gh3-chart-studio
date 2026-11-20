@@ -1,17 +1,113 @@
-# GH3 Chart Studio — 0.13.0 handoff
+# GH3 Chart Studio — 0.13.1 handoff
 
-Prepared November 20, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_13_0.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.13.0 is authoritative.
-The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
+Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_13_1.zip, or
+point it at the GitHub repo below. The ZIP's repository.bundle holds the full
+history: `git clone repository.bundle studio`, then `git checkout main`.
+Release commit is RELEASE_COMMIT.txt in the ZIP.
 
-## Current 0.13.0 update
+## READ FIRST — version and source-of-truth rules
+
+Two assistants worked from the same 0.11.3 at the same time: Claude made 0.11.4
+(window fit) while ChatGPT made 0.12.0 and 0.13.0, so 0.13.0 lacked the fix and
+version numbers collided. 0.13.1 joins both lines. To prevent a repeat:
+
+1. GitHub `main` is the only starting point:
+   https://github.com/robertldanaher-boop/gh3-chart-studio (private).
+   If you can reach it, start from the newest `main`. If you cannot, start only
+   from the newest ZIP/bundle Bob gives you, and check its commit against `main`
+   with Bob before changing anything. Never start from an older ZIP.
+2. Before writing code, run `git log --oneline -5` and read the top of
+   CHANGELOG.md. If either shows a version you do not recognize, stop and
+   reconcile it first.
+3. The version is the number in gh3studio/__init__.py (also pyproject.toml and
+   the README title). Each release bumps it once, from the highest version on
+   `main`. The GitHub release name and tag must equal that number exactly.
+4. Every release ends with its commit on GitHub `main` before Bob switches
+   assistants. If you cannot push, return a ZIP + bundle and tell Bob to upload
+   it; the next assistant must import it into `main` (fast-forward or merge,
+   never overwrite) before new work.
+5. A GitHub release created in the browser tags whatever `main` holds at that
+   moment. Attaching a ZIP to a release does NOT put its code on `main`.
+
+GitHub state when 0.13.1 was pushed:
+- `main` = 0.13.1 (merge of the 0.13 line and the 0.11.4 line).
+- Tags on GitHub: v0.11.3 (2e287db), v0.11.4 and v0.11.5 (both e093849, the
+  0.11.4 window-fix line; v0.11.5 is a mislabel — its release has the 0.13.0
+  ZIP attached but the tag is not 0.13.0 code). Bob may delete the v0.11.5
+  release and tag now that 0.13.1 is on main. Other tags, including v0.12.0,
+  v0.13.0 and v0.13.1, are only in the bundle: Claude's session cannot push tags
+  (proxy HTTP 403). If you can push tags: `git push origin --tags`. Otherwise
+  Bob creates v0.13.1 in the browser: Releases → Draft a new release → tag
+  v0.13.1 on main.
+- Old branches milestone-2-pattern-learning / milestone-3-audio-analysis are
+  ancestors of main; ignore them.
+- Bob uploads through the browser: give browser steps; the uploader skips
+  dot-files and takes 100 files per batch; never upload .venv, __pycache__,
+  logs or music.
+
+## Current 0.13.1 update — 0.13.0 plus the window fit fix
+
+Code is 0.13.0 (09324b2) plus one commit carrying the 0.11.4 window fix, then a
+merge commit joining the 0.11.4 history (no content from it beyond the fix).
+No workflow, conversion, cleanup, chart or audio behaviour changed.
+
+Window fix (gh3studio/window_fit.py, new):
+- fit_geometry(): pure arithmetic — shrink preferred client size to the
+  screen's available area, never below the layout minimum, centre the frame,
+  always keep the frame's top-left (title bar) on screen. Frame allowance 16x48.
+- place_on_screen(): main() calls it before show and again after show
+  (QTimer.singleShot(0)) when real frame margins are known.
+- fit_size(): dialogs clamp to the screen; Qt still centres them.
+- Applied to: main window (gui.py, PREFERRED_MAIN_SIZE 1180x840), cleanup,
+  sync, song export (including 0.12's conversion_report signature), editor,
+  first-run and About dialogs. tools/startup_windows.py Tk window clamps to
+  screen (−40 w, −120 h) and centres.
+- tests/test_window_fit.py: 8 pure cases + 1 Qt case.
+Known limit: layouts still need about 1024x700; on a smaller usable area the
+title bar stays visible but the bottom can run off-screen (maximize as a
+workaround; a scroll-area wrapper would be the real fix if Bob needs it).
+
+Merge conflicts resolved: version files (took 0.13 then bumped to 0.13.1),
+CHANGELOG (0.13.1 entry added above 0.13.0), HANDOFF (this file),
+song_export_gui.py (kept 0.12's new __init__ signature, swapped its fixed
+resize for fit_size).
+
+Evidence (exact): Claude's environment = Python 3.13 Linux, NO PySide6,
+SoundFile or Mido, installs blocked. Executed: tests/test_window_fit.py +
+tests/test_minimal.py → 11 passed, 1 skipped (Qt case, missing PySide6). All
+modules byte-compile. Full suite: 19 collection errors, all missing
+dependencies — NOT a result. ChatGPT reported 296 passed for 0.13.0; the full
+suite has NOT been run on 0.13.1. Bob's Windows START_WINDOWS.cmd run is the
+first full verification.
+
+## Open items (in order)
+
+1. Bob runs 0.13.1 START_WINDOWS.cmd (extract to a new folder). Confirm the
+   startup and studio windows open fully on screen, title bar drag and corner
+   resize work, and the 0.13.0 Prepare my songs / Clean only flows still work.
+   If a startup test fails, get start_windows.log; fix causes, never skip tests.
+2. If sizing still looks wrong, ask for resolution and Windows display scale.
+3. Get v0.13.1 onto GitHub as a tag/release; optionally delete v0.11.5.
+4. Then the existing roadmap: Dolphin acceptance of combined conversion on
+   Expert-only/Hard-only songs selecting all four slots; two consecutive
+   collection runs; one song TheGHOST/Wii end to end.
+
+## Previous 0.13.0 update (ChatGPT)
 
 Streamlined Home to primary Prepare my songs and secondary Clean only. Tabs Home/Prepare songs/Clean only. AdaptPanel shared Choose chart / Choose folder toolbar and One song/Collection selector; duplicate embedded folder picker hidden. Single action Prepare song, collection Prepare & export. Combined guidance and approval labels; Home folder drops route to combined scan. Internal original goal keys retained. 296 tests passed in 28.51s. See docs/M13_RELEASE.md and M13_TEST_RESULTS.txt. Native Windows confirmation pending.
 
-## Previous 0.12.0 update
+## Previous 0.12.0 update (ChatGPT)
 
 User authorized combining cleanup and conversion to eliminate separate passes. complete_conversion now cleans every output difficulty, strips original unsupported markers, repairs sustains, resolves agreeing anchors and blocks conflicting anchors. Original Song remains unchanged. Reports all_difficulty_cleanup, updated operation/status and source compatibility errors separately. Existing Hard/Expert no longer promised unchanged in output; valid notes remain intact and repairs logged. Bulk exports enforce clean_all. Combined single-song dialog hides redundant manual repair toggles, displays automatic repair list and normalizes timing using song.ini delay once when audio available; export passes corresponding audio padding and guards all tracks. Optional newly requested HOPO assistance uses existing editor validator after cleanup. Legacy reserved workflows retain their previous paths. 294 tests passed in 27.12s. See M12_RELEASE.md and M12_TEST_RESULTS.txt. Native Windows/Dolphin confirmation pending.
+
+## Parallel 0.11.4 update (Claude, merged into 0.13.1)
+
+Made from 0.11.3 at the same time as 0.12/0.13, so 0.13.0 did not contain it.
+Bob: 0.11.3 works; window opened with title bar above the screen, could not move
+or resize. Cause: fixed 1180x840 main window and 860x700 Tk startup window with
+no screen check. See the 0.13.1 section for the change. Commits 68896ce (fix) and
+e093849 (handoff) remain in history via a merge; docs/M11_4_RELEASE.md kept.
 
 ## Previous 0.11.3 update
 
