@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.6 handoff
+# GH3 Chart Studio — 0.16.7 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_6.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_7.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,23 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.6 update — install-time hang
+## Current 0.16.7 update — install-time freeze root cause
+
+Bob's 0.16.6 install (log 11:27): 293 passed, then tests/test_stems_gui.py hung
+again; worker now in soundfile._open via song_identity.fill_from_audio, main in
+test_gui.wait() QTest.qWait, one Python-state thread with no frame. (The 150 s
+conftest safety net was present but the log ends at the 60 s faulthandler dump.)
+Diagnosis: test_gui.py's autouse dispose_closed_windows_on_gui_thread (since
+v0.3.0) flushes DeferredDelete of closed Windows/QMediaPlayers between tests; it
+only activates in modules that import it (test_focused_workspace, test_sync_gui
+do). New modules test_stems_gui.py and test_playback_source.py did not import it,
+so the previous tests' players were torn down inside the next test's qWait while
+a worker ran -> deadlock; the worker's stack location is incidental. Fix:
+conftest.py autouse _dispose_closed_qt_windows for all modules (no-op when
+PySide6 not imported). RULE FOR FUTURE GUI TESTS: rely on conftest; never leave
+closed windows undeleted while starting a worker.
+
+## Previous 0.16.6 update — install-time hang
 
 Bob's 0.16.5 install (log 10:22): 293 passed incl. the external-stem test that
 hung in 0.16.2-0.16.3 (same-source fix confirmed). Hang moved to

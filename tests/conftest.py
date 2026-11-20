@@ -36,3 +36,37 @@ def _fail_fast_if_hung(request):
     timer.start()
     yield
     timer.cancel()
+
+
+@pytest.fixture(autouse=True)
+def _dispose_closed_qt_windows():
+    """Applies to EVERY test module (previously only modules that imported
+    test_gui.dispose_closed_windows_on_gui_thread). Closed windows own media
+    players; if their deferred deletion runs inside the NEXT test's wait loop
+    while a worker thread is busy, Qt's FFmpeg backend teardown can deadlock with
+    Python (seen in 0.16.5/0.16.6 install runs in tests/test_stems_gui.py, a new
+    module that did not import the fixture). Flush deletion here, between tests.
+    """
+    yield
+    if 'PySide6.QtWidgets' not in sys.modules:
+        return
+    import gc
+    import time
+    from PySide6.QtCore import QCoreApplication, QEvent
+    from PySide6.QtWidgets import QApplication
+    app = QApplication.instance()
+    if app is None:
+        return
+    for widget in QApplication.topLevelWidgets():
+        busy = getattr(widget, 'busy', None)
+        if callable(busy):
+            deadline = time.monotonic() + 30
+            while busy() and time.monotonic() < deadline:
+                app.processEvents()
+                time.sleep(0.01)
+        widget.close()
+        widget.deleteLater()
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)
+    app.processEvents()
+    gc.collect()
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)

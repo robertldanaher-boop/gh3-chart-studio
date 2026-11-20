@@ -1,3 +1,10 @@
+# 0.16.7 — Root cause of the install-time test freeze
+
+- Bob's 0.16.6 install froze again in tests/test_stems_gui.py, this time with the worker inside soundfile's open (0.16.5: inside realpath). The worker stops wherever it is when the deadlock forms, so the location is not the cause.
+- Cause: since v0.3.0, test_gui.py has an autouse fixture that disposes closed windows (and their Qt media players) between tests, because media-player teardown during another test's busy worker can deadlock. It only applies to modules that import it; the new test_stems_gui.py and test_playback_source.py did not.
+- tests/conftest.py now disposes closed Qt windows after EVERY test, in every module, so new test files cannot miss it. The 150 s hang safety net stays.
+- No application code changed in this release.
+
 # 0.16.6 — Install-time test hang: fix and safety net
 
 - Bob's install of 0.16.5: 293 tests passed, including test_external_stem_analyzed_original_mix_retained (the 0.16.4 fix held). Then tests/test_stems_gui.py hung 60 s with the worker thread inside Path.resolve() (Windows realpath) at the start of stems.cached_mix.
