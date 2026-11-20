@@ -9,6 +9,7 @@ from .chart_editor import EditSession, check_editor_song
 from .audio_chart import TempoClock
 from .editing import timeline
 from .model import ChartError
+from .window_fit import fit_size
 
 
 class EditHighway(Highway):
@@ -99,7 +100,7 @@ class EditHighway(Highway):
 
 class ChartEditorDialog(QDialog):
     def __init__(self,panel):
-        super().__init__(panel);self.panel=panel;self.session=EditSession(panel.current[0]);self.setWindowTitle('Edit chart — working copy');self.resize(960,680)
+        super().__init__(panel);self.panel=panel;self.session=EditSession(panel.current[0]);self.setWindowTitle('Edit chart — working copy');fit_size(self,960,680)
         layout=QVBoxLayout(self)
         hint=QLabel('Right-click to add notes, star power or patterns. Drag note heads to move; drag square sustain handles to resize. Short notes: right-click → Set sustain length. Changes affect this copy only.');hint.setWordWrap(True);layout.addWidget(hint)
         row=QHBoxLayout();layout.addLayout(row);self.difficulty=QComboBox();self.difficulty.addItems([d for d in ('Expert','Hard','Medium','Easy') if self.session.song.tracks.get(d)]);self.difficulty.setCurrentText(panel.current[1]);row.addWidget(self.difficulty)

@@ -1,3 +1,11 @@
+# 0.13.1 — Combined release: 0.13.0 plus the window fit fix
+
+- Brings the 0.11.4 window fix (made in parallel from 0.11.3) into the 0.13.0 line; no other behaviour changes.
+- Main window sizes itself to the screen's usable area and opens centred with its title bar visible, instead of a fixed 1180x840.
+- Dialogs (cleanup review, sync review, export review, editor, first-run notice, About) shrink to fit the screen when needed.
+- Startup progress window fits small screens and opens centred.
+- Version numbering: 0.11.4 existed only on GitHub and the v0.11.5 GitHub release tag pointed at that same commit; 0.13.1 supersedes both.
+
 # 0.13.0 — Streamlined preparation interface
 
 - One primary Home action, Prepare my songs, with secondary Clean only.

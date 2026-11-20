@@ -8,11 +8,12 @@ from PySide6.QtWidgets import (QDialog,QVBoxLayout,QHBoxLayout,QLabel,QComboBox,
     QDoubleSpinBox,QPushButton,QCheckBox,QSlider,QScrollArea,QWidget)
 from .playback import Highway
 from .synchronization import normalize
+from .window_fit import fit_size
 
 
 class SynchronizationDialog(QDialog):
     def __init__(self,row,parent=None):
-        super().__init__(parent);self.setWindowTitle('Review synchronization');self.resize(940,660)
+        super().__init__(parent);self.setWindowTitle('Review synchronization');fit_size(self,940,660)
         self.row=row;self.song=row['sync_source'];self.review=None;self.plan=None
         self.rate=sf.info(row['audio']).samplerate
         outer=QVBoxLayout(self)

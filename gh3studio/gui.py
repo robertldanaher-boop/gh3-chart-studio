@@ -19,6 +19,7 @@ from .patterns import CATEGORIES
 from . import __version__
 from .appearance import apply_style,primary
 from .welcome import WelcomePanel,show_credits
+from .window_fit import PREFERRED_MAIN_SIZE, place_on_screen
 
 class Worker(QThread):
     succeeded=Signal(object)
@@ -60,7 +61,7 @@ class Window(QMainWindow):
         self.variants={};self.goal=None;self.last_export_path=None
         apply_style(self)
         self.setWindowTitle(f'GH3 Chart Studio {__version__} — Wii chart workshop')
-        self.resize(1180,840); self.setAcceptDrops(True)
+        self.resize(*PREFERRED_MAIN_SIZE); self.setAcceptDrops(True)
         shell=QWidget();shell_layout=QVBoxLayout(shell);shell_layout.setContentsMargins(14,10,14,12);self.setCentralWidget(shell)
         header=QHBoxLayout();shell_layout.addLayout(header)
         branding=QVBoxLayout();branding.setSpacing(2);header.addLayout(branding,1)
@@ -449,13 +450,15 @@ class Window(QMainWindow):
 def main():
     app=QApplication(sys.argv); app.setOrganizationName('GH3ChartStudio'); app.setApplicationName('GH3ChartStudio'); app.setStyle('Fusion')
     from .first_run import FirstRunDialog, has_accepted
-    from PySide6.QtCore import QSettings
+    from PySide6.QtCore import QSettings, QTimer
     settings=QSettings('GH3ChartStudio','GH3ChartStudio')
     # A visible first-run dialog counts as ready: never time out while reading.
     app.setQuitOnLastWindowClosed(False)
     windows=[]
     def open_studio():
-        window=Window(); windows.append(window); window.show()
+        window=Window(); windows.append(window); place_on_screen(window); window.show()
+        # Re-fit once the real title-bar/border size is known.
+        QTimer.singleShot(0,lambda:place_on_screen(window))
         app.setQuitOnLastWindowClosed(True)
     if has_accepted(settings):
         open_studio()
@@ -465,7 +468,6 @@ def main():
         gate.rejected.connect(app.quit)
         gate.show()
     import os
-    from PySide6.QtCore import QTimer
     ready=os.environ.get('GH3_STARTUP_READY')
     if ready:
         # Report only after the event loop has started and the window was shown.

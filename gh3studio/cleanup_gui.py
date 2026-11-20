@@ -2,11 +2,12 @@
 import json
 from PySide6.QtWidgets import QDialog,QVBoxLayout,QHBoxLayout,QCheckBox,QPushButton,QTextEdit,QLabel
 from .editing import prepare_cleanup
+from .window_fit import fit_size
 
 class CleanupDialog(QDialog):
     def __init__(self,song,parent=None):
         super().__init__(parent);self.song=song;self.prepared=None;self.report=None
-        self.setWindowTitle('Review GH3 cleanup — source file stays unchanged');self.resize(780,560)
+        self.setWindowTitle('Review GH3 cleanup — source file stays unchanged');fit_size(self,780,560)
         layout=QVBoxLayout(self)
         warning=QLabel('Choose changes, review the exact tick/lane list, then apply to a working copy.\nStripping tap/forced markers does not turn those notes into guaranteed no-strum notes.\nOpen-note events are removed; ordinary five-fret gems remain for four-fret conversion.')
         warning.setWordWrap(True);layout.addWidget(warning)

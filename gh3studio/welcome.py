@@ -6,6 +6,7 @@ from PySide6.QtGui import QColor,QPainter,QPen
 from PySide6.QtWidgets import QWidget,QVBoxLayout,QHBoxLayout,QLabel,QPushButton,QFrame,QScrollArea,QDialog,QTextBrowser,QDialogButtonBox,QTabWidget
 from .appearance import primary
 from . import __version__
+from .window_fit import fit_size
 
 CREDITS_HTML='''
 <h1>Built with a community behind it</h1>
@@ -88,7 +89,7 @@ def legal_notice_text():
 
 class AboutDialog(QDialog):
     def __init__(self,parent=None):
-        super().__init__(parent);self.setWindowTitle('About, credits & license — GH3 Chart Studio '+__version__);self.resize(760,680)
+        super().__init__(parent);self.setWindowTitle('About, credits & license — GH3 Chart Studio '+__version__);fit_size(self,760,680)
         layout=QVBoxLayout(self);self.tabs=QTabWidget();layout.addWidget(self.tabs)
         credits=QTextBrowser();credits.setOpenExternalLinks(True);credits.setHtml(CREDITS_HTML);self.tabs.addTab(credits,'Credits')
         self.legal=QTextBrowser()
