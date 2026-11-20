@@ -62,7 +62,8 @@ Local: install Inno Setup 6.3+, run installer\build_installer.cmd.
 ## Updates (0.18.0)
 Publishing: for each version on main, create a GitHub release whose tag equals the
 app version (v0.18.0, v0.18.1, ...). GitHub attaches "Source code (zip)"
-automatically; that is what the app downloads. The repository must be public (or
+automatically. If Bob attaches the GH3_Chart_Studio_vX_Y_Z.zip package to the
+release, the app downloads that instead (0.18.1+). The repository must be public (or
 releases must be published to a public repository and REPOSITORY in
 gh3studio/updates.py changed) for installed copies to see releases.
 In the app: About -> Check for updates, or the daily check -> Download and install.

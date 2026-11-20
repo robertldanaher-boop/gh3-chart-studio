@@ -55,15 +55,18 @@ def interpret(release, current=__version__):
     latest, mine = parse_version(tag), parse_version(current)
     if latest is None or mine is None:
         return UpdateResult('unavailable', current, tag, message=f'Could not read the release version "{tag}".')
-    installer = ''
+    installer = attached_zip = ''
     for asset in release.get('assets') or []:
-        name = str(asset.get('name', ''))
-        if name.lower().endswith('.exe'):
+        name = str(asset.get('name', '')).lower()
+        if name.endswith('.exe') and not installer:
             installer = asset.get('browser_download_url', '')
-            break
+        # A release ZIP Bob attaches (GH3_Chart_Studio_vX_Y_Z.zip) is preferred over
+        # GitHub's automatic source ZIP: it is exactly the package he was given.
+        if name.endswith('.zip') and 'gh3' in name and not attached_zip:
+            attached_zip = asset.get('browser_download_url', '')
     page = release.get('html_url') or RELEASES_PAGE
     label = '.'.join(map(str, latest))
-    zipball = release.get('zipball_url') or ''
+    zipball = attached_zip or release.get('zipball_url') or ''
     if latest > mine:
         return UpdateResult('newer', current, label, page, installer,
                             f'Version {label} is available (you have {current}).', zipball)

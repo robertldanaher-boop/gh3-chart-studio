@@ -1,3 +1,7 @@
+# 0.18.1 — Prefer the release ZIP Bob attaches
+
+- Download and install now uses a GH3_Chart_Studio_*.zip attached to the GitHub release when present (the package Bob drops on each release), and falls back to GitHub's automatic source ZIP otherwise. Either way the version inside must match the release, or nothing is installed.
+
 # 0.18.0 — Download and install updates from inside the app
 
 - When a newer GitHub release exists (daily check, or About -> Check for updates), the prompt offers Download and install.

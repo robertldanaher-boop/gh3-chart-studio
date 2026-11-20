@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.18.0 handoff
+# GH3 Chart Studio — 0.18.1 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_0.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_1.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,15 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.18.0 update — in-app download and install
+## Current 0.18.1 update — attached release ZIP preferred
+
+Bob attaches the delivered ZIP to each GitHub release. updates.interpret now
+prefers an asset named *.zip containing "gh3" (browser_download_url) over
+zipball_url; extract_update accepts both layouts (GH3_Chart_Studio/ root with
+repository.bundle, or owner-repo-sha/ root). Version inside must equal the tag.
+Keep naming release ZIPs GH3_Chart_Studio_vX_Y_Z.zip.
+
+## Previous 0.18.0 update — in-app download and install
 
 Bob asked how to have the app check for updates, pull them from GitHub and
 install. updates.py: UpdateResult.source_zip_url from release zipball_url;

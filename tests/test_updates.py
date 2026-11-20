@@ -224,3 +224,20 @@ def test_failed_download_reports_and_keeps_app_open(tmp_path):
     assert len(events) == 1 and 'network down' in events[0] and not checker.installing
     checker.shutdown()
     parent.deleteLater()
+
+
+def test_attached_release_zip_preferred_over_github_source_zip():
+    release = {'tag_name': 'v0.18.1', 'html_url': 'https://x/r', 'zipball_url': 'https://api/zipball/v0.18.1',
+               'assets': [{'name': 'notes.txt', 'browser_download_url': 'https://x/notes.txt'},
+                          {'name': 'GH3_Chart_Studio_v0_18_1.zip', 'browser_download_url': 'https://x/GH3_Chart_Studio_v0_18_1.zip'}]}
+    assert interpret(release, current='0.18.0').source_zip_url == 'https://x/GH3_Chart_Studio_v0_18_1.zip'
+    release['assets'] = release['assets'][:1]
+    assert interpret(release, current='0.18.0').source_zip_url == 'https://api/zipball/v0.18.1'
+
+
+def test_packaged_release_zip_layout_installs(tmp_path):
+    from gh3studio.updates import extract_update
+    zip_path = make_release_zip(tmp_path / 'GH3_Chart_Studio_v0_18_1.zip', '0.18.1', top='GH3_Chart_Studio',
+                                extra={'GH3_Chart_Studio/repository.bundle': 'bundle', 'GH3_Chart_Studio/RELEASE_COMMIT.txt': 'abc'})
+    root = extract_update(zip_path, tmp_path / 'x', '0.18.1')
+    assert root.name == 'GH3_Chart_Studio'
