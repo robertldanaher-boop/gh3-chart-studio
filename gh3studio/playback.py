@@ -267,7 +267,7 @@ class PlaybackPanel(QWidget):
         if self.owner.busy() or self.owner.converted is None or self.shift.value()==0:return
         try:
             changed=shift_timing(self.owner.converted,self.shift.value());report=copy.deepcopy(self.owner.report)
-            report.setdefault('timing_edits_ms',[]).append(self.shift.value());report['warnings']=list(dict.fromkeys(report.get('warnings',[])+ensure_valid(changed,True)['warnings']))
+            report.setdefault('timing_edits_ms',[]).append(self.shift.value());report['warnings']=list(dict.fromkeys(report.get('warnings',[])+ensure_valid(__import__('gh3studio.validation',fromlist=['without_flips']).without_flips(changed),True)['warnings']))
             report['timing']='Explicit seconds-based shift; tempo/meter retained; note/phrase endpoints rounded to ticks'
             self.undo_stack.append(self.snapshot());self.redo_stack=[];self.publish((changed,report))
             self.status.setText('Shift applied to the output working copy. Export to a new folder; Undo restores exact previous ticks.')

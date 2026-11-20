@@ -1,3 +1,13 @@
+# 0.18.5 — Keep forced HOPO/strum notes for TheGHOST
+
+- Bob: TheGHOST's chart edit step showed 0 forced notes for every song. Cleanup removed every source marker, including forced notes (N 5 / E *), which TheGHOST supports, so songs played with automatic HOPO guesses instead of what the charter wrote.
+- Each note's authored intent is now kept: what it was meant to be in Clone Hero (its natural HOPO guess, flipped by a forced marker; song.ini hopo_frequency / eighthnote_hopo honoured). Tap notes, which GH3 does not have, become forced HOPOs. Open notes are still removed.
+- TheGHOST forced flips (N 5) are then written wherever TheGHOST's own guess at HOPO measure 2.95 would differ, on Easy, Medium, Hard and Expert (Medium/Easy follow their source difficulty), so the four-fret conversion keeps the intent even where removing Orange changes the automatic guess.
+- Applies to Prepare my songs (single song and collections) and Clean only. Songs without forced or tap notes export exactly as before.
+- Set TheGHOST's HOPO measure to 2.95: the flips are calculated for that setting.
+- Timing shifts and synchronization move forced flips with their notes. Each song's changes list the authored forced/tap counts and flips written.
+- Tests: tests/test_hopo_intent.py (6 cases incl. every difficulty after Orange removal); five existing tests updated from "no markers after export" to "only TheGHOST flips on real notes, playing as authored".
+
 # 0.18.4 — Safer updates and correct shared audio streams
 
 - Script installer stages the complete payload before touching the installed app, retains the complete previous installation (including its environment), and restores it if setup or tests fail. Failed files/logs are retained separately. New dependencies are installed at the final path. Concurrent installers are locked out. Backups intentionally require manual removal after a successful upgrade.

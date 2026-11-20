@@ -57,3 +57,82 @@ def prefer_hopos(song,max_gap_beats=.5,measure=2.95):
                        estimated_hopo_percent=round(100*count/len(states),1),
                        remaining_note_triples_unchanged=result.tracks==song.tracks,
                        warning='Set TheGHOST HOPO measure to 2.95. N 5 toggles natural state; other importer settings can change results. First notes, repeated-fret runs and chords are not newly forced. HOPOs require starting/restarting the combo with a strum; these are not tap notes.')
+
+
+# ---- Keep the charter's forced HOPO / strum intent (0.18.5) -----------------
+# Cleanup removes every source marker. Forced notes (N 5 / E *) only FLIP the
+# importer's natural guess, and Clone Hero (where charts are authored) guesses
+# differently from TheGHOST (GH3). So: work out what each authored note was
+# meant to be in Clone Hero (natural XOR flip; taps play as HOPOs because GH3 has
+# no tap notes), then write TheGHOST N 5 flips wherever its natural guess at
+# measure 2.95 would differ. Open notes stay removed.
+
+def _marker_kind(marker):
+    parts = str(marker).split()
+    if parts[:2] == ['N', '5'] or marker == 'E *':
+        return 'flip'
+    if parts[:2] == ['N', '6']:
+        return 'tap'
+    return None
+
+
+def clone_hero_threshold(song):
+    """Clone Hero natural-HOPO distance in ticks (song.ini overrides honoured)."""
+    ini = {k.lower(): v for k, v in (song.ini_metadata or {}).items()}
+    try:
+        value = int(float(ini.get('hopo_frequency', '')))
+        if value > 0:
+            return value
+    except ValueError:
+        pass
+    if str(ini.get('eighthnote_hopo', '')).strip().lower() in ('1', 'true', 'yes'):
+        return song.resolution / 2
+    return song.resolution * 65 / 192
+
+
+def authored_states(song, difficulty):
+    """{tick: True if the charter meant a HOPO}, from Clone Hero rules plus markers."""
+    threshold = clone_hero_threshold(song)
+    flips, taps = set(), set()
+    for tick, marker in song.modifiers.get(difficulty, []):
+        kind = _marker_kind(marker)
+        if kind == 'flip':
+            flips.add(tick)
+        elif kind == 'tap':
+            taps.add(tick)
+    result, previous = {}, None
+    for tick, notes in events(song, difficulty):
+        lanes = {n.lane for n in notes}
+        natural = bool(previous and len(notes) == 1 and lanes.isdisjoint(previous[1])
+                       and tick - previous[0] <= threshold)
+        result[tick] = True if tick in taps else (natural != (tick in flips))
+        previous = (tick, lanes)
+    return result
+
+
+def authored_marker_counts(song, difficulty):
+    kinds = [_marker_kind(m) for _, m in song.modifiers.get(difficulty, [])]
+    return {'forced': kinds.count('flip'), 'tap': kinds.count('tap')}
+
+
+def restore_hopo_intent(cleaned, original, sources, measure=2.95):
+    """Write TheGHOST N 5 flips into cleaned (markers already removed).
+
+    sources: {output difficulty: original difficulty whose authored intent applies}.
+    Only difficulties whose source had forced or tap markers get flips, so charts
+    without them export exactly as before. Returns a per-difficulty report.
+    """
+    report = {}
+    for difficulty, source in sources.items():
+        counts = authored_marker_counts(original, source)
+        if not cleaned.tracks.get(difficulty) or not (counts['forced'] or counts['tap']):
+            continue
+        intended = authored_states(original, source)
+        natural = natural_states(cleaned, difficulty, measure)
+        flips = [tick for tick in sorted(natural) if tick in intended and intended[tick] != natural[tick]]
+        kept = [(t, m) for t, m in cleaned.modifiers.get(difficulty, []) if not is_flip(m)]
+        cleaned.modifiers[difficulty] = sorted(kept + [(t, 'N 5 0') for t in flips])
+        report[difficulty] = dict(source=source, authored_forced=counts['forced'], authored_taps=counts['tap'],
+                                  theghost_flips=len(flips),
+                                  intended_hopos=sum(1 for t in natural if intended.get(t)))
+    return report

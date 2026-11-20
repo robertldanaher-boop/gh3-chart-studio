@@ -73,6 +73,13 @@ def complete_conversion(song,source,*,strict=False,randomize_orange_sustains=Tru
     report['source_compatibility_errors']=report.pop('compatibility_errors',[])
     report['errors']=[]
     report['retained_notes_exact']=report.get('retained_notes_exact',True) and not any(c['action']=='shorten sustain' for c in cleanup['changes'])
+    # Keep the charter's forced HOPO/strum intent as TheGHOST flips (cleanup removed the markers).
+    from .hopo import restore_hopo_intent
+    intent_sources={'Easy':source,'Medium':source}
+    for difficulty in ('Hard','Expert'):intent_sources[difficulty]=source if difficulty in filled else difficulty
+    report['hopo_intent']=restore_hopo_intent(result,song,intent_sources)
+    if report['hopo_intent']:
+        report['warnings'].append('Forced HOPO/strum notes kept: '+', '.join(f"{d} {r['theghost_flips']} forced" for d,r in report['hopo_intent'].items())+'. Set TheGHOST HOPO measure to 2.95.')
     report['preserved_difficulties']=[d for d in ('Hard','Expert') if song.tracks.get(d) and result.tracks[d]==song.tracks[d] and result.modifiers.get(d,[])==song.modifiers.get(d,[])]
     report['warnings']+=['All four difficulties cleaned automatically. Unsupported markers removed; sustain repairs listed in all_difficulty_cleanup. Original input files remain untouched.']
     report['warnings']+=['Easy replaced with a three-fret copy of the selected source; all four guitar difficulties populated. Missing Hard/Expert copied from source without density reduction. See difficulty_completion for Easy sustain repairs and any empty-track fallback.']

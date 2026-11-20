@@ -1,12 +1,39 @@
-# GH3 Chart Studio — 0.18.4 handoff
+# GH3 Chart Studio — 0.18.5 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_4.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_5.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
 
-## Current 0.18.4 checkpoint — ChatGPT review fixes
+## Current 0.18.5 update (Claude) — forced HOPO/strum intent kept
+
+Base: ChatGPT's 0.18.4 (071a648), fast-forwarded and reviewed; built on it.
+Bob: TheGHOST chart edit step shows 0 forced notes for all songs. Cause:
+editing.prepare_cleanup(strip_markers=True) removes all modifiers, so N 5 / E *
+were lost. New in gh3studio/hopo.py: clone_hero_threshold (ini hopo_frequency,
+eighthnote_hopo, else res*65/192), authored_states (CH natural XOR flip; N 6 tap
+-> HOPO), restore_hopo_intent(cleaned, original, {out_diff: source_diff}) writes
+'N 5 0' where TheGHOST natural_states at measure 2.95 differ from intent; no-op
+when the source had no forced/tap markers. Wired: difficulty_set.complete_conversion
+(Easy/Medium from source; Hard/Expert own or source if filled) -> report['hopo_intent'];
+cleaner Clean-only path (each difficulty its own); cleaner bulk path uses
+prepare_medium(strip_markers=False) so Medium flips survive; combined
+SongExportDialog keeps markers (checkbox False, hidden); song_export clean_all
+guard allows only flips on real notes; editing.shift_timing moves flips and
+validates via validation.without_flips; playback shift validation likewise.
+Tests: tests/test_hopo_intent.py; updated test_cleaner, test_difficulty_set (x2),
+test_bulk_medium, test_gui. Evidence here: Linux py3.13 without PySide6/soundfile/
+mido; with local stand-ins and the Ogg step stubbed, hopo_intent 6/6 and the
+updated conversion/cleaner assertions pass; GUI tests not run. Windows/TheGHOST/
+Dolphin acceptance needed: confirm TheGHOST forced counts > 0 and HOPOs feel right.
+Assumes Bob sets TheGHOST HOPO measure 2.95 (ask him which value he uses).
+
+Open review notes on 0.18.4 (raised to Bob, not yet changed): every update keeps a
+full .previous-* copy (old venv included) forever; every update rebuilds the venv
+(full download); uninstall.ps1 leaves .previous-*/.failed-* and the install lock.
+
+## Previous 0.18.4 checkpoint — ChatGPT review fixes
 
 User asked to continue and provide a Claude handoff in case usage runs out. ChatGPT cannot inspect quota. This document is the handoff; no actual Claude session/handoff has occurred.
 

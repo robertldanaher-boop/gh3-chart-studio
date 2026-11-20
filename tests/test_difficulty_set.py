@@ -57,14 +57,19 @@ def test_conversion_cleans_all_tracks_and_exports_without_second_pass(tmp_path):
         modifiers={'Expert':[(0,'N 6 0')],'Hard':[(0,'N 5 0')]})
     before=deepcopy(song)
     out,report=complete_conversion(song,'Expert')
-    assert song==before and not out.modifiers
+    # 0.18.5: the Expert tap and Hard forced note on a first note become forced HOPO flips everywhere.
+    assert song==before and out.modifiers=={d:[(0,'N 5 0')] for d in ('Easy','Medium','Hard','Expert')}
+    assert set(report['hopo_intent'])=={'Easy','Medium','Hard','Expert'}
     assert out.tracks['Expert'][0].length==192 and out.tracks['Hard'][0].length==192
     assert {c['difficulty'] for c in report['all_difficulty_cleanup']['changes']} >= {'Expert','Hard'}
-    assert prepare_cleanup(out,True,True)[1]['changes']==[]
+    assert [c for c in prepare_cleanup(out,True,True)[1]['changes'] if c['action']!='remove marker/open-note event']==[]
     audio=tmp_path/'song.wav';sf.write(audio,np.zeros(44100),44100)
     details=export_song_folder(out,report,tmp_path/'out',audio)
     reopened=read_chart(tmp_path/'out'/'notes.chart');check_complete_conversion(reopened)
-    assert not reopened.modifiers and reopened.metadata['Offset']=='0'
+    # Timing normalization moves the whole chart by whole bars; forced flips move with their notes.
+    offset=reopened.tracks['Expert'][0].tick-out.tracks['Expert'][0].tick
+    assert reopened.modifiers=={d:[(t+offset,m) for t,m in markers] for d,markers in out.modifiers.items()}
+    assert reopened.metadata['Offset']=='0'
     assert details['synchronization']['automatic']
     assert details['audio_export']['frames']>44100
     assert 'No missing difficulties were generated' not in (tmp_path/'out'/'IMPORT_README.txt').read_text()

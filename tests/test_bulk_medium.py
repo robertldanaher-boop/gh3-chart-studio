@@ -19,7 +19,9 @@ def test_recursive_bulk_fallback_preserves_other_tracks_and_exports(tmp_path):
         original=read_chart(row['path']);out=row['song']
         for d in ('Expert','Hard'):
             if original.tracks.get(d):assert out.tracks[d]==original.tracks[d]
-        assert not any(out.modifiers.values())
+        # 0.18.5: only TheGHOST forced-note flips on real notes may remain.
+        for d,markers in out.modifiers.items():
+            assert all(m=='N 5 0' and t in {n.tick for n in out.tracks[d]} for t,m in markers)
         if any(original.modifiers.values()):assert row['conversion']['all_difficulty_cleanup']['changes']
         assert all(out.tracks.get(d) for d in ('Easy','Medium','Hard','Expert'))
         assert all(n.lane<3 for n in out.tracks['Easy'])

@@ -42,6 +42,16 @@ def validate(song, require_medium=False, *, learning_only=False):
     if sum(len(v) for v in song.tracks.values())>100000: warnings.append('Over 100,000 gems: review memory and import behavior; no proven GH3 limit asserted')
     return {'errors':sorted(set(errors)),'warnings':sorted(set(warnings))}
 
+def without_flips(song):
+    """Copy without TheGHOST HOPO flip markers (N 5 / E *), for strict checks that
+    predate flip support. Every other marker is still reported."""
+    import copy
+    from .hopo import is_flip
+    result=copy.copy(song)
+    result.modifiers={d:[(t,m) for t,m in markers if not is_flip(m)] for d,markers in song.modifiers.items()}
+    return result
+
+
 def ensure_valid(song, require_medium=False, *, learning_only=False):
     report=validate(song,require_medium,learning_only=learning_only)
     if report['errors']: raise ChartError('\n'.join(report['errors']))

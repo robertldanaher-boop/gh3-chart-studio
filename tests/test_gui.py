@@ -297,7 +297,8 @@ def test_marked_display_copy_replaces_old_medium_and_folder_export(tmp_path,app)
     audio=FIXTURE.parent/'audio'/'onset-study.wav'
     dialog=SongExportDialog(w.converted,str(audio),w,conversion_report=w.report)
     assert dialog.markers.isHidden()
-    assert not w.converted.modifiers
+    # 0.18.5: the source tap becomes TheGHOST forced-note flips; nothing else survives.
+    assert all(m=='N 5 0' for markers in w.converted.modifiers.values() for _,m in markers)
     assert w.song.modifiers.get('Expert')
     assert dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
     w.export_song_to(tmp_path/'out',audio,dialog.prepared,dict(w.report,medium_export_cleanup=dialog.review));wait(w)

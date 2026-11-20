@@ -110,9 +110,11 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
                 raise ChartError('No '+medium_source+' source track available')
             from .difficulty_set import complete_conversion
             converted,conversion=complete_conversion(song,source,strict=False,randomize_orange_sustains=preserve_sustains,sustain_seed=0)
-            clean,review=prepare_medium(converted,strip_markers=True,trim_sustains=True)
+            # Already fully cleaned; keep the forced-note flips complete_conversion wrote.
+            clean,review=prepare_medium(converted,strip_markers=False,trim_sustains=True)
             row['conversion']=conversion
             row['changes']+=conversion['all_difficulty_cleanup']['changes']
+            if conversion.get('hopo_intent'):row['changes'].append({'action':'keep forced HOPO/strum notes as TheGHOST flips','difficulties':conversion['hopo_intent']})
             row['changes'].append({'action':'create three-fret Easy and fill missing difficulty slots',**conversion['difficulty_completion']})
             row['changes'].append({'action':'copy '+source+' to four-fret Medium','source_gems':conversion['source_gems'],'medium_gems':conversion['medium_gems'],'sustain_transfers':conversion.get('sustain_transfers',[])})
             row['changes']+=review['changes'];row['errors']+=review['remaining_errors']
@@ -123,11 +125,14 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
                 song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=True,sustain_seed=0)
                 row['changes'].append({'action':'remove Medium Orange; transfer sustained Orange to four frets','removed':transfer['removed_orange_gems'],'transfers':transfer['sustain_transfers']})
             clean,review=prepare_cleanup(song,strip_markers=True,trim_sustains=True)
+            from .hopo import restore_hopo_intent
+            intent=restore_hopo_intent(clean,song,{d:d for d in clean.tracks})
             row['changes']+=review['changes']
+            if intent:row['changes'].append({'action':'keep forced HOPO/strum notes as TheGHOST flips','difficulties':intent})
             row['errors']+=review['remaining_errors']
             if not any(clean.tracks.values()):row['errors'].append('Cleanup would leave no playable guitar notes')
             row['warnings']+=song.warnings
-            row['warnings']+=['All guitar difficulties are cleaned. Forced/tap markers are removed; natural HOPO behavior may change.','Other instrument chart sections and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
+            row['warnings']+=['All guitar difficulties are cleaned. Forced notes are kept as TheGHOST flips (set its HOPO measure to 2.95); tap notes become forced HOPOs; open notes are removed.','Other instrument chart sections and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
         row['song']=clean if not row['errors'] else None
     except Exception as exc:row['errors'].append(str(exc))
     return row

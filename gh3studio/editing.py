@@ -39,10 +39,12 @@ def prepare_cleanup(song, strip_markers=True, trim_sustains=False):
 
 def shift_timing(song, milliseconds):
     """Move all playable notes/phrases/events; retain tempo and meter maps."""
-    ensure_valid(song,True)
+    from .validation import without_flips
+    from .hopo import is_flip
+    ensure_valid(without_flips(song),True)
     if not math.isfinite(milliseconds) or abs(milliseconds)>10000:raise ChartError('Shift must be within ±10,000 ms')
     if float(song.metadata.get('Offset','0'))!=0:raise ChartError('Use a zero-Offset chart before applying a timing shift')
-    if any(song.modifiers.values()):raise ChartError('Review marker cleanup before shifting the complete chart')
+    if any(not is_flip(m) for markers in song.modifiers.values() for _,m in markers):raise ChartError('Review marker cleanup before shifting the complete chart')
     result=copy.deepcopy(song);clock=TempoClock(song);delta=milliseconds/1000
     def move(tick):return clock.tick(song.seconds(tick)+delta)
     for difficulty,notes in song.tracks.items():
@@ -50,7 +52,8 @@ def shift_timing(song, milliseconds):
     for difficulty,phrases in song.phrases.items():
         result.phrases[difficulty]=[Phrase(move(p.tick),p.kind,move(p.tick+p.length)-move(p.tick)) for p in phrases]
     result.events=[(move(t),event) for t,event in song.events]
-    ensure_valid(result,True)
+    result.modifiers={d:[(move(t),m) for t,m in markers] for d,markers in song.modifiers.items()}  # forced-note flips follow their notes
+    ensure_valid(without_flips(result),True)
     result.warnings.append(f'Applied {milliseconds:+g} ms to notes, phrases and events; tempo/meter unchanged. Positions rounded to nearest tick.')
     return result
 

@@ -31,7 +31,10 @@ def test_recursive_export_all_difficulties_without_inventing_medium(tmp_path):
         assert set(song.tracks)=={'Expert','Hard'}
         assert song.tracks['Expert'][0].length==96
         assert song.tracks['Expert'][-1].lane==4
-        assert not any(song.modifiers.values())
+        # 0.18.5: only TheGHOST forced-note flips remain; the source tap at 0 plays as a HOPO, the open note is gone.
+        assert song.modifiers.get('Expert')==[(0,'N 5 0')] and not song.modifiers.get('Hard')
+        from gh3studio.hopo import effective_states
+        assert effective_states(song,'Expert')[0] is True
         assert song.tempos==read_chart(path).tempos
         assert sf.info(folder/'song.ogg').subtype=='VORBIS'
         assert 'name = Song †' in (folder/'song.ini').read_text(encoding='utf-8')

@@ -29,7 +29,9 @@ class SongExportDialog(QDialog):
         self.markers=QCheckBox('Remove existing Medium markers/open-note events (changes gameplay)');layout.addWidget(self.markers)
         self.sustains=QCheckBox('Shorten unsupported Medium sustains (review each change below)');layout.addWidget(self.sustains)
         if self.combined:
-            self.markers.setChecked(True);self.sustains.setChecked(True);self.markers.hide();self.sustains.hide()
+            # The combined conversion already removed unsupported markers and wrote
+            # TheGHOST forced-note flips; removing markers again would drop Medium's flips.
+            self.markers.setChecked(False);self.sustains.setChecked(True);self.markers.hide();self.sustains.hide()
         self.hopo=QCheckBox('Favor HOPOs in Medium runs — experimental TheGHOST .chart profile');layout.addWidget(self.hopo)
         self.hopo_gap=QComboBox();self.hopo_gap.addItem('Fast runs: up to ½ beat',.5);self.hopo_gap.addItem('More generous: up to 1 beat',1.);layout.addWidget(self.hopo_gap)
         self.hopo_summary=QLabel('');self.hopo_summary.setWordWrap(True);layout.addWidget(self.hopo_summary)

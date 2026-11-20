@@ -97,7 +97,10 @@ def _export_song_folder(song, report, destination, audio_path, source_path=None,
     elif clean_all:
         checked,review=prepare_cleanup(song,True,True)
         errors=validate(song)['errors']
-        if checked.tracks!=song.tracks or any(song.modifiers.values()):errors.append('All difficulties must be cleaned before export')
+        if checked.tracks!=song.tracks or any(not is_flip(m) for markers in song.modifiers.values() for _,m in markers):errors.append('All difficulties must be cleaned before export')
+        for diff,markers in song.modifiers.items():
+            ticks={n.tick for n in song.tracks.get(diff,[])}
+            if any(t not in ticks for t,_ in markers):errors.append(f'{diff} HOPO marker has no playable note')
         if any(n.lane==4 for n in song.tracks.get('Medium',[])):errors.append('ORANGE IS PROHIBITED IN MEDIUM')
         if float(song.metadata.get('Offset','0')) or float(song.metadata.get('SongIniDelay','0')):errors.append('Nonzero audio offset/delay requires review')
         if any(d!=4 for _,_,d in song.signatures):errors.append('Non-/4 meter requires review')
