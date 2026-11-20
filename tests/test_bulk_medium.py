@@ -90,3 +90,35 @@ def test_medium_collection_entry_routes_scan_nested_songs(tmp_path,monkeypatch,r
         assert row['song'].tracks['Medium'] and all(n.lane<4 for n in row['song'].tracks['Medium'])
         assert row['song'].tracks['Easy'] and all(n.lane<3 for n in row['song'].tracks['Easy'])
     w.close();app.processEvents()
+
+
+def test_second_batch_after_export_scans_and_shows_all_songs(tmp_path):
+    """Bob: after exporting one folder, dropping the next folder showed no songs."""
+    from test_gui import wait
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtCore import QMimeData,QUrl,QPointF,Qt
+    from PySide6.QtGui import QDropEvent
+    from gh3studio.gui import Window
+    app=QApplication.instance() or QApplication([])
+    first=tmp_path/'batch one';fixture(first/'a',tracks={'Expert':[Note(0,0),Note(192,4,96)]})
+    second=tmp_path/'batch two'
+    fixture(second/'b',tracks={'Expert':[Note(0,1),Note(192,2)]});fixture(second/'c',tracks={'Hard':[Note(0,0),Note(96,3)]})
+    w=Window();w.show();w.welcome.actions['orange'].click();app.processEvents()
+    def drop(folder):
+        mime=QMimeData();mime.setUrls([QUrl.fromLocalFile(str(folder))])
+        event=QDropEvent(QPointF(50,50),Qt.CopyAction,mime,Qt.LeftButton,Qt.NoModifier)
+        w.dropEvent(event);assert event.isAccepted();wait(w);app.processEvents()
+    bulk=w.adapt.bulk
+    drop(first);assert len(bulk.rows)==1
+    bulk.approve.setChecked(True);bulk.output_path.setText(str(tmp_path/'out'))
+    bulk.export_button.click();wait(w);app.processEvents()
+    assert (tmp_path/'out'/'cleanup_summary.json').exists()
+    assert w.goal=='orange' and w.tabs.currentWidget() is w.adapt  # export keeps the Prepare workflow
+    bulk.search.setText('nothing matches this');bulk.filter.setCurrentIndex(1)  # leftovers from batch one
+    drop(second)
+    assert w.tabs.currentWidget() is w.adapt and w.adapt.pages.currentWidget() is bulk
+    assert sorted(Path(r['path']).parent.name for r in bulk.rows)==['b','c']
+    assert bulk.search.text()=='' and bulk.filter.currentIndex()==0
+    assert not any(bulk.table.isRowHidden(i) for i in range(len(bulk.rows)))
+    assert not bulk.search.acceptDrops() and not bulk.output_path.acceptDrops()
+    w.close();app.processEvents()

@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.18.2 handoff
+# GH3 Chart Studio — 0.18.3 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_2.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_3.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,22 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.18.2 update — update check on every start
+## Current 0.18.3 update — second batch after export
+
+Bob: after completing one folder, dropping a new folder for the next batch
+"songs don't generate". No log supplied; diagnosis from code:
+1. CleanerPanel QLineEdits (search, output_path) accepted URL drops as text ->
+   setAcceptDrops(False) so the drop propagates to Window.dropEvent.
+2. scan() kept search text / status filter -> now cleared/reset (signals
+   blocked) and details tab selected.
+3. export_to set owner.goal='clean' even for four_fret -> Home resume went to
+   the Clean only tab, job_progress wrote to cleaner.status. Now 'orange' for
+   four_fret; job_progress also updates adapt.bulk.status.
+Test: test_bulk_medium.test_second_batch_after_export_scans_and_shows_all_songs.
+Not reproduced on Windows; ask Bob to confirm, and if it still fails, where he
+drops (Home, list, details pane) and what the status line says.
+
+## Previous 0.18.2 update — update check on every start
 
 Bob: "check for updates at the start and prompt to update." gui.main now calls
 UpdateChecker.check_on_startup 1.5 s after the window shows (no daily

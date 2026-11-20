@@ -37,7 +37,10 @@ class CleanerPanel(QWidget):
         self.source_label=QLabel('Choose a collection folder; all subfolders are scanned.' if four_fret else 'Or drop a folder anywhere in this workspace');self.source_label.setObjectName('muted');self.source_label.setWordWrap(True);row.addWidget(self.source_label,1)
         self.cancel_button=QPushButton('Cancel');self.cancel_button.clicked.connect(owner.cancel);row.addWidget(self.cancel_button)
         row=QHBoxLayout();content.addLayout(row)
-        self.search=QLineEdit();self.search.setPlaceholderText('Find a song or artist…');self.search.textChanged.connect(self.filter_rows);row.addWidget(self.search,1)
+        self.search=QLineEdit();self.search.setPlaceholderText('Find a song or artist…')
+        # Text boxes would swallow a dropped folder as typed text (hiding every row or
+        # replacing the output path); let the drop reach the window, which scans it.
+        self.search.setAcceptDrops(False);self.search.textChanged.connect(self.filter_rows);row.addWidget(self.search,1)
         self.filter=QComboBox();self.filter.addItems(['All songs','Needs help','Ready']);self.filter.currentIndexChanged.connect(self.filter_rows);row.addWidget(self.filter)
         self.select_all=QPushButton('Select all');self.select_all.clicked.connect(lambda:self.set_checked(True));row.addWidget(self.select_all)
         self.select_ready=QPushButton('Ready only');self.select_ready.clicked.connect(lambda:self.set_checked(True,ready_only=True));row.addWidget(self.select_ready)
@@ -63,7 +66,7 @@ class CleanerPanel(QWidget):
         self.sync_button=QPushButton('Timing tools (optional)…');self.sync_button.clicked.connect(self.review_sync);row.addWidget(self.sync_button)
         hint=QLabel('song.ini delay is applied automatically. Open timing tools only to override it.');hint.setWordWrap(True);row.addWidget(hint,1)
         row=QHBoxLayout();outer.addLayout(row);row.addWidget(QLabel('Save to'))
-        self.output_path=QLineEdit();self.output_path.setPlaceholderText('Existing exports here will be updated');row.addWidget(self.output_path,1)
+        self.output_path=QLineEdit();self.output_path.setPlaceholderText('Existing exports here will be updated');self.output_path.setAcceptDrops(False);row.addWidget(self.output_path,1)
         self.output_button=QPushButton('Change…');self.output_button.clicked.connect(self.choose_output);row.addWidget(self.output_button)
         self.approve=QCheckBox('Apply the reviewed conversion and repairs' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('All guitar difficulties are cleaned. Check the selected-song details for sustain repairs and removed markers.');outer.addWidget(self.approve)
         self.status=QLabel('Step 1 · Choose a folder. Charts, audio and metadata are matched inside each song folder.');self.status.setWordWrap(True);self.status.setObjectName('nextStep');outer.addWidget(self.status)
@@ -103,6 +106,10 @@ class CleanerPanel(QWidget):
     def scan(self,path):
         if self.owner.busy():return
         self.owner.goal='orange' if self.four_fret else 'clean'
+        # A new batch starts with no leftover search text or status filter hiding its songs.
+        self.search.blockSignals(True);self.search.clear();self.search.blockSignals(False)
+        self.filter.blockSignals(True);self.filter.setCurrentIndex(0);self.filter.blockSignals(False)
+        self.detail_tabs.setCurrentWidget(self.details)
         self.root=Path(path).resolve();self.source_label.setText(self.root.name or str(self.root));self.source_label.setToolTip(str(self.root));self.steps.set_step(0);self.output_path.setText(str(self.root.parent/('GH3 Four Fret Output' if self.four_fret else 'GH3 Cleaned Output')));self.approve.setChecked(False);self.last_output=None;self.rows=[];self.render()
         options=self.inspection_options()
         self.owner.run_job('Scanning charts and preparing cleanup review…',lambda cancel:scan_charts(self.root,cancel,lambda done,total,name:self.owner.worker.progress.emit(done,total,name),inspect_options=options),self.scanned,True)
@@ -232,7 +239,7 @@ class CleanerPanel(QWidget):
         if not selected:self.status.setText('Check at least one song.');return
         path=Path(path).resolve()
         if path==self.root or path.is_relative_to(self.root):self.status.setText('Cannot start: output must be outside the scanned source folder. Change output folder above.');return
-        self.owner.goal='clean';self.steps.set_step(2)
+        self.owner.goal='orange' if self.four_fret else 'clean';self.steps.set_step(2)
         self.status.setText(f'Starting cleanup of {len(selected)} checked songs. Output: {path}')
         def ready(results):
             self.last_output=Path(path) if (Path(path)/'cleanup_summary.json').exists() else None

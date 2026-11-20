@@ -1,3 +1,11 @@
+# 0.18.3 — Next batch after an export shows its songs
+
+Bob: after finishing one folder, dropping the next folder did not produce songs.
+- The collection screen's search box and "Save to" box accepted dropped folders as typed text (the search text then hid every row, or the output path was replaced) instead of letting the window scan the folder. They no longer accept drops.
+- Each new scan clears the search text, resets the Needs help / Ready filter and shows the selected-song details, so leftovers from the previous batch cannot hide new songs.
+- Exporting from Prepare my songs left the app in Clean only mode, so Home's Continue opened the empty Clean only page and progress went to the wrong screen. It now stays in Prepare my songs.
+- New test: two batches back to back (drop, export, drop the next folder).
+
 # 0.18.2 — Check for updates at every start
 
 - The update check now runs every time the studio opens (about 1.5 s after the window appears) instead of once a day. When a newer GitHub release exists it shows the Download and install prompt; choosing Later asks again next start. Nothing is shown when up to date, offline or when releases are not visible.

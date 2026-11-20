@@ -254,6 +254,7 @@ class Window(QMainWindow):
     def job_progress(self,done,total,name):
         self.operation_count=(done,total);self.refresh_operation_clock()
         if hasattr(self,'cleaner') and self.goal=='clean':self.cleaner.status.setText(f'{done}/{total} — {name}')
+        elif hasattr(self,'adapt') and self.goal=='orange' and self.adapt.mode.currentIndex()==1:self.adapt.bulk.status.setText(f'{done}/{total} — {name}')
         self.progress.setRange(0,total); self.progress.setValue(done)
         self.library.summary.setText(f'{done}/{total} — {name}' if total else name)
         if hasattr(self,'audio'):
