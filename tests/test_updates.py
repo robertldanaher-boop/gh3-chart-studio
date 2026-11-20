@@ -241,3 +241,41 @@ def test_packaged_release_zip_layout_installs(tmp_path):
                                 extra={'GH3_Chart_Studio/repository.bundle': 'bundle', 'GH3_Chart_Studio/RELEASE_COMMIT.txt': 'abc'})
     root = extract_update(zip_path, tmp_path / 'x', '0.18.1')
     assert root.name == 'GH3_Chart_Studio'
+
+
+def test_startup_check_runs_every_launch_and_prompts_only_for_newer(tmp_path):
+    os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+    pytest.importorskip('PySide6')
+    import time
+    from PySide6.QtCore import QSettings
+    from PySide6.QtWidgets import QApplication, QWidget
+    from gh3studio.updates import UpdateResult
+    from gh3studio.updates_gui import UpdateChecker, LAST_CHECK_KEY
+    app = QApplication.instance() or QApplication([])
+    parent = QWidget()
+    settings = QSettings(str(tmp_path / 's.ini'), QSettings.IniFormat)
+    settings.setValue(LAST_CHECK_KEY, time.time())  # checked moments ago: startup still checks
+    prompts = []
+
+    def run(result):
+        checker = UpdateChecker(parent, settings, check=lambda: result,
+                                prompt=lambda w, r, m: (prompts.append((r.status, m)), '')[1])
+        assert checker.check_on_startup()
+        checker.thread.wait(5000)
+        for _ in range(50):
+            app.processEvents()
+            if checker.last_result is not None:
+                break
+        checker.shutdown()
+
+    run(UpdateResult('current', '0.18.2', '0.18.2'))
+    run(UpdateResult('unavailable', '0.18.2', message='offline'))
+    assert prompts == []
+    run(UpdateResult('newer', '0.18.2', '0.19.0', source_zip_url='https://x/zip'))
+    assert prompts == [('newer', False)]
+    os.environ['GH3_NO_UPDATE_CHECK'] = '1'
+    try:
+        assert UpdateChecker(parent, settings).check_on_startup() is False
+    finally:
+        del os.environ['GH3_NO_UPDATE_CHECK']
+    parent.deleteLater()

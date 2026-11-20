@@ -1,3 +1,7 @@
+# 0.18.2 — Check for updates at every start
+
+- The update check now runs every time the studio opens (about 1.5 s after the window appears) instead of once a day. When a newer GitHub release exists it shows the Download and install prompt; choosing Later asks again next start. Nothing is shown when up to date, offline or when releases are not visible.
+
 # 0.18.1 — Prefer the release ZIP Bob attaches
 
 - Download and install now uses a GH3_Chart_Studio_*.zip attached to the GitHub release when present (the package Bob drops on each release), and falls back to GitHub's automatic source ZIP otherwise. Either way the version inside must match the release, or nothing is installed.

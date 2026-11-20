@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.18.1 handoff
+# GH3 Chart Studio — 0.18.2 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_1.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_2.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,16 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.18.1 update — attached release ZIP preferred
+## Current 0.18.2 update — update check on every start
+
+Bob: "check for updates at the start and prompt to update." gui.main now calls
+UpdateChecker.check_on_startup 1.5 s after the window shows (no daily
+throttle; GH3_NO_UPDATE_CHECK still disables). Prompt only when newer.
+check_if_due kept but unused. Bob was shown how to make the repo public
+(Settings > General > Danger Zone; the Pages "Upgrade" prompt is unrelated).
+Test: test_updates.test_startup_check_runs_every_launch_and_prompts_only_for_newer.
+
+## Previous 0.18.1 update — attached release ZIP preferred
 
 Bob attaches the delivered ZIP to each GitHub release. updates.interpret now
 prefers an asset named *.zip containing "gh3" (browser_download_url) over

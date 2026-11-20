@@ -485,10 +485,11 @@ def main():
         window=Window(); windows.append(window); place_on_screen(window); window.show()
         # Re-fit once the real title-bar/border size is known.
         QTimer.singleShot(0,lambda:place_on_screen(window))
-        # Once a day, quietly look for a newer GitHub release; speaks only if one exists.
+        # Every launch: look for a newer GitHub release and offer Download and install.
+        # Silent when up to date or offline.
         from .updates_gui import UpdateChecker
         window.update_checker=UpdateChecker(window,settings)
-        QTimer.singleShot(4000,window.update_checker.check_if_due)
+        QTimer.singleShot(1500,window.update_checker.check_on_startup)
         app.setQuitOnLastWindowClosed(True)
     if has_accepted(settings):
         open_studio()

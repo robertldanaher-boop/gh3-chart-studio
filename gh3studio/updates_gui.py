@@ -82,8 +82,8 @@ def default_prompt(parent, result, manual):
 
 
 class UpdateChecker(QObject):
-    """manual=True always reports; automatic checks only speak up when a newer
-    version exists, and run at most once a day."""
+    """manual=True always reports; automatic checks (every launch) only speak up
+    when a newer version exists."""
     finished = Signal(object)
 
     def __init__(self, parent_widget, settings=None, check=check_for_update, prompt=default_prompt,
@@ -108,6 +108,13 @@ class UpdateChecker(QObject):
 
     def running(self):
         return self.thread is not None and self.thread.isRunning()
+
+    def check_on_startup(self):
+        """Every launch: look for a newer release; prompt only when one exists
+        (no message when up to date, offline or the releases are not visible)."""
+        if os.environ.get('GH3_NO_UPDATE_CHECK'):
+            return False
+        return self.check(manual=False)
 
     def check_if_due(self):
         if os.environ.get('GH3_NO_UPDATE_CHECK'):
