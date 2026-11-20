@@ -1,3 +1,11 @@
+# 0.18.6 — Downloaded MIDI charts no longer blocked by overlaps or track names
+
+Bob: songs blocked with "No PART GUITAR or T1 GEMS track found" and "Overlapping MIDI pitch 84 at 166464".
+- Same-fret overlaps (a fret restarted before its note-off; pitch 84 = Hard green) end the earlier note where the next starts, like Clone Hero/Moonscraper, instead of blocking the song. Stray note-offs are ignored and notes without a note-off end at the track end; each is listed in the song's warnings.
+- Guitar track names are matched regardless of capitalization, spaces or underscores (Part Guitar, PART_GUITAR). Lead guitar (PART GUITAR, T1 GEMS) is preferred; PART GUITAR COOP or PART RHYTHM is used only when there is no lead guitar, with a warning.
+- A MIDI with no guitar part at all is still blocked, but the message now lists the tracks it does contain (e.g. PART DRUMS, PART VOCALS).
+- Note: TheGHOST "Star Power 0 (Forced)" is TheGHOST's ForceNoStarPower setting (Project screen > Default Settings > 3. Notes), not an export problem.
+
 # 0.18.5 — Keep forced HOPO/strum notes for TheGHOST
 
 - Bob: TheGHOST's chart edit step showed 0 forced notes for every song. Cleanup removed every source marker, including forced notes (N 5 / E *), which TheGHOST supports, so songs played with automatic HOPO guesses instead of what the charter wrote.

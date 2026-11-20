@@ -7,21 +7,42 @@ from .model import Song, Note, Phrase, ChartError, BASES
 
 META_PREFIX = 'GH3CS_METADATA '
 
+# Lead guitar first; co-op/rhythm guitar only when no lead guitar track exists.
+GUITAR_TRACK_PRIORITY = ('PART GUITAR', 'T1 GEMS', 'PART GUITAR COOP', 'PART RHYTHM')
+
+
+def _track_key(name):
+    """'Part Guitar', 'PART_GUITAR', ' part  guitar ' -> 'PART GUITAR'."""
+    return ' '.join(str(name or '').replace('_', ' ').upper().split())
+
+
+def _choose_guitar_track(names):
+    keys = [_track_key(n) for n in names]
+    for wanted in GUITAR_TRACK_PRIORITY:
+        if wanted in keys:
+            return keys.index(wanted), wanted
+    found = ', '.join(n for n in names if n) or 'none'
+    raise ChartError(f'No guitar part in this MIDI (looked for PART GUITAR, T1 GEMS, PART GUITAR COOP, PART RHYTHM; found tracks: {found})')
+
 def read_midi(path, phrase_mode='modern'):
     mid = mido.MidiFile(path)
     if mid.type == 2 or mid.ticks_per_beat <= 0: raise ChartError('Only synchronous PPQ MIDI type 0/1 is supported')
     song = Song(resolution=mid.ticks_per_beat)
     tempos, signatures = [], []
-    guitar_seen = False
+    names = [next((m.name for m in track if m.type=='track_name'), '') for track in mid.tracks]
+    guitar_index, guitar_kind = _choose_guitar_track(names)
+    if guitar_kind not in ('PART GUITAR', 'T1 GEMS'):
+        song.warnings.append(f'No lead guitar track; used {names[guitar_index]} instead.')
+    overlaps = 0
     for track_index, track in enumerate(mid.tracks):
         absolute = 0
-        name = next((m.name for m in track if m.type=='track_name'), '')
-        if track_index==0 and name not in ('', 'TEMPO', 'PART GUITAR', 'T1 GEMS', 'EVENTS'):
+        name = names[track_index]
+        if track_index==0 and _track_key(name) not in ('', 'TEMPO', 'EVENTS', *GUITAR_TRACK_PRIORITY):
             song.metadata.setdefault('Name',name)
-        guitar = name in ('PART GUITAR', 'T1 GEMS')
-        if guitar and guitar_seen: raise ChartError('Multiple guitar tracks are ambiguous')
-        guitar_seen |= guitar
+        guitar = track_index == guitar_index
+        events_track = _track_key(name) == 'EVENTS'
         active = {}
+        early_ends = {}  # note-offs still to come for notes we ended early
         spans = []
         for msg in track:
             absolute += msg.time
@@ -29,21 +50,36 @@ def read_midi(path, phrase_mode='modern'):
             elif msg.type == 'time_signature': signatures.append((absolute,msg.numerator,msg.denominator))
             elif msg.type == 'text' and msg.text.startswith(META_PREFIX):
                 song.metadata.update(json.loads(msg.text[len(META_PREFIX):]))
-            elif name == 'EVENTS' and msg.type in ('text','marker'):
+            elif events_track and msg.type in ('text','marker'):
                 song.events.append((absolute,msg.text.strip('[]')))
             elif guitar and msg.type in ('note_on','note_off'):
                 key = (msg.channel, msg.note)
                 if msg.type=='note_on' and msg.velocity>0:
-                    if key in active: raise ChartError(f'Overlapping MIDI pitch {msg.note} at {absolute}')
+                    if key in active:
+                        # Same fret restarted before its note-off (common in downloaded
+                        # charts): end the earlier note here, as Clone Hero/Moonscraper do.
+                        start = active.pop(key)
+                        early_ends[key] = early_ends.get(key, 0) + 1
+                        if absolute > start:
+                            spans.append((start,msg.note,absolute-start)); overlaps += 1
+                        # A repeated note-on at the same tick is the same note.
                     active[key] = absolute
                 else:
-                    if key not in active: raise ChartError(f'Unmatched note-off {msg.note} at {absolute}')
+                    if key not in active:
+                        if early_ends.get(key):
+                            early_ends[key] -= 1; continue  # original end of a note already ended
+                        song.warnings.append(f'Ignored stray MIDI note-off {msg.note} at {absolute}'); continue
+                    if early_ends.get(key) and absolute == active[key]:
+                        early_ends[key] -= 1; continue  # late note-off landing on the restart tick
                     start = active.pop(key)
-                    if absolute <= start: raise ChartError('MIDI note must have a positive duration')
                     spans.append((start,msg.note,absolute-start))
             elif guitar and msg.type=='sysex':
                 raise ChartError('Guitar SysEx mechanics are unsupported in this version')
-        if active: raise ChartError('Unterminated MIDI notes')
+        if guitar and active:
+            # A note still sounding when the track ends: end it at the track end.
+            for key,start in active.items():
+                if absolute > start:spans.append((start,key[1],absolute-start))
+            song.warnings.append(f'{len(active)} MIDI notes had no note-off; ended at the end of the track.')
         if guitar:
             modern_sp = []
             for tick, pitch, length in spans:
@@ -65,7 +101,7 @@ def read_midi(path, phrase_mode='modern'):
             if modern_sp:
                 for diff in song.tracks:
                     song.phrases.setdefault(diff,[]).extend(modern_sp)
-    if not guitar_seen: raise ChartError('No PART GUITAR or T1 GEMS track found')
+    if overlaps:song.warnings.append(f'{overlaps} overlapping MIDI notes on the same fret were ended where the next one starts.')
     song.tempos = sorted(set(tempos)) or song.tempos
     song.signatures = sorted(set(signatures)) or song.signatures
     if song.tempos[0][0] != 0: song.tempos.insert(0,(0,Fraction(500000)))

@@ -1,12 +1,29 @@
-# GH3 Chart Studio — 0.18.5 handoff
+# GH3 Chart Studio — 0.18.6 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_5.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_18_6.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
 
-## Current 0.18.5 update (Claude) — forced HOPO/strum intent kept
+## Current 0.18.6 update (Claude) — tolerant MIDI import
+
+Bob's scans blocked MIDI songs: "No PART GUITAR or T1 GEMS track found" and
+"Overlapping MIDI pitch 84 at 166464". midiio.read_midi now: picks the guitar
+track by GUITAR_TRACK_PRIORITY (PART GUITAR, T1 GEMS, PART GUITAR COOP,
+PART RHYTHM) using _track_key (case/space/underscore-insensitive), warns on
+fallback, and lists found tracks when none match; same-pitch note_on while active
+ends the earlier span at the new start (early_ends absorbs the original note-off;
+a note-off on the restart tick is treated as the late original); stray note-offs
+warn; unterminated notes end at track end with a warning. Removed errors:
+"Multiple guitar tracks are ambiguous", "Unmatched note-off", "MIDI note must have
+a positive duration", "Unterminated MIDI notes". Tests: tests/test_midi_tolerance.py
+(real mido files; not runnable here). Checked locally with fake mido objects.
+Also found for Bob: TheGHOST "Star Power 0 (Forced)" = its ForceNoStarPower
+default (Project screen > Default Settings group > 3. Notes; Reapply All), source
+TheGHOST/ProjectDefaultsProperties.cs and VersionHistory v0.42.
+
+## Previous 0.18.5 update (Claude) — forced HOPO/strum intent kept
 
 Base: ChatGPT's 0.18.4 (071a648), fast-forwarded and reviewed; built on it.
 Bob: TheGHOST chart edit step shows 0 forced notes for all songs. Cause:
