@@ -29,7 +29,8 @@ if ($running) {
 
 $programs = [Environment]::GetFolderPath('Programs')
 $desktop  = [Environment]::GetFolderPath('Desktop')
-foreach ($link in @((Join-Path $programs "$AppName.lnk"), (Join-Path $programs "$AppName - Repair.lnk"), (Join-Path $desktop "$AppName.lnk"))) {
+foreach ($link in @((Join-Path $programs "$AppName.lnk"), (Join-Path $programs "$AppName - Repair.lnk"),
+                    (Join-Path $programs "$AppName - Uninstall.lnk"), (Join-Path $desktop "$AppName.lnk"))) {
     Remove-Item -Force $link -ErrorAction SilentlyContinue
 }
 Remove-Item -Path $UninstallKey -Recurse -Force -ErrorAction SilentlyContinue

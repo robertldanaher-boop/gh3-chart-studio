@@ -5,7 +5,8 @@
   setup .exe:
     * copies the program to %LOCALAPPDATA%\Programs\GH3 Chart Studio
     * runs setup and the full automated test suite once (START_WINDOWS.cmd --install)
-    * creates Start menu entries (GH3 Chart Studio, GH3 Chart Studio - Repair)
+    * creates Start menu entries (GH3 Chart Studio, GH3 Chart Studio - Repair,
+      GH3 Chart Studio - Uninstall)
       and a desktop icon
     * registers the program in Settings > Apps > Installed apps with an Uninstall
       button (same registry entry the Inno Setup installer uses, so the two never
@@ -92,12 +93,14 @@ try {
     $desktop  = [Environment]::GetFolderPath('Desktop')
     New-Shortcut (Join-Path $programs "$AppName.lnk") $pythonw "`"$runApp`"" 'Clean charts and build four-fret Medium for Guitar Hero III Wii'
     New-Shortcut (Join-Path $programs "$AppName - Repair.lnk") (Join-Path $Target 'START_WINDOWS.cmd') '--install' 'Re-run setup and the automated tests'
+    $uninstallScript = Join-Path $Target 'installer\uninstall.ps1'
+    New-Shortcut (Join-Path $programs "$AppName - Uninstall.lnk") (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') `
+        "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$uninstallScript`"" "Remove $AppName from this PC"
     if (-not $NoDesktopIcon) {
         New-Shortcut (Join-Path $desktop "$AppName.lnk") $pythonw "`"$runApp`"" 'GH3 Chart Studio'
     }
 
     # Settings > Apps entry with Uninstall.
-    $uninstallScript = Join-Path $Target 'installer\uninstall.ps1'
     $sizeKb = [int]((Get-ChildItem $Target -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum / 1KB)
     New-Item -Path $UninstallKey -Force | Out-Null
     $values = @{

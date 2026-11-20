@@ -5,8 +5,8 @@
 2. Double-click "Install GH3 Chart Studio.cmd". If Windows asks about running a
    downloaded file, choose Run / More info -> Run anyway.
 3. Click OK to install. A progress window runs setup and the tests once.
-4. Done: Start menu -> GH3 Chart Studio, desktop icon, Settings -> Apps entry
-   with Uninstall. You can delete the extracted ZIP folder afterwards.
+4. Done: Start menu -> GH3 Chart Studio (plus "- Repair" and "- Uninstall"),
+   desktop icon, Settings -> Apps entry with Uninstall. You can delete the extracted ZIP folder afterwards.
 
 ## For Bob: installing with the setup .exe (from GitHub Actions)
 1. Download GH3ChartStudio-Setup-<version>.exe from the GitHub release (or the

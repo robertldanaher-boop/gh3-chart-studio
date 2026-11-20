@@ -81,6 +81,8 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\.venv\Scripts\pythonw.exe"; \
 Name: "{autoprograms}\{#AppName} - Repair"; Filename: "{app}\START_WINDOWS.cmd"; \
   Parameters: "--install"; WorkingDir: "{app}"; IconFilename: "{app}\gh3studio\assets\app.ico"; \
   Comment: "Re-run setup and the automated tests"
+Name: "{autoprograms}\{#AppName} - Uninstall"; Filename: "{uninstallexe}"; \
+  IconFilename: "{app}\gh3studio\assets\app.ico"; Comment: "Remove {#AppName} from this PC"
 
 [Run]
 Filename: "{app}\.venv\Scripts\pythonw.exe"; Parameters: """{app}\run_app.py"""; WorkingDir: "{app}"; \

@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.2 handoff
+# GH3 Chart Studio — 0.16.3 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_2.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_3.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,15 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.2 update — test correction
+## Current 0.16.3 update — Start menu Uninstall
+
+Bob asked for an uninstall option. install.ps1 now also creates "GH3 Chart
+Studio - Uninstall.lnk" (powershell -WindowStyle Hidden -ExecutionPolicy Bypass
+-File installer\uninstall.ps1); uninstall.ps1 removes that shortcut too. The
+Inno .iss gets an {uninstallexe} Start menu entry. Settings > Apps uninstall was
+already registered. Scripts hand-checked only (no PowerShell here).
+
+## Previous 0.16.2 update — test correction
 
 Bob's Windows run of 0.16.1: 334 passed, 1 skipped, 1 failed — KeyError
 'padded_frames' in test_separate_tracks_export_one_mixed_song_ogg (line 173),

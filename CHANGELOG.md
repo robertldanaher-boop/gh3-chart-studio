@@ -1,3 +1,8 @@
+# 0.16.3 — Uninstall in the Start menu
+
+- New Start menu entry "GH3 Chart Studio - Uninstall" (script installer and the Inno Setup installer). It removes the shortcuts, the Settings > Apps entry and the program folder, including its private Python environment. Songs and exported song folders are never touched.
+- Uninstall is still also available in Settings > Apps > Installed apps.
+
 # 0.16.2 — Test correction
 
 - Windows run of 0.16.1: 334 passed, 1 failed with KeyError 'padded_frames'. The audio fix worked (the clip check passed); the test itself checked padding on the longest track (guitar), which is never padded. It now checks that the two shorter tracks are padded to the mix length. No app code changed.
