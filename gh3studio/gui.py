@@ -445,10 +445,14 @@ class Window(QMainWindow):
         if self.busy():
             self.cancel(); self.log_line('Wait for the current operation to finish before closing.'); event.ignore()
         else:
-            self.playback.shutdown(); event.accept()
+            self.playback.shutdown()
+            if getattr(self,'update_checker',None) is not None:self.update_checker.shutdown()
+            event.accept()
 
 def main():
     app=QApplication(sys.argv); app.setOrganizationName('GH3ChartStudio'); app.setApplicationName('GH3ChartStudio'); app.setStyle('Fusion')
+    from .branding import apply_identity
+    apply_identity(app)
     from .first_run import FirstRunDialog, has_accepted
     from PySide6.QtCore import QSettings, QTimer
     settings=QSettings('GH3ChartStudio','GH3ChartStudio')
@@ -459,6 +463,10 @@ def main():
         window=Window(); windows.append(window); place_on_screen(window); window.show()
         # Re-fit once the real title-bar/border size is known.
         QTimer.singleShot(0,lambda:place_on_screen(window))
+        # Once a day, quietly look for a newer GitHub release; speaks only if one exists.
+        from .updates_gui import UpdateChecker
+        window.update_checker=UpdateChecker(window,settings)
+        QTimer.singleShot(4000,window.update_checker.check_if_due)
         app.setQuitOnLastWindowClosed(True)
     if has_accepted(settings):
         open_studio()

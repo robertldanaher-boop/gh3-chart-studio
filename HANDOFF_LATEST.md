@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.13.1 handoff
+# GH3 Chart Studio — 0.14.0 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_13_1.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_14_0.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -30,7 +30,13 @@ version numbers collided. 0.13.1 joins both lines. To prevent a repeat:
 5. A GitHub release created in the browser tags whatever `main` holds at that
    moment. Attaching a ZIP to a release does NOT put its code on `main`.
 
-GitHub state when 0.13.1 was pushed:
+6. GitHub Actions (.github/workflows/windows.yml) runs the FULL test suite on
+   real Windows for every push to main and builds the installer. Check the
+   Actions tab result before claiming a release passes; it is the only Windows
+   test evidence besides Bob's PC. A published release fails the workflow if
+   its tag does not equal the app version.
+
+GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
 - `main` = 0.13.1 (merge of the 0.13 line and the 0.11.4 line).
 - Tags on GitHub: v0.11.3 (2e287db), v0.11.4 and v0.11.5 (both e093849, the
   0.11.4 window-fix line; v0.11.5 is a mislabel — its release has the 0.13.0
@@ -46,7 +52,52 @@ GitHub state when 0.13.1 was pushed:
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.13.1 update — 0.13.0 plus the window fit fix
+## Current 0.14.0 update — installer, icon, update check
+
+Bob asked for a formal Windows 11 installer: setup and tests only at install,
+Start menu entry, desktop icon, update checks, and his artwork (a dog in a
+superhero costume, his own image) as the icon/logo. He did not choose a build
+method or update source; assumptions: GitHub Actions builds, and the update
+check reads the GitHub repo's latest release (fails gracefully while private).
+
+New/changed files:
+- installer/GH3ChartStudio.iss (Inno Setup 6.3+): per-user, no admin, installs
+  to %LOCALAPPDATA%\Programs\GH3 Chart Studio, fixed AppId
+  {2E998221-C3C3-4195-9C31-6047FBBDDE0E} (never change), MinVersion 10.0.17763,
+  x64. [InstallDelete] removes old code dirs before upgrade, keeps .venv.
+  ssPostInstall runs `START_WINDOWS.cmd --install` hidden; non-zero exit shows
+  a message naming the log folder and the Repair shortcut. Shortcuts launch
+  .venv\Scripts\pythonw.exe run_app.py with app.ico and AppUserModelID
+  GH3ChartStudio.Studio. Uninstall deletes .venv, code and logs.
+- installer/build_installer.cmd (local build), installer/wizard_*.bmp.
+- START_WINDOWS.cmd: optional --install argument passed to the Tk tool; no
+  `pause` in install mode. No argument = unchanged behaviour.
+- tools/startup_windows.py: Startup(root, install) — install mode runs the
+  same venv/deps/tests, writes .venv/installed.json, emits 'installed', exits
+  0/1, never launches. getattr guard keeps old tests' __new__ objects working.
+- gh3studio/assets/{app.ico, app_icon.png, logo.png} from Bob's image;
+  gh3studio/branding.py (window icon, AppUserModelID); About dialog shows the
+  logo and a Check for updates button.
+- gh3studio/updates.py (pure: parse_version, interpret, check_for_update,
+  due) and updates_gui.py (QThread + queued slot; automatic check once a day,
+  4 s after launch, silent unless newer; GH3_NO_UPDATE_CHECK disables).
+  Window.closeEvent waits for the check thread.
+- .github/workflows/windows.yml; pyproject package-data for assets;
+  build_windows.cmd (PyInstaller) gets the icon and assets.
+- Tests: tests/test_updates.py (offline, fake fetchers; Qt checker case),
+  two install-mode cases in tests/test_startup.py, real-app startup test now
+  sets GH3_NO_UPDATE_CHECK.
+
+Evidence (exact): Linux, Python 3.13, no PySide6. Executed test_updates,
+test_window_fit, test_minimal and the two new install-mode startup tests:
+all non-Qt cases passed; Qt cases skipped. Workflow YAML parses. The .iss has
+NOT been compiled and the installer has NOT been run anywhere yet; the first
+GitHub Actions run is the first real build and Windows test.
+
+Known limits: unsigned (SmartScreen warning); setup needs internet; update
+check cannot see a private repo.
+
+## Previous 0.13.1 update — 0.13.0 plus the window fit fix
 
 Code is 0.13.0 (09324b2) plus one commit carrying the 0.11.4 window fix, then a
 merge commit joining the 0.11.4 history (no content from it beyond the fix).
@@ -83,7 +134,12 @@ first full verification.
 
 ## Open items (in order)
 
-1. Bob runs 0.13.1 START_WINDOWS.cmd (extract to a new folder). Confirm the
+0. Check the GitHub Actions run for 0.14.0 (Actions tab). Fix any Windows test
+   or Inno Setup compile failure first. Then Bob installs from the artifact:
+   SmartScreen -> More info -> Run anyway; confirm setup/tests run once, Start
+   menu + desktop icon, icon shows on window/taskbar, launch is fast, About ->
+   Check for updates gives a sensible message, Repair works, uninstall cleans.
+1. (Superseded by 0.14 install, same checks) Bob runs START_WINDOWS.cmd. Confirm the
    startup and studio windows open fully on screen, title bar drag and corner
    resize work, and the 0.13.0 Prepare my songs / Clean only flows still work.
    If a startup test fails, get start_windows.log; fix causes, never skip tests.

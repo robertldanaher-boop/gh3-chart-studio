@@ -16,6 +16,7 @@ import uuid
 
 MESSAGES=("Tuning the strings and warming up the stage…", "Getting your chart-cleaning workbench ready…", "Checking the setlist. Your encore is coming!", "Warming up the amps—no sound check required yet.", "A few backstage checks before the music starts…")
 STEPS=('1 / 3 — Set up and verify dependencies','2 / 3 — Run automated tests','3 / 3 — Open GH3 Chart Studio')
+INSTALL_STEPS=('1 / 3 — Set up and verify dependencies','2 / 3 — Run automated tests','3 / 3 — Finish installation')
 DEFAULT_SECONDS=(90.,30.,10.)
 
 
@@ -45,13 +46,16 @@ def cache_key(root,python):
 
 
 class Startup:
-    def __init__(self,root):
+    def __init__(self,root,install=False):
+        # install=True (installer / Repair): set up and test once, then exit without
+        # launching. Normal launches from the Start menu skip all of this.
+        self.install=install;self.succeeded=False
         import tkinter as tk
         from tkinter import ttk
         self.root=root;self.events=queue.Queue();self.cancelled=threading.Event();self.process=None
         self.started=self.step_started=time.monotonic();self.step=0;self.test_percent=None;self.last_output=self.started
         self.estimates,self.historical=load_history(root/'startup_timings.json');self.durations=[];self.done=False;self.last_percent=0
-        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — opening the workshop');
+        self.ui=tk.Tk();self.ui.title('GH3 Chart Studio — '+('installing' if install else 'opening the workshop'));
         # Fit small/scaled screens: keep the title bar reachable (taskbar ~80px allowance).
         sw,sh=self.ui.winfo_screenwidth(),self.ui.winfo_screenheight();w,h=min(860,sw-40),min(700,sh-120)
         self.ui.geometry(f'{w}x{h}+{max(0,(sw-w)//2)}+{max(0,(sh-80-h)//2)}');self.ui.minsize(min(690,w),min(560,h));self.ui.configure(bg='#101722')
@@ -139,10 +143,19 @@ class Startup:
                 stamp.write_text(json.dumps({'key':key,'packages':snapshot}))
             else:self.write('Dependency lock and installed versions unchanged: reusing verified setup (no package download).')
             self.durations.append(time.monotonic()-start);start=time.monotonic()
-            self.stage_change(1,'Each completed test appears below. The full test suite still runs every startup.')
+            self.stage_change(1,'Each completed test appears below. '+('Tests run once during installation; normal launches skip them.' if getattr(self,'install',False) else 'The full test suite still runs every startup.'))
             env=dict(os.environ,QT_QPA_PLATFORM='offscreen',PYTHONUNBUFFERED='1')
             self.command([str(python),'-u','-m','pytest','-v','--tb=short','-o','faulthandler_timeout=60'],env)
             self.durations.append(time.monotonic()-start);start=time.monotonic()
+            if getattr(self,'install',False):
+                self.stage_change(2,'Tests passed. Recording the verified installation…')
+                from importlib.util import spec_from_file_location,module_from_spec
+                spec=spec_from_file_location('gh3_version',self.root/'gh3studio'/'__init__.py');module=module_from_spec(spec);spec.loader.exec_module(module)
+                (self.root/'.venv'/'installed.json').write_text(json.dumps({'version':module.__version__,'python':str(python),'tests':'passed','time':time.time()}))
+                self.durations.append(time.monotonic()-start)
+                (self.root/'startup_timings.json').write_text(json.dumps({'seconds':self.durations}))
+                self.write('Installation verified: dependencies installed and all tests passed.')
+                self.events.put(('installed',None));return
             self.stage_change(2,'Tests passed. Waiting for the application window to report ready…')
             env=dict(os.environ,GH3_STARTUP_READY=str(ready),PYTHONUNBUFFERED='1');env.pop('QT_QPA_PLATFORM',None)
             self.log.flush()
@@ -171,9 +184,11 @@ class Startup:
                 match=re.search(r'\[\s*(\d+)%\]',value)
                 if match and self.step==1:self.test_percent=int(match[1])
             elif kind=='stage':
-                self.step,detail=value;self.step_started=time.monotonic();self.test_percent=None;self.stage.configure(text=STEPS[self.step]);self.detail.configure(text=detail)
+                self.step,detail=value;self.step_started=time.monotonic();self.test_percent=None;self.stage.configure(text=(INSTALL_STEPS if getattr(self,'install',False) else STEPS)[self.step]);self.detail.configure(text=detail)
             elif kind=='failed':
                 self.done=True;self.stage.configure(text='Startup stopped — please review the log');self.close_button.configure(text='Close');self.detail.configure(text='The application was not confirmed ready. Save start_windows.log for troubleshooting.')
+            elif kind=='installed':
+                self.done=True;self.succeeded=True;self.bar['value']=100;self.stage.configure(text='3 / 3 — Installation complete');self.detail.configure(text='GH3 Chart Studio is ready. Open it from the Start menu or desktop icon.');self.close_button.configure(text='Close');self.ui.after(2500,self.ui.destroy)
             elif kind=='ready':
                 self.done=True;self.bar['value']=100;self.stage.configure(text='3 / 3 — Ready!');self.clock.configure(text=f'100% • Total startup time {duration(time.monotonic()-self.started)}');self.ui.after(1200,self.ui.destroy)
         if not self.done:
@@ -198,6 +213,7 @@ class Startup:
 
 
 def main():
-    startup=Startup(Path(__file__).resolve().parent.parent);startup.ui.mainloop()
+    startup=Startup(Path(__file__).resolve().parent.parent,install='--install' in sys.argv[1:]);startup.ui.mainloop()
+    if startup.install:sys.exit(0 if startup.succeeded else 1)
 
 if __name__=='__main__':main()

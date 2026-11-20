@@ -1,3 +1,13 @@
+# 0.14.0 — Windows installer, app icon and update check
+
+- New per-user Windows 10/11 installer (Inno Setup, installer/GH3ChartStudio.iss): no administrator prompt; installs to %LOCALAPPDATA%\Programs\GH3 Chart Studio.
+- Setup and the full automated test suite run once during installation (START_WINDOWS.cmd --install). Start menu and desktop shortcuts then open the studio directly with no setup or tests.
+- Start menu: GH3 Chart Studio and GH3 Chart Studio - Repair (re-runs setup/tests). Optional desktop icon (on by default). Upgrades install over the old version and reuse unchanged dependencies; uninstall removes the program and its private Python environment.
+- New app icon and logo from Bob's artwork: window/taskbar icon, shortcuts, installer and About screen.
+- Check for updates: About screen button, plus a quiet once-a-day check that only speaks up when a newer GitHub release exists. Nothing downloads or installs automatically. A private repository or no internet gives a plain message, never an error.
+- GitHub Actions workflow runs the full test suite on Windows for each push to main and builds the installer; a published release gets the installer attached and must match the app version.
+- START_WINDOWS.cmd without arguments behaves exactly as before (setup + tests + launch) for source checkouts.
+
 # 0.13.1 — Combined release: 0.13.0 plus the window fit fix
 
 - Brings the 0.11.4 window fix (made in parallel from 0.11.3) into the 0.13.0 line; no other behaviour changes.

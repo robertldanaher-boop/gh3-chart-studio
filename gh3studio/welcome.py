@@ -90,13 +90,38 @@ def legal_notice_text():
 class AboutDialog(QDialog):
     def __init__(self,parent=None):
         super().__init__(parent);self.setWindowTitle('About, credits & license — GH3 Chart Studio '+__version__);fit_size(self,760,680)
-        layout=QVBoxLayout(self);self.tabs=QTabWidget();layout.addWidget(self.tabs)
+        layout=QVBoxLayout(self)
+        from PySide6.QtWidgets import QHBoxLayout,QLabel,QPushButton
+        from PySide6.QtGui import QPixmap
+        from .branding import LOGO_PNG
+        top=QHBoxLayout();layout.addLayout(top)
+        self.logo=QLabel();self.logo.setObjectName('aboutLogo')
+        pixmap=QPixmap(str(LOGO_PNG)) if LOGO_PNG.exists() else QPixmap()
+        if not pixmap.isNull():self.logo.setPixmap(pixmap.scaledToHeight(150,Qt.SmoothTransformation))
+        top.addWidget(self.logo)
+        side=QVBoxLayout();top.addLayout(side,1)
+        name=QLabel('GH3 Chart Studio '+__version__);name.setStyleSheet('font-size:20px;font-weight:600;');side.addWidget(name)
+        self.update_status=QLabel('Check GitHub for a newer version.');self.update_status.setWordWrap(True);side.addWidget(self.update_status)
+        self.update_button=QPushButton('Check for updates');self.update_button.clicked.connect(self.check_updates);side.addWidget(self.update_button,0,Qt.AlignLeft)
+        side.addStretch(1)
+        self.updates=None
+        self.tabs=QTabWidget();layout.addWidget(self.tabs,1)
         credits=QTextBrowser();credits.setOpenExternalLinks(True);credits.setHtml(CREDITS_HTML);self.tabs.addTab(credits,'Credits')
         self.legal=QTextBrowser()
         try:self.legal.setMarkdown(legal_notice_text())
         except OSError as exc:self.legal.setPlainText('License documents could not be loaded. Extract the complete package, including LICENSE and docs/LICENSE_AND_DISCLAIMER.md.\n'+str(exc))
         self.tabs.addTab(self.legal,'License && disclaimer')
         buttons=QDialogButtonBox(QDialogButtonBox.Close);buttons.rejected.connect(self.reject);layout.addWidget(buttons)
+    def check_updates(self):
+        from .updates_gui import UpdateChecker
+        if self.updates is None:
+            self.updates=UpdateChecker(self)
+            self.updates.finished.connect(lambda result:(self.update_status.setText(result.message),self.update_button.setEnabled(True)))
+        if self.updates.check(manual=True):
+            self.update_button.setEnabled(False);self.update_status.setText('Checking GitHub…')
+    def done(self,code):
+        if self.updates is not None:self.updates.shutdown()
+        super().done(code)
 
 
 def show_credits(parent):

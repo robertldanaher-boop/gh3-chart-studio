@@ -1,0 +1,80 @@
+# Runs the full test suite on real Windows for every push to main, and builds the
+# installer. When a GitHub release is published, the installer is attached to it.
+name: Windows tests and installer
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          architecture: x64
+
+      - name: Install pinned dependencies (hash-checked)
+        run: |
+          python -m pip install --disable-pip-version-check --require-hashes --only-binary=:all: -r requirements-windows.lock
+
+      - name: Run full test suite
+        env:
+          QT_QPA_PLATFORM: offscreen
+          GH3_NO_UPDATE_CHECK: '1'
+          PYTHONUNBUFFERED: '1'
+        run: python -m pytest -v --tb=short -o faulthandler_timeout=120
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $line = Select-String -Path gh3studio/__init__.py -Pattern "__version__\s*=\s*'([^']+)'"
+          $v = $line.Matches[0].Groups[1].Value
+          "value=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "Version $v"
+
+      - name: Release tag must match the app version
+        if: github.event_name == 'release'
+        shell: pwsh
+        run: |
+          $tag = '${{ github.event.release.tag_name }}'.TrimStart('v')
+          if ($tag -ne '${{ steps.version.outputs.value }}') {
+            Write-Error "Release tag v$tag does not match app version ${{ steps.version.outputs.value }}. Bump gh3studio/__init__.py or fix the tag."
+            exit 1
+          }
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      - name: Build installer
+        shell: pwsh
+        working-directory: installer
+        run: |
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "/DAppVersion=${{ steps.version.outputs.value }}" GH3ChartStudio.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GH3ChartStudio-Setup-${{ steps.version.outputs.value }}
+          path: installer/output/*.exe
+
+      - name: Attach installer to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" (Get-ChildItem installer/output/*.exe).FullName --clobber
+        shell: pwsh

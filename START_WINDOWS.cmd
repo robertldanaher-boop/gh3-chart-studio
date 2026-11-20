@@ -1,5 +1,7 @@
 @echo off
 setlocal
+rem --install (used by the installer and the Repair shortcut): set up and test once, no launch, no pause.
+set "GH3_MODE=%~1"
 pushd "%~dp0"
 if errorlevel 1 goto folder_fail
 if not exist tools\startup_windows.py goto missing_files
@@ -22,7 +24,7 @@ call :probe "%LocalAppData%\Programs\Python\Python311\python.exe"
 if not defined GH3_PYTHON goto runtime_fail
 :launch
 echo Opening GH3 Chart Studio startup progress...
-"%GH3_PYTHON%" tools\startup_windows.py 2>> startup_bootstrap.log
+"%GH3_PYTHON%" tools\startup_windows.py %GH3_MODE% 2>> startup_bootstrap.log
 if errorlevel 1 goto bootstrap_fail
 popd
 exit /b 0
@@ -44,10 +46,10 @@ echo ERROR: Setup or startup failed. Details follow:
 type startup_bootstrap.log
 echo Save startup_bootstrap.log, python_install.log if present, and start_windows.log.
 :fail
-pause
+if /i not "%GH3_MODE%"=="--install" pause
 popd
 exit /b 1
 :folder_fail
 echo ERROR: Cannot open the application folder.
-pause
+if /i not "%~1"=="--install" pause
 exit /b 1

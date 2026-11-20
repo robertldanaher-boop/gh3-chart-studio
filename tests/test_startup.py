@@ -79,7 +79,7 @@ def test_real_app_reports_ready_after_event_loop_starts(tmp_path):
     import os
     import subprocess
     import sys
-    ready=tmp_path/'ready';env=dict(os.environ,QT_QPA_PLATFORM='offscreen',GH3_STARTUP_READY=str(ready))
+    ready=tmp_path/'ready';env=dict(os.environ,QT_QPA_PLATFORM='offscreen',GH3_STARTUP_READY=str(ready),GH3_NO_UPDATE_CHECK='1')
     with (tmp_path/'app.log').open('w') as output:
         process=subprocess.Popen([sys.executable,'run_app.py'],env=env,stdout=output,stderr=subprocess.STDOUT)
         try:
@@ -89,3 +89,34 @@ def test_real_app_reports_ready_after_event_loop_starts(tmp_path):
             assert ready.read_text()=='ready' and process.poll() is None
         finally:
             process.terminate();process.wait(timeout=10)
+
+
+def test_install_mode_sets_up_tests_and_records_without_launching(tmp_path):
+    import sys
+    obj=worker(tmp_path);obj.install=True
+    (tmp_path/'gh3studio').mkdir();(tmp_path/'gh3studio'/'__init__.py').write_text("__version__ = '9.9.9'\n")
+    with patch.object(sys,'version_info',(3,11,9,'final',0)),patch.object(sys,'maxsize',2**63-1),\
+         patch('tools.startup_windows.subprocess.run',return_value=SimpleNamespace(returncode=0)),\
+         patch('tools.startup_windows.subprocess.check_output',return_value='packages'),\
+         patch('tools.startup_windows.subprocess.Popen') as popen:obj.work()
+    popen.assert_not_called()
+    commands=[args for args,_ in obj.commands]
+    assert any('pytest' in args for args in commands) and any('install' in args for args in commands)
+    assert ('installed',None) in list(obj.events.queue)
+    record=json.loads((tmp_path/'.venv'/'installed.json').read_text())
+    assert record['version']=='9.9.9' and record['tests']=='passed'
+    obj.log.close()
+
+
+def test_install_mode_failed_tests_leave_no_install_record(tmp_path):
+    import sys
+    obj=worker(tmp_path);obj.install=True
+    def command(args,env=None):
+        if 'pytest' in args:raise RuntimeError('test failed')
+    obj.command=command
+    with patch.object(sys,'version_info',(3,11,9,'final',0)),patch.object(sys,'maxsize',2**63-1),\
+         patch('tools.startup_windows.subprocess.run',return_value=SimpleNamespace(returncode=0)),\
+         patch('tools.startup_windows.subprocess.check_output',return_value='packages'):obj.work()
+    assert ('failed',None) in list(obj.events.queue)
+    assert not (tmp_path/'.venv'/'installed.json').exists()
+    obj.log.close()
