@@ -1,3 +1,9 @@
+# 0.14.1 — Installer that works straight from the ZIP
+
+- New "Install GH3 Chart Studio.cmd" (installer/install.ps1): double-click after extracting the ZIP. No compiled setup .exe needed.
+- Installs per user to %LOCALAPPDATA%\Programs\GH3 Chart Studio, runs setup and tests once, creates Start menu entries (GH3 Chart Studio, GH3 Chart Studio - Repair) and a desktop icon, and registers in Settings > Apps with Uninstall (installer/uninstall.ps1).
+- Uses the same Apps entry as the Inno Setup .exe, so the two never appear twice. The Inno Setup .exe built by GitHub Actions remains the preferred installer when available.
+
 # 0.14.0 — Windows installer, app icon and update check
 
 - New per-user Windows 10/11 installer (Inno Setup, installer/GH3ChartStudio.iss): no administrator prompt; installs to %LOCALAPPDATA%\Programs\GH3 Chart Studio.

@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.14.0 handoff
+# GH3 Chart Studio — 0.14.1 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_14_0.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_14_1.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,31 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.14.0 update — installer, icon, update check
+## Current 0.14.1 update — script installer from the ZIP
+
+Bob: 0.14.0 logo and update check work, but he got no Start menu entry or
+desktop icon. He had only the source ZIP (which holds the .iss recipe, not a
+compiled .exe) and asked Claude to build the installer. Claude's environment
+cannot compile Windows installers (no Windows/Wine/Inno Setup, outbound network
+blocked; GitHub Actions results are not visible to it). So 0.14.1 adds an
+installer that runs directly from the extracted ZIP:
+- "Install GH3 Chart Studio.cmd" (root, CRLF) -> powershell -WindowStyle Hidden
+  -ExecutionPolicy Bypass installer/install.ps1 (Windows PowerShell 5.1, ASCII).
+- install.ps1: confirm dialog; refuses if the installed copy is running; removes
+  old code dirs (keeps .venv); robocopy to %LOCALAPPDATA%\Programs\GH3 Chart
+  Studio; runs START_WINDOWS.cmd --install hidden and checks exit 0 plus
+  .venv/installed.json; creates .lnk shortcuts via WScript.Shell (Start menu
+  app + Repair, desktop; icon app.ico); writes HKCU Uninstall key
+  {2E998221-C3C3-4195-9C31-6047FBBDDE0E}_is1 (same as Inno, so one entry) with
+  UninstallString -> installer/uninstall.ps1; launches the app on success.
+  Shortcuts lack an AppUserModelID (the Inno version sets it).
+- uninstall.ps1: removes shortcuts, registry key and the program folder.
+Evidence: no PowerShell available to Claude; scripts were only reviewed by hand
+(ASCII, quoting, balanced braces). NOT executed anywhere yet.
+Still open: whether the 0.14.0 GitHub Actions run passed and produced the
+Inno .exe — ask Bob to check the Actions tab.
+
+## Previous 0.14.0 update — installer, icon, update check
 
 Bob asked for a formal Windows 11 installer: setup and tests only at install,
 Start menu entry, desktop icon, update checks, and his artwork (a dog in a
