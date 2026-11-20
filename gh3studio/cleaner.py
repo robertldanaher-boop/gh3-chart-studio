@@ -43,6 +43,12 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
             if plan['left_out']:
                 row['warnings'].append('Not mixed: '+'; '.join(f"{i['file']} ({i['reason']})" for i in plan['left_out']))
         row['metadata']=fill_from_audio(song.metadata,chosen)
+        # Renaming tools prefix "1. ", "3." to Artist/Title; remove them (manual edits below still win).
+        from .song_identity import clean_track_numbers
+        row['metadata'],prefix_changes=clean_track_numbers(row['metadata'])
+        if prefix_changes:
+            row['changes']+=prefix_changes
+            row['warnings'].append('Removed track-number prefix: '+'; '.join(f"{c['field']} \"{c['from']}\" -> \"{c['to']}\"" for c in prefix_changes))
         if metadata is not None:row['metadata'].update({k:v for k,v in metadata.items() if k in FIELDS})
         song.metadata.update(row['metadata'])
         for field in ('Name','Artist'):

@@ -20,7 +20,8 @@ class SongExportDialog(QDialog):
         row=QHBoxLayout();layout.addLayout(row);self.audio=QLineEdit(audio_path);row.addWidget(self.audio)
         browse=QPushButton('Change recording…');browse.clicked.connect(self.browse);row.addWidget(browse)
         form=QGridLayout();layout.addLayout(form);self.identity_fields={}
-        identity=fill_from_audio(song.metadata,audio_path)
+        from .song_identity import clean_track_numbers
+        identity,_=clean_track_numbers(fill_from_audio(song.metadata,audio_path))
         for index,field in enumerate(FIELDS):
             edit=QLineEdit(identity.get(field,''));self.identity_fields[field]=edit
             row,col=divmod(index,2);form.addWidget(QLabel('Title' if field=='Name' else field),row*2,col)

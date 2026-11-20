@@ -1,3 +1,4 @@
+import pytest
 import configparser
 import copy
 from datetime import datetime
@@ -59,3 +60,21 @@ def test_folder_collisions_keep_existing_files(tmp_path):
     (tmp_path/'Artist - Song (2)').write_text('leave alone')
     assert export_folder_path(tmp_path,metadata).name=='Artist - Song (3)'
     assert (tmp_path/'Artist - Song (2)').read_text()=='leave alone'
+
+
+@pytest.mark.parametrize('before,after',[
+    ('1. Metallica','Metallica'),('03.Enter Sandman','Enter Sandman'),('12 . Song','Song'),
+    ('3. 1979','1979'),('  7. Seven Nation Army ','Seven Nation Army'),('100. Track','Track'),
+    # Real names that start with numbers stay unchanged.
+    ('3 Doors Down','3 Doors Down'),('311','311'),('The 1975','The 1975'),('10.000 Maniacs','10.000 Maniacs'),
+    ('2.0','2.0'),('5.5 Hours','5.5 Hours'),('4 Non Blondes','4 Non Blondes'),('1.','1.'),('1234. Too long','1234. Too long')])
+def test_track_number_prefix_removed_only_when_it_is_a_prefix(before,after):
+    from gh3studio.song_identity import strip_track_number
+    assert strip_track_number(before)==after
+
+
+def test_clean_track_numbers_touches_artist_and_title_only():
+    from gh3studio.song_identity import clean_track_numbers
+    cleaned,changes=clean_track_numbers({'Artist':'1. Band','Name':'2. Song','Album':'3. Album'})
+    assert cleaned=={'Artist':'Band','Name':'Song','Album':'3. Album'}
+    assert [(c['field'],c['from'],c['to']) for c in changes]==[('Artist','1. Band','Band'),('Title','2. Song','Song')]

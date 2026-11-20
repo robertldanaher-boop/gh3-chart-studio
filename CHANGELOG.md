@@ -1,3 +1,11 @@
+# 0.17.0 — Remove track-number prefixes from Artist and Title
+
+- Bob: 0.16.7 installed and running. Renaming tools add "1. ", "3." etc. to Artist or Title to mark track order; almost no artist names contain such numbers.
+- Song scans (Prepare my songs and Clean only, single songs and collections) and the single-song export review remove a leading 1-3 digit number followed by a period from Artist and Title: "1. Metallica" -> "Metallica", "03.Enter Sandman" -> "Enter Sandman", "3. 1979" -> "1979".
+- Names that only start with numbers are kept: "3 Doors Down", "311", "The 1975", "10.000 Maniacs", "2.0", "5.5 Hours".
+- Each removal is listed in the song's warnings and changes. A value typed by hand in the metadata editor is kept as typed. Album and other fields are not changed.
+- The cleaned names flow into notes.chart, song.ini, song.ogg tags and the "Artist - Title" folder name.
+
 # 0.16.7 — Root cause of the install-time test freeze
 
 - Bob's 0.16.6 install froze again in tests/test_stems_gui.py, this time with the worker inside soundfile's open (0.16.5: inside realpath). The worker stops wherever it is when the deadlock forms, so the location is not the cause.

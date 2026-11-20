@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.7 handoff
+# GH3 Chart Studio — 0.17.0 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_7.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_17_0.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,20 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.7 update — install-time freeze root cause
+## Current 0.17.0 update — track-number prefixes
+
+Bob: 0.16.7 installed and running (Nov 20 ~11:44); the conftest disposal fix
+resolved the install-time freezes. He is doing more testing.
+Request: artist/song names like "1. Artist" or "3.Song" come from a renaming
+tool; remove them during cleanup. song_identity.TRACK_PREFIX
+r'^\s*\d{1,3}\s*\.(?!\d)\s*' (digits + dot not followed by a digit; result
+must be non-empty); strip_track_number / clean_track_numbers (Artist and Name
+only). Applied in cleaner.inspect_chart after fill_from_audio and BEFORE manual
+metadata overrides (manual entries win), with change entries + warning; and in
+song_export_gui identity defaults. Tests: test_song_identity (16 cases),
+test_cleaner (scan + manual override). Run here with the WAV shim: pass.
+
+## Previous 0.16.7 update — install-time freeze root cause
 
 Bob's 0.16.6 install (log 11:27): 293 passed, then tests/test_stems_gui.py hung
 again; worker now in soundfile._open via song_identity.fill_from_audio, main in

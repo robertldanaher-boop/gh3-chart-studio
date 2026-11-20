@@ -176,3 +176,14 @@ def test_separate_tracks_export_one_mixed_song_ogg(tmp_path):
     assert {s['file'] for s in mix['stems']}=={'song.wav','guitar.ogg','rhythm.wav'}
     assert before=={str(p):fingerprint(p) for p in folder.iterdir()}
     assert not (out/'guitar.ogg').exists() and not (out/'preview.ogg').exists()
+
+
+def test_scan_removes_track_number_prefix_but_manual_edit_wins(tmp_path):
+    path=fixture(tmp_path/'song',metadata={'Name':'3. Song Title','Artist':'1. The Band'})
+    row=inspect_chart(path)
+    assert row['metadata']['Name']=='Song Title' and row['metadata']['Artist']=='The Band'
+    assert row['song'].metadata['Name']=='Song Title'
+    assert any(c.get('action')=='remove track-number prefix' for c in row['changes'])
+    assert any('track-number prefix' in w for w in row['warnings'])
+    edited=inspect_chart(path,metadata={'Name':'3. Song Title','Artist':'1. The Band'})
+    assert edited['metadata']['Name']=='3. Song Title'  # a deliberate manual entry is kept
