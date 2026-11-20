@@ -1,26 +1,102 @@
 # GH3 Chart Studio — 0.11.4 handoff
 
-Updated November 20, 2026 for Bob Danaher.
+Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_11_4.zip.
+Release commit is RELEASE_COMMIT.txt in the ZIP. The ZIP's repository.bundle holds
+the full history, all branches and tags v0.1.0–v0.11.4:
+`git clone repository.bundle studio`, then `git checkout main`.
 
-## Source of truth: GitHub
-The project now lives at https://github.com/robertldanaher-boop/gh3-chart-studio
-(private). `main` carries the full history; work on branches and push there instead
-of passing ZIPs/bundles. Tag v0.11.3 = 2e287db (created on GitHub). Older tags
-v0.1.0–v0.11.2 are in repository.bundle attached to the v0.11.3 GitHub release.
-Claude sessions here could push branches but not tags (proxy 403); create tags via
-a GitHub release in the browser. Bob confirmed 0.11.3 works on Windows (Nov 20).
-The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
+## Start here
 
-## Current 0.11.4 update
+1. Restore Git from the bundle (above) or clone GitHub (below). Confirm
+   `git rev-parse main` equals RELEASE_COMMIT.txt and `git describe --tags`
+   gives v0.11.4.
+2. Run `python tools/check_environment.py`, then record exactly which tests you
+   could and could not run. Never report the full suite as passing unless it ran.
+3. Ask Bob for his Windows 0.11.4 startup result (see "Open items") before
+   adding features.
 
-Bob: 0.11.3 works; window opened with title bar above screen top, could not move or
-resize. Cause: fixed 1180x840 main window (and 860x700 Tk startup) with no screen
-check. New gh3studio/window_fit.py fits main window to availableGeometry, centres it,
-keeps title bar on screen; dialogs clamp via fit_size; Tk startup clamps/centres.
-Layout minimum (1024x700) unchanged. Tests: tests/test_window_fit.py (8 pure cases
-+ 1 Qt case). Executed here: Python 3.13 Linux, NO PySide6 — pure tests and
-test_minimal passed (11 passed, Qt case skipped). Full suite NOT run here; the
-startup test run on Windows is the first full verification. See docs/M11_4_RELEASE.md.
+## Where the code lives: GitHub (new since 0.11.3)
+
+Private repo: https://github.com/robertldanaher-boop/gh3-chart-studio
+- `main` is the source of truth and carries the full 47-commit history.
+- Branches milestone-2-pattern-learning and milestone-3-audio-analysis are old
+  ancestors of main; ignore them.
+- On GitHub, tag v0.11.3 exists (= 2e287db, created via a GitHub release; that
+  release also has the v0.11.3 repository.bundle attached). Tags v0.1.0–v0.11.2
+  and v0.11.4 are NOT on GitHub yet: Claude's session could push branches but its
+  proxy refused tag pushes (HTTP 403). They are all in this ZIP's bundle.
+  If you can push tags, run `git push origin --tags`; otherwise Bob can create
+  v0.11.4 in the browser: Releases → Draft a new release → tag v0.11.4 on main.
+- If you can reach the repo, work there (commit to main or a branch, push).
+  If you cannot, work from the bundle and return a new ZIP + bundle as before;
+  Bob will upload or relay it. Do not let two copies diverge: one active owner.
+- Bob uploads through the browser, not the command line. Give browser steps.
+  The web uploader skips dot-files (e.g. .gitignore) and accepts 100 files per
+  batch; never ask him to upload .venv, __pycache__, logs or music.
+
+## Current 0.11.4 update — windows fit the screen
+
+Bob confirmed 0.11.3 runs on Windows and the collection flow works (Nov 20).
+He then reported: the main window opened too high, title bar above the screen, so
+he could not move it or reach the corner to resize it.
+
+Cause: Window always opened at a fixed 1180x840 client size with no screen check;
+the Tk startup progress window was a fixed 860x700. On displays with less usable
+height (e.g. 1366x768, or 1080p at 125–150% scaling) Windows placed the frame
+partly off-screen.
+
+Change (commit 68896ce, files):
+- NEW gh3studio/window_fit.py
+  - fit_geometry(preferred, minimum, available, frame_extra): pure arithmetic.
+    Shrinks preferred client size to the available area, never below the
+    layout minimum, centres the frame, always keeps the frame's top-left
+    (title bar) inside the available area. Default frame allowance 16x48.
+  - place_on_screen(widget): uses screen().availableGeometry() (excludes
+    taskbar); main() calls it before show and again via QTimer.singleShot(0)
+    after show when real frame margins are known.
+  - fit_size(dialog, w, h): clamps dialog size; Qt still centres dialogs.
+- gh3studio/gui.py: PREFERRED_MAIN_SIZE constant; main() uses place_on_screen.
+- cleanup_gui, sync_gui, song_export_gui, editor_gui, first_run, welcome:
+  fixed resize() replaced by fit_size().
+- tools/startup_windows.py: Tk window clamps to screen size (−40 w, −120 h)
+  and centres; minsize clamped too.
+- NEW tests/test_window_fit.py: 8 pure cases (large/medium/small screens,
+  negative-origin monitor, minimum larger than screen) + 1 Qt case (real Window
+  frame top-left inside availableGeometry; dialog clamp).
+- Version 0.11.4 in gh3studio/__init__.py, pyproject.toml, README title.
+  CHANGELOG.md and docs/M11_4_RELEASE.md updated.
+
+Unchanged: all layouts, the 1024x700 size assertions, workflows, chart/audio
+processing, dependencies. The window was always resizable; it is now reachable.
+
+Evidence (be exact): Claude's environment had Python 3.13 on Linux WITHOUT
+PySide6, SoundFile or Mido, and installs were blocked. Executed: 
+tests/test_window_fit.py + tests/test_minimal.py → 11 passed, 1 skipped (the Qt
+case, skipped for missing PySide6). tests/test_startup.py fails identically
+before and after the change in that environment (missing PySide6), so it says
+nothing about this change. The full suite has NOT been run on 0.11.4. Bob's
+Windows START_WINDOWS.cmd run is the first full verification.
+
+Known limit: layouts still need ~1024x700 client area. On a screen with less
+usable height the window opens at the top edge with the title bar visible but
+the bottom may extend past the screen; workaround maximize (double-click title
+bar or Win+Up). A real fix would wrap the central content in a scroll area —
+only do that if Bob's screen needs it, and keep the existing visibility tests.
+
+## Open items (in order)
+
+1. Bob runs 0.11.4 START_WINDOWS.cmd (extract to a new folder; first launch
+   rebuilds .venv). Confirm: startup window fully visible; studio centred with
+   title bar visible; title bar drag and corner resize work; About and export
+   review fit. If any startup test fails, get start_windows.log and fix the
+   cause — never weaken or skip tests.
+2. Ask Bob for his resolution and Windows display scale (Settings → System →
+   Display) if sizing still looks wrong.
+3. Push the missing tags to GitHub or have Bob create v0.11.4 via a release.
+4. Then resume the existing roadmap: Dolphin acceptance of Expert-only/Hard-only
+   conversions selecting all four difficulty slots; two consecutive collection
+   runs (stable output reuse); one song TheGHOST/Wii end to end.
 
 ## Previous 0.11.3 update
 
