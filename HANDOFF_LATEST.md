@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.1 handoff
+# GH3 Chart Studio — 0.16.2 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_1.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_2.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,17 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.1 update — stem mix headroom
+## Current 0.16.2 update — test correction
+
+Bob's Windows run of 0.16.1: 334 passed, 1 skipped, 1 failed — KeyError
+'padded_frames' in test_separate_tracks_export_one_mixed_song_ogg (line 173),
+AFTER the decoded-peak assertion passed (so the -1 dBFS fix works on Windows).
+The test wrongly expected the longest track (guitar.ogg) to be padded; fixed to
+check song.wav and rhythm.wav padding == mix frames - 4410. Test-only change.
+Lesson: run new end-to-end tests fully before release; locally this was done
+with a WAV shim and a stubbed Ogg step (all three new cleaner stem tests pass).
+
+## Previous 0.16.1 update — stem mix headroom
 
 FIRST FULL WINDOWS RESULT FOR THE 0.14-0.16 WORK: Bob installed 0.16.0 with
 "Install GH3 Chart Studio.cmd" (installed to %LOCALAPPDATA%\Programs\GH3 Chart

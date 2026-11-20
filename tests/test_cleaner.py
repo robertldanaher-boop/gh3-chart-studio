@@ -170,7 +170,9 @@ def test_separate_tracks_export_one_mixed_song_ogg(tmp_path):
     assert np.abs(data).max()<1.0  # decoded Ogg must not clip after the anti-clip turn-down
     details=json.loads((out/'validation.json').read_text(encoding='utf-8'))
     mix=details['audio_stems']
-    assert mix['turned_down'] and mix['stems'][1]['padded_frames']==4410
+    # guitar.ogg is the longest track; the shorter song/rhythm tracks are padded with silence.
+    assert mix['turned_down'] and 'padded_frames' not in mix['stems'][1]
+    assert mix['stems'][0]['padded_frames']==mix['stems'][2]['padded_frames']==mix['frames']-4410>0
     assert {s['file'] for s in mix['stems']}=={'song.wav','guitar.ogg','rhythm.wav'}
     assert before=={str(p):fingerprint(p) for p in folder.iterdir()}
     assert not (out/'guitar.ogg').exists() and not (out/'preview.ogg').exists()

@@ -1,3 +1,7 @@
+# 0.16.2 — Test correction
+
+- Windows run of 0.16.1: 334 passed, 1 failed with KeyError 'padded_frames'. The audio fix worked (the clip check passed); the test itself checked padding on the longest track (guitar), which is never padded. It now checks that the two shorter tracks are padded to the mix length. No app code changed.
+
 # 0.16.1 — Mixed tracks never clip after Ogg encoding
 
 - Bob's Windows install of 0.16.0: 334 passed, 1 failed. The stem-mix test decoded song.ogg with a 1.023 peak: the mix was limited to 0.98, and lossy Vorbis encoding overshot it.
