@@ -357,7 +357,7 @@ class Window(QMainWindow):
     def start_export(self):
         if self.converted is None or self.busy(): return
         from .song_export_gui import SongExportDialog
-        dialog=SongExportDialog(self.converted,self.playback.player.source().toLocalFile(),self)
+        dialog=SongExportDialog(self.converted,self.playback.player.source().toLocalFile(),self,conversion_report=self.report)
         if not dialog.exec():dialog.deleteLater();return
         prepared,review,audio=dialog.prepared,dialog.review,dialog.audio.text()
         dialog.deleteLater()
@@ -365,6 +365,7 @@ class Window(QMainWindow):
         if not parent:return
         import copy
         report=copy.deepcopy(self.report);report['medium_export_cleanup']=review
+        if review.get('synchronization'):report['synchronization']=review['synchronization']
         if review.get('hopo_assistance'):report['hopo_assistance']=review['hopo_assistance']
         if any(c['action']=='shorten sustain' for c in review['changes']):report['retained_notes_exact']=False
         from .song_identity import export_folder_path
@@ -382,7 +383,7 @@ class Window(QMainWindow):
             if report.get('hopo_assistance'):
                 self.playback.threshold.setValue(1/2.95)
                 self.playback.status.setText('Exported with HOPO assistance. Set TheGHOST HOPO measure to 2.95 and verify in-game. '+str(report['hopo_assistance']['estimated_hopo_percent'])+'% estimated HOPO events.')
-        self.run_job('Exporting chart, full-mix audio and song.ini…',lambda cancel:export_song_folder(song,report,destination,audio,self.path,overwrite=True),ready)
+        self.run_job('Exporting chart, full-mix audio and song.ini…',lambda cancel:export_song_folder(song,report,destination,audio,self.path,editor_all=bool(report.get("all_difficulty_cleanup") and report.get("hopo_assistance")),overwrite=True),ready)
     def export_to(self,destination):
         self.run_job('Writing and reopening both exports…',lambda cancel:export_bundle(self.converted,self.report,destination,self.path),
                      lambda details:self.log_line('Export verified: '+str(destination)+'\n'+ '\n'.join(details['warnings'])))

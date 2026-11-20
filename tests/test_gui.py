@@ -295,9 +295,10 @@ def test_marked_display_copy_replaces_old_medium_and_folder_export(tmp_path,app)
     w.playback.difficulty.setCurrentText('Expert');w.playback.difficulty.setCurrentText('Medium')
     assert [n[2] for n in w.playback.highway.notes]==[1,3]
     audio=FIXTURE.parent/'audio'/'onset-study.wav'
-    dialog=SongExportDialog(w.converted,str(audio),w)
-    assert not dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
-    dialog.markers.setChecked(True)
+    dialog=SongExportDialog(w.converted,str(audio),w,conversion_report=w.report)
+    assert dialog.markers.isHidden()
+    assert not w.converted.modifiers
+    assert w.song.modifiers.get('Expert')
     assert dialog.buttons.button(QDialogButtonBox.Save).isEnabled()
     w.export_song_to(tmp_path/'out',audio,dialog.prepared,dict(w.report,medium_export_cleanup=dialog.review));wait(w)
     assert read_chart(tmp_path/'out'/'notes.chart').tracks['Expert']==song.tracks['Expert']

@@ -96,10 +96,11 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
             converted,conversion=complete_conversion(song,source,strict=False,randomize_orange_sustains=preserve_sustains,sustain_seed=0)
             clean,review=prepare_medium(converted,strip_markers=True,trim_sustains=True)
             row['conversion']=conversion
+            row['changes']+=conversion['all_difficulty_cleanup']['changes']
             row['changes'].append({'action':'create three-fret Easy and fill missing difficulty slots',**conversion['difficulty_completion']})
-            row['changes'].append({'action':'copy '+source+' to four-fret Medium','source_gems':conversion['source_gems'],'medium_gems':conversion['medium_gems'],'sustain_transfers':conversion['sustain_transfers']})
+            row['changes'].append({'action':'copy '+source+' to four-fret Medium','source_gems':conversion['source_gems'],'medium_gems':conversion['medium_gems'],'sustain_transfers':conversion.get('sustain_transfers',[])})
             row['changes']+=review['changes'];row['errors']+=review['remaining_errors']
-            row['warnings']+=song.warnings+['Existing Easy and Medium are replaced in the output. Existing Expert/Hard notes and phrases are retained; automatic timing translation affects all tracks together. Medium markers are removed and incompatible Medium sustains shortened as listed.']
+            row['warnings']+=song.warnings+['Existing Easy and Medium are replaced in the output. All four difficulties are cleaned; unsupported markers removed and incompatible sustains repaired as listed. Automatic timing translation affects all tracks together.']
         else:
             # Medium must never export Orange; preserve its sustains using seeded four-fret placement.
             if any(n.lane==4 for n in song.tracks.get('Medium',[])):
@@ -171,7 +172,7 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             if sync:
                 report['synchronization']=sync
                 log('SYNCHRONIZATION | '+json.dumps(sync,ensure_ascii=True))
-            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=not bool(row.get('conversion')),audio_padding_frames=sync.get('audio_padding_frames',0),overwrite=True)
+            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True,audio_padding_frames=sync.get('audio_padding_frames',0),overwrite=True)
             if details['audio_export'].get('fallback'):
                 result['audio_recovered']=True
                 log('AUDIO RECOVERED | '+row['audio']+' | '+json.dumps(details['audio_export']['fallback']))

@@ -7,13 +7,14 @@ from .song_identity import FIELDS,fill_from_audio,export_folder_name
 from .hopo import prefer_hopos
 
 class SongExportDialog(QDialog):
-    def __init__(self,song,audio_path='',parent=None):
-        super().__init__(parent);self.song=song;self.setWindowTitle('Review & export your song');self.resize(820,700)
+    def __init__(self,song,audio_path='',parent=None,conversion_report=None):
+        super().__init__(parent);self.song=song;self.conversion_report=conversion_report or {};self.combined=bool(self.conversion_report.get("all_difficulty_cleanup"));self.setWindowTitle('Review & export your song');self.resize(820,700)
         outer=QVBoxLayout(self);scroll=QScrollArea();scroll.setWidgetResizable(True);outer.addWidget(scroll)
         content=QWidget();scroll.setWidget(content);layout=QVBoxLayout(content)
         from .workspace import heading
         layout.addWidget(heading('Ready for the next stage.', 'Review the recording and song details before creating a new folder.'))
         label=QLabel('Exports notes.chart + song.ogg + song.ini and validation details. Existing Expert/Hard stay untouched; conversions also create three-fret Easy and fill missing slots.\nThis optional cleanup affects Medium. Shortening sustains changes the exact Orange-only copy.');label.setWordWrap(True);layout.addWidget(label)
+        if self.combined:label.setText('Medium + Easy created; all four difficulties cleaned. Review repairs below. Original files remain unchanged; exported Hard/Expert include necessary compatibility repairs.')
         layout.addWidget(QLabel('Recording from preview (used for this song’s export):'))
         row=QHBoxLayout();layout.addLayout(row);self.audio=QLineEdit(audio_path);row.addWidget(self.audio)
         browse=QPushButton('Change recording…');browse.clicked.connect(self.browse);row.addWidget(browse)
@@ -25,6 +26,8 @@ class SongExportDialog(QDialog):
             form.addWidget(edit,row*2+1,col);edit.textChanged.connect(self.update_identity)
         self.markers=QCheckBox('Remove existing Medium markers/open-note events (changes gameplay)');layout.addWidget(self.markers)
         self.sustains=QCheckBox('Shorten unsupported Medium sustains (review each change below)');layout.addWidget(self.sustains)
+        if self.combined:
+            self.markers.setChecked(True);self.sustains.setChecked(True);self.markers.hide();self.sustains.hide()
         self.hopo=QCheckBox('Favor HOPOs in Medium runs — experimental TheGHOST .chart profile');layout.addWidget(self.hopo)
         self.hopo_gap=QComboBox();self.hopo_gap.addItem('Fast runs: up to ½ beat',.5);self.hopo_gap.addItem('More generous: up to 1 beat',1.);layout.addWidget(self.hopo_gap)
         self.hopo_summary=QLabel('');self.hopo_summary.setWordWrap(True);layout.addWidget(self.hopo_summary)
@@ -34,13 +37,19 @@ class SongExportDialog(QDialog):
         self.buttons=QDialogButtonBox(QDialogButtonBox.Save|QDialogButtonBox.Cancel);outer.addWidget(self.buttons)
         self.buttons.button(QDialogButtonBox.Save).setText('Choose destination / export…')
         self.buttons.accepted.connect(self.accept);self.buttons.rejected.connect(self.reject)
-        self.hopo.toggled.connect(self.refresh);self.hopo_gap.currentIndexChanged.connect(self.refresh);self.markers.toggled.connect(self.refresh);self.sustains.toggled.connect(self.refresh);self.audio.textChanged.connect(self.update_export_enabled);self.refresh()
+        self.hopo.toggled.connect(self.refresh);self.hopo_gap.currentIndexChanged.connect(self.refresh);self.markers.toggled.connect(self.refresh);self.sustains.toggled.connect(self.refresh);self.audio.textChanged.connect(self.refresh if self.combined else self.update_export_enabled);self.refresh()
     def browse(self):
         path,_=QFileDialog.getOpenFileName(self,'Select matching full mix','','Audio (*.wav *.flac *.ogg *.mp3)')
         if path:self.audio.setText(path)
     def refresh(self,*args):
         try:
-            self.prepared,self.review=prepare_medium(self.song,self.markers.isChecked(),self.sustains.isChecked())
+            working=self.song;plan={}
+            if self.combined:
+                from .song_export import automatic_export_timing
+                working,plan=automatic_export_timing(working,self.audio.text())
+            self.prepared,self.review=prepare_medium(working,self.markers.isChecked(),self.sustains.isChecked())
+            if self.combined:self.review['changes']=self.conversion_report['all_difficulty_cleanup']['changes']+self.review['changes']
+            if plan:self.review['synchronization']=plan
             self.hopo_summary.setText('No added HOPO assistance. Natural HOPOs may still occur.')
             if self.hopo.isChecked():
                 self.prepared,hopo_review=prefer_hopos(self.prepared,self.hopo_gap.currentData())

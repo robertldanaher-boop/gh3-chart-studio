@@ -1,3 +1,9 @@
+# 0.12.0 — Convert and clean in one workflow
+
+- Four-fret conversion automatically cleans all four difficulties for single songs and collections.
+- Single-song export applies song.ini delay automatically, with padding recorded once.
+- Repair details remain reviewable; original source files stay unchanged.
+
 # 0.11.3 — Direct collection import for challenging Medium
 
 - Visible Choose folder action in Four-fret workspace; recursively scans nested song folders.

@@ -1,11 +1,15 @@
-# GH3 Chart Studio — 0.11.3 handoff
+# GH3 Chart Studio — 0.12.0 handoff
 
-Prepared November 19, 2026 for Bob Danaher. Give the next assistant this file and
-GH3_Chart_Studio_v0_11_3.zip. Restore Git with `git clone repository.bundle studio`.
-Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.11.3 is authoritative.
+Prepared November 20, 2026 for Bob Danaher. Give the next assistant this file and
+GH3_Chart_Studio_v0_12_0.zip. Restore Git with `git clone repository.bundle studio`.
+Release commit is RELEASE_COMMIT.txt in the ZIP; tag v0.12.0 is authoritative.
 The intermediate learning fix is tagged v0.3.1. Prior full baseline was v0.3.0.
 
-## Current 0.11.3 update
+## Current 0.12.0 update
+
+User authorized combining cleanup and conversion to eliminate separate passes. complete_conversion now cleans every output difficulty, strips original unsupported markers, repairs sustains, resolves agreeing anchors and blocks conflicting anchors. Original Song remains unchanged. Reports all_difficulty_cleanup, updated operation/status and source compatibility errors separately. Existing Hard/Expert no longer promised unchanged in output; valid notes remain intact and repairs logged. Bulk exports enforce clean_all. Combined single-song dialog hides redundant manual repair toggles, displays automatic repair list and normalizes timing using song.ini delay once when audio available; export passes corresponding audio padding and guards all tracks. Optional newly requested HOPO assistance uses existing editor validator after cleanup. Legacy reserved workflows retain their previous paths. 294 tests passed in 27.12s. See M12_RELEASE.md and M12_TEST_RESULTS.txt. Native Windows/Dolphin confirmation pending.
+
+## Previous 0.11.3 update
 
 Added persistent Choose folder button in AdaptPanel mode row. Window.start_medium_collection handles picker, workspace selection and recursive bulk scan. start_guided orange with directory and directory drops on adapt now route here. CleanerPanel.scan retains orange goal in four_fret mode. Chart file opens explicitly switch to single-song page. Three route regressions cover nested Expert/Hard song folders, populated Medium/Easy lane restrictions, no clean queue misrouting. See M11_3_RELEASE.md and M11_3_TEST_RESULTS.txt. Windows confirmation pending.
 

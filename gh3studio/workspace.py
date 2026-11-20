@@ -29,7 +29,7 @@ class AdaptPanel(QWidget):
         super().__init__();self.owner=owner;self.loaded_song=None
         outer=QVBoxLayout(self);outer.setContentsMargins(18,14,18,14);outer.setSpacing(10)
         outer.addWidget(heading('Four frets. Keep the challenge.',
-            'Copy Expert/Hard into four-fret Medium and three-fret Easy. Populate all difficulty slots.'))
+            'Create Medium + Easy and clean all four difficulties in one step.'))
         self.steps=StepStrip(['Choose chart','Create Medium','Listen & export']);outer.addWidget(self.steps)
         self.scroll=QScrollArea();self.scroll.setWidgetResizable(True);outer.addWidget(self.scroll,1)
         body=QWidget();self.body=QVBoxLayout(body);self.body.setContentsMargins(0,0,8,0);self.body.setSpacing(10);self.scroll.setWidget(body)
@@ -110,6 +110,6 @@ class AdaptPanel(QWidget):
             self.next_step.setText('Export complete. Open the song folder for import testing.' if self.owner.last_export_path else
                 'Medium is prepared. Compare tracks below, listen, then review metadata and compatibility before export.')
         elif song:
-            self.summary.setText('Source file stays untouched. Orange taps are removed; surviving notes keep their timing. No automatic density reduction.')
+            self.summary.setText('Original files stay untouched. All difficulties are cleaned; sustain repairs are reported. No automatic density reduction.')
             self.next_step.setText('Choose Expert or Hard, then Create four-fret Medium.' if self.source.count() else
                 'This chart has no Expert or Hard notes. Use Clean songs to prepare its existing difficulties.')

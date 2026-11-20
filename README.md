@@ -1,4 +1,6 @@
-# GH3 Chart Studio 0.11.3 — Wii chart workshop
+# GH3 Chart Studio 0.12.0 — Wii chart workshop
+
+**Convert and clean together:** Make a challenging Medium now creates Medium + Easy, fills missing slots and cleans all four difficulties. Exported Hard/Expert receive compatibility repairs; originals remain unchanged. No separate Clean songs pass needed. [Windows steps](docs/M12_RELEASE.md).
 
 **Startup layout fix:** The collection source explanation now wraps at large text sizes, preventing a hidden page from widening the entire window. [Fix details and Windows test steps](docs/M11_1_RELEASE.md).
 

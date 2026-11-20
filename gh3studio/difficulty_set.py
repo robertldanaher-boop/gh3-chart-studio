@@ -58,7 +58,23 @@ def complete_conversion(song,source,*,strict=False,randomize_orange_sustains=Tru
             filled.append(difficulty)
     report['difficulty_completion']=dict(source=source,easy=details,filled_from_source=filled,
         note_counts={d:len(result.tracks[d]) for d in ('Easy','Medium','Hard','Expert')})
-    report['preserved_difficulties']=[d for d in ('Hard','Expert') if song.tracks.get(d)]
+    from .synchronization import inspect_anchors
+    anchors=inspect_anchors(result)
+    if any(a['needs_review'] for a in anchors):raise ChartError('Tempo anchors disagree with the BPM map; review synchronization')
+    result.anchors=[]
+    result,cleanup=prepare_cleanup(result,strip_markers=True,trim_sustains=True)
+    cleanup['changes']=anchors+cleanup['changes']
+    if cleanup['remaining_errors']:raise ChartError('\n'.join(cleanup['remaining_errors']))
+    report['all_difficulty_cleanup']=cleanup
+    report['operation']='convert-and-clean-all'
+    report['status']='All difficulties structurally cleaned; target-game acceptance required'
+    report['timing']='Onset ticks retained during conversion; incompatible sustains repaired as listed. Export synchronization may translate all tracks together.'
+    report['warnings']=[w for w in report['warnings'] if 'Expert and Hard are unchanged' not in w and 'no sustain was silently shortened' not in w]
+    report['source_compatibility_errors']=report.pop('compatibility_errors',[])
+    report['errors']=[]
+    report['retained_notes_exact']=report.get('retained_notes_exact',True) and not any(c['action']=='shorten sustain' for c in cleanup['changes'])
+    report['preserved_difficulties']=[d for d in ('Hard','Expert') if song.tracks.get(d) and result.tracks[d]==song.tracks[d] and result.modifiers.get(d,[])==song.modifiers.get(d,[])]
+    report['warnings']+=['All four difficulties cleaned automatically. Unsupported markers removed; sustain repairs listed in all_difficulty_cleanup. Original input files remain untouched.']
     report['warnings']+=['Easy replaced with a three-fret copy of the selected source; all four guitar difficulties populated. Missing Hard/Expert copied from source without density reduction. See difficulty_completion for Easy sustain repairs and any empty-track fallback.']
     return result,report
 
