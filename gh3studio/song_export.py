@@ -114,11 +114,14 @@ def _export_song_folder(song, report, destination, audio_path, source_path=None,
         audio_details=export_ogg(audio_path,stage/'song.ogg',song.metadata,reconcile_metadata=clean_all or editor_all,padding_frames=audio_padding_frames)
         frames,rate,channels=(audio_details[k] for k in ('frames','sample_rate','channels'))
         output=copy.deepcopy(song)
-        for key in ('GuitarStream','BassStream','RhythmStream'):output.metadata.pop(key,None)
+        # GH3-lean output: guitar-only chart (other instrument sections are never
+        # written), practice sections/end events only, minimal [Song] header.
+        from .gh3_profile import lean_events,lean_chart_metadata,lean_ini,omitted_sections
+        output.events,events_removed=lean_events(output.events)
+        output.metadata,chart_keys_removed=lean_chart_metadata(output.metadata)
         output.metadata['MusicStream']='song.ogg'
-        if 'Length' in output.metadata:output.metadata['Length']=str(frames/rate)
         write_chart(output,stage/'notes.chart');reopened=read_chart(stage/'notes.chart')
-        if reopened.tracks!=song.tracks or reopened.events!=song.events or reopened.signatures!=song.signatures:
+        if reopened.tracks!=song.tracks or reopened.events!=output.events or reopened.signatures!=song.signatures:
             raise ChartError('Chart note/timing read-back mismatch')
         for diff in song.tracks:
             if reopened.phrases.get(diff,[])!=song.phrases.get(diff,[]):raise ChartError('Phrase read-back mismatch')
@@ -129,7 +132,8 @@ def _export_song_folder(song, report, destination, audio_path, source_path=None,
         drift=max(abs(reopened.seconds(t)-song.seconds(t)) for t in probes)
         if [t for t,_ in reopened.tempos]!=[t for t,_ in song.tempos] or drift>.001:raise ChartError('Tempo read-back mismatch')
         ini=configparser.ConfigParser(interpolation=None)
-        ini['song']=dict(song.ini_metadata)
+        ini_values,ini_keys_removed=lean_ini(dict(song.ini_metadata))
+        ini['song']=ini_values
         ini['song'].update({key:str(song.metadata[field]) for field,key in FIELDS.items() if field in song.metadata})
         ini['song'].update({'song_length':str(round(frames/rate*1000)),'delay':'0'})
         with (stage/'song.ini').open('w',encoding='utf-8') as f:ini.write(f)
@@ -145,7 +149,10 @@ def _export_song_folder(song, report, destination, audio_path, source_path=None,
             warnings[0]='Edited difficulties passed structural checks; manually verify timing, sustains and HOPOs in game.'
             warnings[1]='All difficulties reflect the editor working copy. Source files are unchanged.'
         if audio_padding_frames:warnings[2]='Audio has reviewed leading silence; no source samples were trimmed. Vorbis was re-encoded. See synchronization and audio_export details.'
-        details=dict(report,source_chart_path=str(Path(source_path).resolve()) if source_path else None,song_identity={field:song.metadata.get(field,'') for field in FIELDS},source_ini_metadata=report.get('source_ini_metadata',dict(song.ini_metadata)),audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
+        lean={'policy':'Guitar Hero III guitar only: no drums, vocals, keys, bass or 6-fret data; song.ogg remains the complete song',
+              'instrument_sections_omitted':omitted_sections(song.warnings),'events_removed':events_removed,
+              'chart_song_keys_removed':chart_keys_removed,'song_ini_keys_removed':ini_keys_removed}
+        details=dict(report,gh3_lean=lean,source_chart_path=str(Path(source_path).resolve()) if source_path else None,song_identity={field:song.metadata.get(field,'') for field in FIELDS},source_ini_metadata=report.get('source_ini_metadata',dict(song.ini_metadata)),audio_export=audio_details,folder_checks={'medium_orange_gems':0,'chart_reopened':True,'audio_frames':frames,'audio_sample_rate':rate,'audio_channels':channels,'tempo_drift_ms':drift*1000},warnings=list(report.get('warnings',[]))+warnings)
         def digest(path):
             h=hashlib.sha256()
             with Path(path).open('rb') as f:
@@ -160,7 +167,7 @@ def _export_song_folder(song, report, destination, audio_path, source_path=None,
         details['audio_source_sha256']=digest(audio_path)
         if source_path:details['source_sha256']=digest(source_path)
         (stage/'validation.json').write_text(json.dumps(details,indent=2),encoding='utf-8')
-        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. Separate source tracks, if any, are mixed into song.ogg (see audio_stems).\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nIf HOPO assistance was enabled, set TheGHOST HOPO measure to 2.95.\nHOPO flips depend on this setting; HOPOs still require a starting/recovery strum.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
+        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. Separate source tracks, if any, are mixed into song.ogg (see audio_stems).\nGuitar only: drum, vocal, keys and other non-GH3 chart data are left out (see gh3_lean).\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nIf HOPO assistance was enabled, set TheGHOST HOPO measure to 2.95.\nHOPO flips depend on this setting; HOPOs still require a starting/recovery strum.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
         if clean_all:
             readme=stage/'IMPORT_README.txt'
             readme.write_text(readme.read_text(encoding='utf-8').replace('Use the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.','All included guitar difficulties were cleaned; see validation.json for repairs and any generated difficulty slots.'),encoding='utf-8')

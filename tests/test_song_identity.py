@@ -27,7 +27,9 @@ def test_chart_ini_audio_metadata_round_trip(tmp_path):
     reread=load(dest/'notes.chart')
     for key,value in source.metadata.items():
         if key!='Resolution':assert reread.metadata[key]==value
-    assert reread.ini_metadata['custom_tag']=='preserve me'
+    # 0.16.0 policy (Bob): lean GH3 output; non-GH3 ini keys are dropped and listed.
+    assert 'custom_tag' not in reread.ini_metadata
+    assert 'custom_tag' in report['gh3_lean']['song_ini_keys_removed']
     assert reread.ini_metadata['preview_start_time']=='12000'
     with sf.SoundFile(dest/'song.ogg') as sound:
         assert sound.title=='† Song / title' and sound.artist=='Björk' and sound.album=='Álbum' and sound.tracknumber=='7'

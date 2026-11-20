@@ -1,3 +1,12 @@
+# 0.16.0 — Lean, guitar-only GH3 export
+
+- Exported song folders contain only what Guitar Hero III guitar play uses (no drums, microphone/vocals, keys, bass or 6-fret data).
+- notes.chart: the four guitar difficulties only (as before), [Events] keeps practice sections and end; lyrics, vocal phrase markers, crowd/venue and other Rock Band/Clone Hero cues are removed. [Song] header keeps identity, Offset, Resolution, preview times and MusicStream.
+- song.ini: identity, song length, delay, preview times and guitar settings only; drum/vocal/keys/bass/GHL difficulties, pro-drums, video, icon and similar keys are removed.
+- song.ogg is unchanged in principle: it is still the complete song, including the sound of drums and vocals.
+- Everything removed is listed per song in validation.json (gh3_lean). Applies to single songs, collections and editor exports.
+- Policy change: extra song.ini fields were previously preserved; they are now dropped unless GH3 uses them.
+
 # 0.15.0 — Songs with separate audio tracks
 
 - Songs downloaded as separate tracks (song/backing + guitar, rhythm, bass, keys, drums, vocals) are detected and mixed into one song.ogg for both single songs and collections. Before, song.ogg alone was used, which drops the guitar, or the song was blocked.

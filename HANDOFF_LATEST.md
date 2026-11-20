@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.15.0 handoff
+# GH3 Chart Studio — 0.16.0 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_15_0.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_0.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,32 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.15.0 update — separate audio tracks (stems)
+## Current 0.16.0 update — lean guitar-only GH3 export
+
+Bob: "exclude any features that aren't supported by guitar hero 3 ... we don't
+use the drums controller or microphone so we want a clean file that's lean."
+Interpreted as chart/ini data; song.ogg stays the complete song (drums/vocals
+are part of the music). If Bob wants instrument audio removed, that is a
+separate change: ask first.
+
+New gh3studio/gh3_profile.py (lean_events, lean_chart_metadata, lean_ini,
+omitted_sections), applied in song_export._export_song_folder for every export
+mode: [Events] keeps "section ...", prc_*, "end"; [Song] keeps FIELDS +
+Offset/Resolution/PreviewStart/PreviewEnd/MusicStream (Length and SongIniDelay
+no longer written); song.ini keeps FIELDS values + frets, song_length, delay,
+preview_start/end_time, diff_guitar, hopo_frequency, eighthnote_hopo,
+sustain_cutoff_threshold. Removed items -> validation.json gh3_lean.
+Chart read-back now compares events with the lean output. Star power (S 2)
+and face-off phrases (S 0/1) are kept (GH3 supports them); modifiers were
+already required empty by the clean export checks. Policy change (authorized):
+tests/test_song_identity no longer expects custom ini tags to be preserved.
+
+Evidence: tests/test_gh3_profile.py pure cases pass (run with the local WAV
+shim, since gh3_profile imports song_identity -> soundfile). The full export case
+passed with export_ogg stubbed (chart/ini output shown lean); real Ogg path
+not run here. Full suite NOT run.
+
+## Previous 0.15.0 update — separate audio tracks (stems)
 
 Bob (Nov 20): conversions tested successfully in Dolphin. Formal .exe installer
 deferred by Bob ("skip that for now"); the Inno .iss and Actions workflow stay.
