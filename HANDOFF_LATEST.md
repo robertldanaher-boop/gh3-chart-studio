@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.5 handoff
+# GH3 Chart Studio — 0.16.6 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_5.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_6.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,24 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.5 update — bug review
+## Current 0.16.6 update — install-time hang
+
+Bob's 0.16.5 install (log 10:22): 293 passed incl. the external-stem test that
+hung in 0.16.2-0.16.3 (same-source fix confirmed). Hang moved to
+tests/test_stems_gui.py: worker thread in stems.cached_mix line 352
+Path(p).resolve() -> ntpath.realpath for 60 s; main thread in test_gui.wait()
+QTest.qWait loop; one native thread. Root cause not proven (candidates: Windows
+file-open latency from security scanning of newly written WAVs, or GIL handoff
+latency while the main thread sits in QTest.qWait). Changes: cache key via
+os.path.abspath + os.stat; tests/conftest.py autouse timer (150 s, env
+GH3_TEST_HANG_LIMIT) suspends pytest capture, dumps all thread stacks and
+os._exit(3) so install fails clearly instead of freezing.
+Bob is frustrated by repeated install-time failures ("more issues than ever").
+Open policy question offered to Bob: keep the strict "every test must pass on
+the user's PC" install gate, or run timing-sensitive GUI/media tests in GitHub
+Actions only. Do not change the gate without his decision.
+
+## Previous 0.16.5 update — bug review
 
 Bob asked for a bug review. Reviewed the 0.14-0.16.4 diff. Fixed:
 1. playback.open_audio same-source skip now requires mediaStatus not

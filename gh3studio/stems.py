@@ -349,8 +349,14 @@ def cached_mix(paths, roles=None, cancel=lambda: False):
     """Mix once into the temp folder for preview/single-song export; reuse while
     the stems are unchanged. Returns (wav_path, report)."""
     import json
-    key = hashlib.sha256('|'.join(f'{Path(p).resolve()}:{Path(p).stat().st_size}:{Path(p).stat().st_mtime_ns}'
-                                  for p in paths).encode('utf-8')).hexdigest()[:24]
+    import os
+    # abspath is pure string work; Path.resolve() asks Windows to open each file and
+    # was caught stalled there for 60 s during an install-time test run.
+    parts = []
+    for p in paths:
+        info = os.stat(p)
+        parts.append(f'{os.path.abspath(p)}:{info.st_size}:{info.st_mtime_ns}')
+    key = hashlib.sha256('|'.join(parts).encode('utf-8')).hexdigest()[:24]
     folder = Path(tempfile.gettempdir()) / 'gh3-chart-studio-mixes'
     folder.mkdir(parents=True, exist_ok=True)
     wav, meta = folder / f'{key}.wav', folder / f'{key}.json'

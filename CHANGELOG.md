@@ -1,3 +1,9 @@
+# 0.16.6 — Install-time test hang: fix and safety net
+
+- Bob's install of 0.16.5: 293 tests passed, including test_external_stem_analyzed_original_mix_retained (the 0.16.4 fix held). Then tests/test_stems_gui.py hung 60 s with the worker thread inside Path.resolve() (Windows realpath) at the start of stems.cached_mix.
+- cached_mix builds its cache key with os.path.abspath + os.stat instead of Path.resolve().
+- New tests/conftest.py: any single test running 150 s prints all thread stacks to the log and ends the run (exit 3), so setup reports a failure instead of freezing until cancelled. Verified locally with a deliberately stuck test.
+
 # 0.16.5 — Bug review fixes
 
 Review of everything changed since 0.13.1 (stems, lean export, playback, installer, updates):
