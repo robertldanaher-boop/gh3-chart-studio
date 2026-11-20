@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.16.0 handoff
+# GH3 Chart Studio — 0.16.1 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_0.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_16_1.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,18 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.16.0 update — lean guitar-only GH3 export
+## Current 0.16.1 update — stem mix headroom
+
+FIRST FULL WINDOWS RESULT FOR THE 0.14-0.16 WORK: Bob installed 0.16.0 with
+"Install GH3 Chart Studio.cmd" (installed to %LOCALAPPDATA%\Programs\GH3 Chart
+Studio; the script installer and install-mode tests ran). 334 passed, 1 skipped,
+1 failed: test_separate_tracks_export_one_mixed_song_ogg decoded peak 1.0229 >
+1.0 (constant 0.98 mix overshot by Vorbis). Fix: stems.HEADROOM 0.98 -> 0.891
+(-1 dBFS); test signals changed from DC to 440 Hz tones, assertion kept strict
+(< 1.0). Local FFmpeg libvorbis check: DC at 0.891 decodes at 0.921.
+Not yet re-run on Windows.
+
+## Previous 0.16.0 update — lean guitar-only GH3 export
 
 Bob: "exclude any features that aren't supported by guitar hero 3 ... we don't
 use the drums controller or microphone so we want a clean file that's lean."

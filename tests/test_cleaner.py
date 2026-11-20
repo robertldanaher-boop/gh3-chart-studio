@@ -154,9 +154,10 @@ def test_unreadable_stem_blocks_with_its_name(tmp_path):
 def test_separate_tracks_export_one_mixed_song_ogg(tmp_path):
     source=tmp_path/'sources';path=fixture(source/'stems')
     folder=path.parent
-    sf.write(folder/'song.wav',np.full((4410,2),.25),44100)
-    sf.write(folder/'guitar.ogg',np.full(8820,.25),44100,format='OGG',subtype='VORBIS')  # mono, longer
-    sf.write(folder/'rhythm.wav',np.full((4410,2),.6),44100)
+    tone=lambda n,amp:amp*np.sin(2*np.pi*440*np.arange(n)/44100)
+    sf.write(folder/'song.wav',np.stack([tone(4410,.25)]*2,axis=1),44100)
+    sf.write(folder/'guitar.ogg',tone(8820,.25),44100,format='OGG',subtype='VORBIS')  # mono, longer
+    sf.write(folder/'rhythm.wav',np.stack([tone(4410,.6)]*2,axis=1),44100)  # in phase: peaks sum to ~1.1
     sf.write(folder/'preview.ogg',np.zeros(441),44100,format='OGG',subtype='VORBIS')
     before={str(p):fingerprint(p) for p in folder.iterdir()}
     rows=scan_charts(source)
@@ -166,7 +167,7 @@ def test_separate_tracks_export_one_mixed_song_ogg(tmp_path):
     out=Path(result['folder'])
     data,rate=sf.read(out/'song.ogg',always_2d=True)
     assert rate==44100 and data.shape[1]==2 and abs(len(data)-8820)<1100
-    assert np.abs(data).max()<=1.0
+    assert np.abs(data).max()<1.0  # decoded Ogg must not clip after the anti-clip turn-down
     details=json.loads((out/'validation.json').read_text(encoding='utf-8'))
     mix=details['audio_stems']
     assert mix['turned_down'] and mix['stems'][1]['padded_frames']==4410

@@ -9,7 +9,8 @@ song.ogg, so the stems are mixed:
 * every stem at its original level (no re-balancing), sample-accurate start;
 * mono stems are placed in both channels; shorter stems are padded with silence;
 * a stem at a different sample rate is resampled to the main rate;
-* if the summed peak would clip, the whole mix is turned down evenly (never up);
+* if the summed peak would exceed -1 dBFS (room for Ogg encoding overshoot), the
+  whole mix is turned down evenly (never up);
 * preview and crowd tracks are left out;
 * a stem that libsndfile cannot decode is recovered with the bundled FFmpeg
   (same strict, header-checked recovery used for single recordings).
@@ -37,7 +38,9 @@ STREAM_KEYS = {'MusicStream': 'song', 'GuitarStream': 'guitar', 'RhythmStream': 
                'BassStream': 'bass', 'KeysStream': 'keys', 'DrumStream': 'drums',
                'Drum2Stream': 'drums_2', 'Drum3Stream': 'drums_3', 'Drum4Stream': 'drums_4',
                'VocalStream': 'vocals', 'CrowdStream': 'crowd'}
-HEADROOM = 0.98
+# -1 dBFS: lossy Ogg Vorbis encoding can overshoot the mixed peak by a few
+# percent, so leave room or decoded playback would clip (seen on Windows: 0.98 -> 1.023).
+HEADROOM = 0.891
 BLOCK = 65536
 
 
@@ -263,7 +266,7 @@ def mix_stems(paths, destination, *, opener=None, writer=None, cancel=lambda: Fa
     opener = opener or _soundfile_open
     report = {'action': 'mix separate audio tracks into one full mix', 'stems': [],
               'policy': 'original levels; mono to both channels; shorter tracks padded with silence; '
-                        'resampled to the main track rate if needed; turned down evenly only to prevent clipping'}
+                        'resampled to the main track rate if needed; turned down evenly only to keep peaks at or below -1 dBFS'}
     with tempfile.TemporaryDirectory(prefix='gh3-stems-') as workdir:
         entries = []
         for index, path in enumerate(paths):

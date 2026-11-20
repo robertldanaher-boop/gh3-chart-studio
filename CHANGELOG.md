@@ -1,3 +1,9 @@
+# 0.16.1 — Mixed tracks never clip after Ogg encoding
+
+- Bob's Windows install of 0.16.0: 334 passed, 1 failed. The stem-mix test decoded song.ogg with a 1.023 peak: the mix was limited to 0.98, and lossy Vorbis encoding overshot it.
+- Mixes of separate tracks are now kept at or below -1 dBFS (0.891) before encoding; the whole mix is turned down evenly only when needed. FFmpeg Vorbis check of the worst case (flat signal at 0.891) decodes at 0.921.
+- The test now uses realistic tones and still requires the decoded song.ogg to stay below full scale.
+
 # 0.16.0 — Lean, guitar-only GH3 export
 
 - Exported song folders contain only what Guitar Hero III guitar play uses (no drums, microphone/vocals, keys, bass or 6-fret data).
