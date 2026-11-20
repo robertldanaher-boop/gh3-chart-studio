@@ -1,3 +1,13 @@
+# 0.15.0 — Songs with separate audio tracks
+
+- Songs downloaded as separate tracks (song/backing + guitar, rhythm, bass, keys, drums, vocals) are detected and mixed into one song.ogg for both single songs and collections. Before, song.ogg alone was used, which drops the guitar, or the song was blocked.
+- Mix keeps every track at its original level, places mono tracks in both channels, pads shorter tracks with silence, resamples a track with a different sample rate, and turns the whole mix down evenly only if it would clip.
+- preview and crowd tracks and unrecognized files are left out and listed. Duplicate formats of the same track prefer Ogg. Chart MusicStream/GuitarStream/... entries are honoured.
+- A track libsndfile cannot decode is recovered with FFmpeg (header-checked); an unreadable track blocks the song with its file name.
+- Single-song view mixes once (cached in the temp folder) so preview playback and export use the same mix. validation.json records every track, hash, padding, resampling and gain as audio_stems; cleanup.log notes the mix.
+- A lone audio file named like an instrument (e.g. guitar.ogg) is still treated as the full song, with a warning.
+- Source files are never modified.
+
 # 0.14.1 — Installer that works straight from the ZIP
 
 - New "Install GH3 Chart Studio.cmd" (installer/install.ps1): double-click after extracting the ZIP. No compiled setup .exe needed.

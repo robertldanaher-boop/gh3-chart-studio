@@ -1,7 +1,7 @@
-# GH3 Chart Studio — 0.14.1 handoff
+# GH3 Chart Studio — 0.15.0 handoff
 
 Prepared November 20, 2026 for Bob Danaher, for the next assistant (ChatGPT or
-Claude). Give the next assistant this file and GH3_Chart_Studio_v0_14_1.zip, or
+Claude). Give the next assistant this file and GH3_Chart_Studio_v0_15_0.zip, or
 point it at the GitHub repo below. The ZIP's repository.bundle holds the full
 history: `git clone repository.bundle studio`, then `git checkout main`.
 Release commit is RELEASE_COMMIT.txt in the ZIP.
@@ -52,7 +52,39 @@ GitHub state when 0.13.1 was pushed (0.14.0 pushed on top the same way):
   dot-files and takes 100 files per batch; never upload .venv, __pycache__,
   logs or music.
 
-## Current 0.14.1 update — script installer from the ZIP
+## Current 0.15.0 update — separate audio tracks (stems)
+
+Bob (Nov 20): conversions tested successfully in Dolphin. Formal .exe installer
+deferred by Bob ("skip that for now"); the Inno .iss and Actions workflow stay.
+He asked that songs downloaded with separate tracks be cleaned/converted too.
+
+Bug fixed by this: a folder with song.ogg + guitar.ogg exported song.ogg alone
+(Clone Hero song.ogg is the backing track WITHOUT guitar), and folders with only
+instrument tracks were blocked.
+
+New gh3studio/stems.py: find_song_audio() (Clone Hero names + chart *Stream
+entries; preview/crowd/unknown left out and listed; duplicate formats prefer
+.ogg) and mix_stems() (original levels, mono->both channels, pad shorter, resample
+other rates, uniform turn-down only above 0.98 peak, FFmpeg recovery for
+undecodable tracks, two streamed passes, PCM_24 WAV), cached_mix() for the GUI,
+describe(). Wired into cleaner.inspect_chart (row['audio_stems'], every track
+validated and hashed), song_export.export_song_folder (accepts a list; mixes to
+temp WAV; validation.json audio_stems), cleaner.export_cleaned (log + result
+'audio_mixed') and gui.open_path/export_song_to (mix once, preview the mix).
+Policy change, authorized by Bob: tests/test_cleaner's "multiple unidentified
+stems require full-mix choice" became "separate instrument tracks are mixed".
+Details: docs/M15_STEMS.md.
+
+Evidence (exact): Linux, Python 3.13, no PySide6/soundfile/mido.
+tests/test_stems.py 11 passed (+1 real-file case skipped); with a throwaway local
+WAV-only soundfile shim (not committed) all 12 passed and a 3-track mix with
+resampling and -1.77 dB turn-down produced the expected samples. test_cleaner
+under that shim: the new export test reaches Ogg validation, which the shim cannot
+satisfy (3 older export tests fail identically under the shim without these
+changes) — so real export is NOT verified here. Full suite NOT run; GitHub
+Actions / Bob's install is the first real run.
+
+## Previous 0.14.1 update — script installer from the ZIP
 
 Bob: 0.14.0 logo and update check work, but he got no Start menu entry or
 desktop icon. He had only the source ZIP (which holds the .iss recipe, not a

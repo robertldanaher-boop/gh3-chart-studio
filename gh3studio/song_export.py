@@ -56,7 +56,28 @@ def automatic_export_timing(song,audio_path):
     return song,plan
 
 
-def export_song_folder(song, report, destination, audio_path, source_path=None, *, clean_all=False, audio_padding_frames=0, editor_all=False, overwrite=False):
+def export_song_folder(song, report, destination, audio_path, source_path=None, **options):
+    """audio_path is one full-mix recording, or a list/tuple of separate tracks
+    (song/guitar/rhythm/...) that are mixed into one temporary full mix first.
+    The mix report is stored in validation.json as audio_stems."""
+    if isinstance(audio_path,(list,tuple)):
+        tracks=[Path(p) for p in audio_path]
+        if len(tracks)==1:return _export_song_folder(song,report,destination,tracks[0],source_path,**options)
+        for track in tracks:
+            if not track.is_file():raise ChartError('Audio track missing: '+str(track))
+            if options.get('overwrite') and track.resolve().is_relative_to(Path(destination).resolve()):
+                raise ChartError('Choose an output folder separate from the input song')
+        from .stems import mix_stems,describe
+        with tempfile.TemporaryDirectory(prefix='gh3-mix-') as folder:
+            mixed=Path(folder)/'full-mix.wav'
+            mix=mix_stems(tracks,mixed)
+            report=dict(report,audio_stems=mix,warnings=list(report.get('warnings',[]))+[describe(mix)+' song.ogg is this mix, encoded as Ogg Vorbis.'])
+            details=_export_song_folder(song,report,destination,mixed,source_path,**options)
+        return details
+    return _export_song_folder(song,report,destination,audio_path,source_path,**options)
+
+
+def _export_song_folder(song, report, destination, audio_path, source_path=None, *, clean_all=False, audio_padding_frames=0, editor_all=False, overwrite=False):
     destination=Path(destination);audio_path=Path(audio_path)
     combined=bool(report.get("all_difficulty_cleanup") or report.get("conversion",{}).get("all_difficulty_cleanup"))
     if combined:
@@ -139,7 +160,7 @@ def export_song_folder(song, report, destination, audio_path, source_path=None, 
         details['audio_source_sha256']=digest(audio_path)
         if source_path:details['source_sha256']=digest(source_path)
         (stage/'validation.json').write_text(json.dumps(details,indent=2),encoding='utf-8')
-        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. No separate guitar/bass stems are fabricated.\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nIf HOPO assistance was enabled, set TheGHOST HOPO measure to 2.95.\nHOPO flips depend on this setting; HOPOs still require a starting/recovery strum.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
+        (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. Separate source tracks, if any, are mixed into song.ogg (see audio_stems).\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nIf HOPO assistance was enabled, set TheGHOST HOPO measure to 2.95.\nHOPO flips depend on this setting; HOPOs still require a starting/recovery strum.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
         if clean_all:
             readme=stage/'IMPORT_README.txt'
             readme.write_text(readme.read_text(encoding='utf-8').replace('Use the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.','All included guitar difficulties were cleaned; see validation.json for repairs and any generated difficulty slots.'),encoding='utf-8')

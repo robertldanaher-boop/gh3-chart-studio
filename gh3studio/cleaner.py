@@ -27,12 +27,21 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
     row={'path':str(path),'errors':[],'warnings':[],'changes':[],'metadata':{k:v for k,v in (metadata or {}).items() if k in FIELDS},'audio':str(audio) if audio else '','song':None,'hashes':{}}
     try:
         song=load(path,learning_only=True,cleanup=True)
-        chosen=Path(audio).resolve() if audio else matching_audio(path,song.metadata)
+        chosen=Path(audio).resolve() if audio else None
+        stems=[]
         if chosen is None:
-            choices=[p for p in path.parent.iterdir() if p.is_file() and p.suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus') and p.stem.lower() not in ('preview','song_preview')]
-            if len(choices)==1:
-                chosen=choices[0]
-                row['warnings'].append('Automatically matched the only non-preview audio in this song folder: '+chosen.name+'. Verify it contains the full song, not an isolated instrument.')
+            # Separate instrument tracks (song + guitar + rhythm ...) are mixed;
+            # song.ogg alone would be the backing track without the guitar.
+            from .stems import find_song_audio
+            plan=find_song_audio(path,song.metadata)
+            row['warnings']+=plan['notes']
+            if plan['kind']!='none':chosen=plan['paths'][0]
+            if plan['kind']=='stems':
+                stems=plan['paths'];row['audio_stems']=[str(p) for p in stems];row['audio_roles']=plan['roles']
+                row['changes'].append({'action':'mix separate audio tracks into song.ogg','tracks':[p.name for p in stems],'left_out':plan['left_out']})
+                row['warnings'].append('Separate audio tracks will be mixed into one song.ogg at their original levels: '+', '.join(p.name for p in stems)+'.')
+            if plan['left_out']:
+                row['warnings'].append('Not mixed: '+'; '.join(f"{i['file']} ({i['reason']})" for i in plan['left_out']))
         row['metadata']=fill_from_audio(song.metadata,chosen)
         if metadata is not None:row['metadata'].update({k:v for k,v in metadata.items() if k in FIELDS})
         song.metadata.update(row['metadata'])
@@ -44,12 +53,13 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
         if chosen is None:row['errors'].append('No unambiguous full-mix audio: select the matching recording')
         else:
             row['audio']=str(chosen)
-            try:
-                with sf.SoundFile(chosen) as f:
-                    if f.channels not in (1,2) or f.frames<=0:raise ChartError('Audio must be nonempty mono/stereo')
-                    row['audio_format']=f.format+'/'+f.subtype
-                row['hashes'][str(chosen)]=fingerprint(chosen)
-            except Exception as exc:row['errors'].append('Audio: '+str(exc))
+            for track in (stems or [chosen]):
+                try:
+                    with sf.SoundFile(track) as f:
+                        if f.channels not in (1,2) or f.frames<=0:raise ChartError('Audio must be nonempty mono/stereo')
+                        if Path(track)==Path(chosen):row['audio_format']=f.format+'/'+f.subtype
+                    row['hashes'][str(track)]=fingerprint(track)
+                except Exception as exc:row['errors'].append(f'Audio ({Path(track).name}): '+str(exc))
         if not any(song.tracks.values()):raise ChartError('No supported playable guitar notes')
         if any(d!=4 for _,_,d in song.signatures):raise ChartError('Non-/4 time signature needs manual review for TheGHOST; tempo/meter will not be guessed')
         from .synchronization import timing_values,normalize,inspect_anchors
@@ -111,7 +121,7 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
             row['errors']+=review['remaining_errors']
             if not any(clean.tracks.values()):row['errors'].append('Cleanup would leave no playable guitar notes')
             row['warnings']+=song.warnings
-            row['warnings']+=['All guitar difficulties are cleaned. Forced/tap markers are removed; natural HOPO behavior may change.','Other instrument sections, stems and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
+            row['warnings']+=['All guitar difficulties are cleaned. Forced/tap markers are removed; natural HOPO behavior may change.','Other instrument chart sections and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
         row['song']=clean if not row['errors'] else None
     except Exception as exc:row['errors'].append(str(exc))
     return row
@@ -172,10 +182,14 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             if sync:
                 report['synchronization']=sync
                 log('SYNCHRONIZATION | '+json.dumps(sync,ensure_ascii=True))
-            details=export_song_folder(song,report,folder,row['audio'],row['path'],clean_all=True,audio_padding_frames=sync.get('audio_padding_frames',0),overwrite=True)
+            if row.get('audio_stems'):log('AUDIO TRACKS | mixing '+', '.join(Path(p).name for p in row['audio_stems']))
+            details=export_song_folder(song,report,folder,row.get('audio_stems') or row['audio'],row['path'],clean_all=True,audio_padding_frames=sync.get('audio_padding_frames',0),overwrite=True)
             if details['audio_export'].get('fallback'):
                 result['audio_recovered']=True
                 log('AUDIO RECOVERED | '+row['audio']+' | '+json.dumps(details['audio_export']['fallback']))
+            if details.get('audio_stems'):
+                from .stems import describe
+                result['audio_mixed']=describe(details['audio_stems']);log('AUDIO MIXED | '+result['audio_mixed'])
             result.update(status='exported',folder=str(folder))
         except Exception as exc:
             result.update(status='failed',error=str(exc));log('FAILED | '+str(exc)+'\n'+traceback.format_exc())

@@ -1,4 +1,4 @@
-# GH3 Chart Studio 0.14.1 — Wii chart workshop
+# GH3 Chart Studio 0.15.0 — Wii chart workshop
 
 **Streamlined workspace:** Home → Prepare my songs. Choose chart or folder from one toolbar, review, then export. Clean only is the secondary option when you want to retain existing difficulty choices. [Windows steps](docs/M13_RELEASE.md).
 

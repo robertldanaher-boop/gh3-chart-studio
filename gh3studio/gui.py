@@ -304,22 +304,37 @@ class Window(QMainWindow):
     def open_path(self,path):
         if self.busy(): return
         self.song=None; self.original_song=None; self.cleanup_report=None; self.converted=None; self.report=None; self.path=None; self.variants={}
+        self.audio_mix=None
         self.playback.clear_audio()
         self.info.setText('Loading…'); self.preview.scene().clear(); self.playback.set_chart(None,'Medium')
         mode='modern' if self.phrase_mode.currentIndex()==0 else 'legacy'
-        def ready(song):
+        def ready(value):
+            song,recording,mix=value
             self.song=song; self.original_song=song; self.path=Path(path); self.file_label.setText(str(path))
             available=[d for d in ('Expert','Hard') if song.tracks.get(d)]
             if available: self.source.setCurrentText(available[0])
             self.info.setText(f"{song.metadata.get('Name',Path(path).stem)} — {song.metadata.get('Artist','Unknown artist')} | PPQ {song.resolution} | "+' · '.join(f'{d}: {len(n)} gems' for d,n in song.tracks.items()))
             self.log_line('Imported. '+ ' '.join(song.warnings)); self.refresh_preview()
-            from .preview_audio import matching_audio
-            recording=matching_audio(path,song.metadata)
+            if mix and mix.get('error'):
+                self.log_line('Separate audio tracks could not be mixed: '+mix['error']+' Click Play preview audio to select a full-mix recording.')
+            elif mix:
+                from .stems import describe
+                self.audio_mix=(str(recording),mix);self.log_line(describe(mix)+' Preview and export use this mix.')
             if recording:self.playback.open_audio(recording)
             else:self.log_line('No unambiguous matching audio found. Click Play preview audio to select the recording.')
             if self.goal=='orange':self.audio.show_listen()
             elif self.goal=='refine':self.tabs.setCurrentWidget(self.converter)
-        self.run_job('Reading chart for review…',lambda cancel:load(path,mode,learning_only=True),ready)
+        def read(cancel):
+            song=load(path,mode,learning_only=True)
+            # Separate instrument tracks are mixed once (cached) for preview and export.
+            from .stems import find_song_audio,cached_mix
+            plan=find_song_audio(path,song.metadata);recording=None;mix=None
+            if plan['kind']=='stems':
+                try:recording,mix=cached_mix(plan['paths'],plan['roles'],cancel)
+                except Exception as exc:mix={'error':str(exc)}
+            elif plan['kind']=='single':recording=plan['paths'][0]
+            return song,recording,mix
+        self.run_job('Reading chart and audio for review…',read,ready)
     def start_convert(self):
         if self.song is None or self.busy(): return
         settings=self.settings(); self.converted=None; self.report=None; self.variants={}
@@ -375,6 +390,10 @@ class Window(QMainWindow):
         from .song_export import export_song_folder
         song=song if song is not None else self.converted
         report=report if report is not None else self.report
+        mixed=getattr(self,'audio_mix',None)
+        if mixed and audio and Path(audio).resolve()==Path(mixed[0]).resolve():
+            from .stems import describe
+            report=dict(report,audio_stems=mixed[1],warnings=list(report.get('warnings',[]))+[describe(mixed[1])])
         def ready(details):
             self.converted,self.report=song,report;self.last_export_path=Path(destination);self.refresh_preview()
             if Path(self.playback.player.source().toLocalFile()).resolve()!=Path(audio).resolve():

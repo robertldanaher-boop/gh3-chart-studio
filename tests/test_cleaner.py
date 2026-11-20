@@ -132,10 +132,44 @@ def test_single_packaged_audio_named_guitar_auto_matches(tmp_path):
     assert Path(rows[0]['audio']).name=='guitar.wav'
 
 
-def test_multiple_unidentified_stems_require_full_mix_choice(tmp_path):
+def test_separate_instrument_tracks_are_mixed_not_blocked(tmp_path):
+    # 0.15.0 policy (Bob): separate downloaded tracks are mixed into one song.ogg.
     path=fixture(tmp_path/'song')
     (path.parent/'song.wav').rename(path.parent/'guitar.wav')
     sf.write(path.parent/'bass.wav',np.zeros(100),44100)
     row=inspect_chart(path)
-    assert not row['audio']
-    assert any('audio' in e for e in row['errors'])
+    assert [Path(p).name for p in row['audio_stems']]==['guitar.wav','bass.wav']
+    assert not [e for e in row['errors'] if 'audio' in e.lower()]
+    assert set(row['hashes'])>={str(path.parent/'guitar.wav'),str(path.parent/'bass.wav')}
+    assert any(c.get('action')=='mix separate audio tracks into song.ogg' for c in row['changes'])
+
+
+def test_unreadable_stem_blocks_with_its_name(tmp_path):
+    path=fixture(tmp_path/'song')
+    (path.parent/'guitar.wav').write_bytes(b'not audio')
+    row=inspect_chart(path)
+    assert any('guitar.wav' in e for e in row['errors'])
+
+
+def test_separate_tracks_export_one_mixed_song_ogg(tmp_path):
+    source=tmp_path/'sources';path=fixture(source/'stems')
+    folder=path.parent
+    sf.write(folder/'song.wav',np.full((4410,2),.25),44100)
+    sf.write(folder/'guitar.ogg',np.full(8820,.25),44100,format='OGG',subtype='VORBIS')  # mono, longer
+    sf.write(folder/'rhythm.wav',np.full((4410,2),.6),44100)
+    sf.write(folder/'preview.ogg',np.zeros(441),44100,format='OGG',subtype='VORBIS')
+    before={str(p):fingerprint(p) for p in folder.iterdir()}
+    rows=scan_charts(source)
+    assert not rows[0]['errors'] and [Path(p).name for p in rows[0]['audio_stems']]==['song.wav','guitar.ogg','rhythm.wav']
+    result=export_cleaned(rows,tmp_path/'out',source)[0]
+    assert result['status']=='exported' and 'Mixed 3 audio tracks' in result['audio_mixed']
+    out=Path(result['folder'])
+    data,rate=sf.read(out/'song.ogg',always_2d=True)
+    assert rate==44100 and data.shape[1]==2 and abs(len(data)-8820)<1100
+    assert np.abs(data).max()<=1.0
+    details=json.loads((out/'validation.json').read_text(encoding='utf-8'))
+    mix=details['audio_stems']
+    assert mix['turned_down'] and mix['stems'][1]['padded_frames']==4410
+    assert {s['file'] for s in mix['stems']}=={'song.wav','guitar.ogg','rhythm.wav'}
+    assert before=={str(p):fingerprint(p) for p in folder.iterdir()}
+    assert not (out/'guitar.ogg').exists() and not (out/'preview.ogg').exists()
