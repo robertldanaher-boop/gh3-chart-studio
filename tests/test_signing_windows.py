@@ -12,9 +12,21 @@ PWSH=shutil.which('pwsh') or shutil.which('powershell')
 pytestmark=pytest.mark.skipif(os.name!='nt' or not PWSH,reason='Windows SDK and Windows certificate store integration')
 
 
+@pytest.fixture(autouse=True)
+def packaging_tools_available():
+    kits=Path(os.environ.get('ProgramFiles(x86)','C:/Program Files (x86)'))/'Windows Kits/10/bin'
+    missing=[name for name in ('signtool','makeappx') if not (shutil.which(name) or any(kits.glob('*/x64/'+name+'.exe')))]
+    inno=Path(os.environ.get('ProgramFiles(x86)','C:/Program Files (x86)'))/'Inno Setup 6/ISCC.exe'
+    if not inno.is_file():missing.append('Inno Setup 6')
+    if missing:
+        reason='Developer packaging tools not installed: '+', '.join(missing)
+        if os.environ.get('GH3_REQUIRE_WINDOWS_PACKAGING_TESTS')=='1':pytest.fail(reason)
+        pytest.skip(reason)
+
+
 def run(script,tmp_path,**env):
     path=tmp_path/'check.ps1';path.write_text(script,encoding='utf-8-sig')
-    return subprocess.run([PWSH,'-NoProfile','-NonInteractive','-File',str(path)],env=dict(os.environ,GH3_REPO=str(ROOT),GH3_PYTHON=sys.executable,**env),text=True,capture_output=True,timeout=120)
+    return subprocess.run([PWSH,'-NoProfile','-NonInteractive','-File',str(path)],env=dict(os.environ,GH3_REPO=str(ROOT),GH3_PYTHON=sys.executable,RUNNER_TEMP=str(tmp_path),**env),text=True,capture_output=True,timeout=120)
 
 
 def test_missing_signing_identity_stops_without_modifying_file(tmp_path):

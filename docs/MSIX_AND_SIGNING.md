@@ -140,6 +140,8 @@ uninstall removes package-managed state; keep songs/exports outside that state.
 ## Evidence and limits
 
 Read M20_TEST_RESULTS.txt and the PR's latest Windows job for executed checks.
+Normal source installs do not require developer SDK/Inno tools: those integration tests skip when the tools are absent. CI sets GH3_REQUIRE_WINDOWS_PACKAGING_TESTS=1 so missing tools fail rather than silently skipping.
+
 Native integration tests use an isolated self-signed test identity, temporarily
 trusted inside the CI runner, to test real SDK signing, timestamps, tamper rejection
 and bundle/installer construction. They remove it afterwards. That test identity
