@@ -64,3 +64,18 @@ def test_note_without_note_off_ends_at_track_end(tmp_path):
     song = read_midi(path)
     assert [(n.tick, n.lane, n.length) for n in song.tracks['Expert']] == [(0, 0, 192), (96, 1, 96)]
     assert any('no note-off' in w for w in song.warnings)
+
+
+def test_late_original_release_does_not_shorten_restart(tmp_path):
+    path=write(tmp_path/'fifo.mid',[('PART GUITAR',[on(84),on(84,192),off(84,108),off(84,100)])])
+    assert [(n.tick,n.length) for n in read_midi(path).tracks['Hard']]==[(0,192),(192,208)]
+
+
+def test_multiple_restarts_pair_releases_in_fifo_order(tmp_path):
+    path=write(tmp_path/'many.mid',[('PART GUITAR',[on(96),on(96,96),on(96,96),off(96,48),off(96,48),off(96,96)])])
+    assert [(n.tick,n.length) for n in read_midi(path).tracks['Expert']]==[(0,96),(96,96),(192,192)]
+
+
+def test_same_tick_duplicate_does_not_swallow_real_release(tmp_path):
+    path=write(tmp_path/'duplicate.mid',[('PART GUITAR',[on(96),on(96),off(96,96),on(97,96),off(97,96)])])
+    assert [(n.tick,n.lane,n.length) for n in read_midi(path).tracks['Expert']]==[(0,0,96),(192,1,96)]

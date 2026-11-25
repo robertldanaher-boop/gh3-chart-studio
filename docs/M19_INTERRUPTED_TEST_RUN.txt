@@ -1,0 +1,10 @@
+A full-suite attempt stalled without a final summary and was interrupted for a verbose diagnostic rerun. No pass is claimed for this attempt. The exact stalled test was not recorded by quiet progress output.
+
+Command: QT_QPA_PLATFORM=offscreen GH3_NO_UPDATE_CHECK=1 .venv/bin/python -m pytest -q --tb=short -rs
+
+Partial output:
+........................................................................ [ 17%]
+........................................................................ [ 35%]
+........................
+
+Final diagnostic rerun: see M19_TEST_RESULTS.txt (404 passed, 5 skipped).

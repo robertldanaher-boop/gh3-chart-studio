@@ -68,7 +68,7 @@ class Window(QMainWindow):
         brand=QLabel('GH3  /  CHART STUDIO');brand.setObjectName('brand');brand.setWordWrap(True);branding.addWidget(brand)
         badge=QLabel('WII WORKSHOP  ·  '+__version__);badge.setObjectName('versionBadge');badge.setWordWrap(True);branding.addWidget(badge)
         self.home_button=QPushButton('Home');self.home_button.setObjectName('quietAction');self.home_button.clicked.connect(lambda:self.tabs.setCurrentWidget(self.welcome));header.addWidget(self.home_button)
-        self.reserve_button=QPushButton('Tools in reserve');self.reserve_button.setObjectName('quietAction');self.reserve_menu=QMenu(self);self.reserve_button.setMenu(self.reserve_menu);header.addWidget(self.reserve_button)
+        self.reserve_button=QPushButton('Advanced / experimental');self.reserve_button.setObjectName('quietAction');self.reserve_menu=QMenu(self);self.reserve_button.setMenu(self.reserve_menu);header.addWidget(self.reserve_button)
         credits=QPushButton('About');credits.setObjectName('quietAction');credits.clicked.connect(lambda:show_credits(self));header.addWidget(credits)
         self.tabs=QTabWidget();self.tabs.setUsesScrollButtons(True);shell_layout.addWidget(self.tabs)
         root=QWidget();self.converter=root; self.tabs.addTab(root,'Chart Converter');outer=QVBoxLayout(root)
@@ -124,13 +124,13 @@ class Window(QMainWindow):
         self.playback=PlaybackPanel(self)
         self.audio=AudioPanel(self); self.tabs.addTab(self.audio,'Audio Studio')
         from .cleaner_gui import CleanerPanel
-        self.cleaner=CleanerPanel(self);self.tabs.addTab(self.cleaner,'Clean charts')
+        self.cleaner=CleanerPanel(self,unified=True);self.tabs.addTab(self.cleaner,'Clean charts')
         from .workspace import AdaptPanel
         self.adapt=AdaptPanel(self);self.tabs.insertTab(0,self.adapt,'Prepare songs')
-        self.tabs.removeTab(self.tabs.indexOf(self.cleaner));self.tabs.insertTab(1,self.cleaner,'Clean only')
+        self.tabs.removeTab(self.tabs.indexOf(self.cleaner));self.tabs.insertTab(1,self.cleaner,'Songs')
         self.welcome=WelcomePanel(self);self.tabs.insertTab(0,self.welcome,'Home');self.tabs.setCurrentWidget(self.welcome)
-        self.reserved=(self.converter,self.library,self.audio)
-        for panel,label in ((self.converter,'Advanced converter'),(self.library,'Local pattern library'),(self.audio,'Audio drafting lab')):
+        self.reserved=(self.converter,self.library,self.audio,self.adapt)
+        for panel,label in ((self.adapt,'Legacy single-song converter'),(self.converter,'Advanced converter'),(self.library,'Local pattern library'),(self.audio,'Audio drafting lab')):
             self.tabs.setTabText(self.tabs.indexOf(panel),label);self.tabs.setTabVisible(self.tabs.indexOf(panel),False)
             action=self.reserve_menu.addAction(label);action.triggered.connect(lambda checked=False,p=panel:self.open_reserved(p))
         self.reserve_menu.addSeparator();self.reserve_menu.addAction('Save application log…',self.save_diagnostics)
@@ -148,13 +148,14 @@ class Window(QMainWindow):
     def enter_workspace(self,goal):
         if self.busy():return
         self.goal=goal
-        self.tabs.setCurrentWidget(self.cleaner if goal=='clean' else self.adapt)
-        if goal=='orange':self.adapt.attach_preview()
+        self.cleaner.set_goal(goal)
+        self.tabs.setCurrentWidget(self.cleaner)
     def open_reserved(self,panel):
         if self.busy():return
         self.tabs.setTabVisible(self.tabs.indexOf(panel),True)
         if panel is self.audio:self.goal='audio';self.audio.set_mode('audio');self.audio.show_analysis()
         elif panel is self.converter:self.goal='refine'
+        elif panel is self.adapt:self.goal='orange';self.adapt.attach_preview()
         self.tabs.setCurrentWidget(panel)
     def hide_reserved(self):
         self.tabs.setCurrentWidget(self.welcome)
@@ -199,10 +200,10 @@ class Window(QMainWindow):
         if self.busy():return False
         if path is None:path=QFileDialog.getExistingDirectory(self,'Choose song folder or parent collection')
         if not path:return False
-        self.enter_workspace('orange');self.adapt.open_bulk();self.adapt.bulk.scan(path)
+        self.enter_workspace('orange');self.cleaner.scan(path)
         return True
     def resume_workflow(self):
-        if self.goal=='clean':self.tabs.setCurrentWidget(self.cleaner)
+        if self.cleaner.rows and self.goal in ('clean','orange'):self.tabs.setCurrentWidget(self.cleaner)
         elif self.goal=='refine':self.open_reserved(self.converter)
         elif self.converted is not None or (self.song is not None and self.goal!='audio'):self.audio.show_listen()
         else:self.tabs.setCurrentWidget(self.audio)
@@ -253,7 +254,7 @@ class Window(QMainWindow):
     @Slot(int,int,str)
     def job_progress(self,done,total,name):
         self.operation_count=(done,total);self.refresh_operation_clock()
-        if hasattr(self,'cleaner') and self.goal=='clean':self.cleaner.status.setText(f'{done}/{total} — {name}')
+        if hasattr(self,'cleaner') and self.tabs.currentWidget() is self.cleaner:self.cleaner.status.setText(f'{done}/{total} — {name}')
         elif hasattr(self,'adapt') and self.goal=='orange' and self.adapt.mode.currentIndex()==1:self.adapt.bulk.status.setText(f'{done}/{total} — {name}')
         self.progress.setRange(0,total); self.progress.setValue(done)
         self.library.summary.setText(f'{done}/{total} — {name}' if total else name)
@@ -270,7 +271,7 @@ class Window(QMainWindow):
         if hasattr(self,'adapt') and self.adapt.mode.currentIndex()==1:self.adapt.bulk.status.setText('Operation failed: '+error)
         self.operation_label.setText('Could not complete: '+error)
         if hasattr(self,'adapt'):self.adapt.next_step.setText('Needs attention: '+error)
-        if hasattr(self,'cleaner') and self.goal=='clean':self.cleaner.status.setText('Operation failed: '+error)
+        if hasattr(self,'cleaner') and self.tabs.currentWidget() is self.cleaner:self.cleaner.status.setText('Operation failed: '+error)
         if hasattr(self,'playback'):self.playback.status.setText('Operation failed: '+error)
         if hasattr(self,'library'): self.library.summary.setText('Operation failed: '+error)
         if hasattr(self,'audio'): self.audio.summary.setText('Operation failed: '+error)
@@ -449,12 +450,19 @@ class Window(QMainWindow):
     def dropEvent(self,event):
         paths=[u.toLocalFile() for u in event.mimeData().urls() if u.isLocalFile()]
         if len(paths)!=1: self.log_line('Drop one chart file or one parent folder containing your songs.'); return
+        if self.tabs.currentWidget() in (self.welcome,self.cleaner) and (Path(paths[0]).is_dir() or Path(paths[0]).suffix.lower() in ('.chart','.mid','.midi')):
+            self.tabs.setCurrentWidget(self.cleaner);self.cleaner.scan(paths[0]);event.acceptProposedAction();return
         if Path(paths[0]).is_dir():
             if self.tabs.currentWidget() is self.library:self.library.scan(paths[0])
             elif self.tabs.currentWidget() in (self.welcome,self.adapt):self.start_medium_collection(paths[0])
             else:self.start_guided('clean',paths[0])
             event.acceptProposedAction(); return
         if Path(paths[0]).suffix.lower() in ('.wav','.flac','.ogg','.mp3','.opus'):
+            if self.tabs.currentWidget() in (self.welcome,self.cleaner):
+                index=self.cleaner.selected()
+                if index is None:self.cleaner.status.setText('Choose a chart and select its row before matching audio.');self.tabs.setCurrentWidget(self.cleaner)
+                else:self.cleaner.recheck(index,audio=paths[0])
+                event.acceptProposedAction();return
             # A recording on the essential path is for listening, not transcription.
             if self.tabs.currentWidget() is self.audio:
                 self.audio.open_path(paths[0])

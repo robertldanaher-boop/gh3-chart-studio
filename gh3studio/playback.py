@@ -84,14 +84,14 @@ class PlaybackPanel(QWidget):
         self.hopo=QCheckBox('Highlight estimated HOPOs');self.hopo.setChecked(True);self.hopo.toggled.connect(self.highlight);row.addWidget(self.hopo)
         label=QLabel('Candidate gap (beats)');label.setWordWrap(True);row.addWidget(label)
         self.threshold=QDoubleSpinBox();self.threshold.setDecimals(4);self.threshold.setRange(.01,1);self.threshold.setValue(1/3);self.threshold.valueChanged.connect(self.rebuild);row.addWidget(self.threshold)
-        row=QHBoxLayout();options.addLayout(row)
+        row=QHBoxLayout();self.shift_row=row;options.addLayout(row)
         label=QLabel('Preview shift (ms; + = notes later)');label.setWordWrap(True);row.addWidget(label,1)
         self.shift=QDoubleSpinBox();self.shift.setRange(-10000,10000);self.shift.setDecimals(1);self.shift.valueChanged.connect(self.shift_changed);row.addWidget(self.shift)
-        row=QHBoxLayout();options.addLayout(row)
+        row=QHBoxLayout();self.shift_buttons=row;options.addLayout(row)
         self.apply_button=QPushButton('Apply shift to output');self.apply_button.clicked.connect(self.apply_shift);row.addWidget(self.apply_button)
         self.undo_button=QPushButton('Undo shift');self.undo_button.clicked.connect(self.undo);row.addWidget(self.undo_button)
         self.redo_button=QPushButton('Redo shift');self.redo_button.clicked.connect(self.redo);row.addWidget(self.redo_button)
-        row=QHBoxLayout();options.addLayout(row);row.addWidget(QLabel('Sustain placement seed'))
+        row=QHBoxLayout();self.sustain_row=row;options.addLayout(row);row.addWidget(QLabel('Sustain placement seed'))
         self.sustain_seed=QSpinBox();self.sustain_seed.setRange(0,2147483647);row.addWidget(self.sustain_seed)
         self.regenerate_sustains=QPushButton('Regenerate sustain placement');self.regenerate_sustains.clicked.connect(self.regenerate_sustain_placement);row.addWidget(self.regenerate_sustains)
         self.status=QLabel('Preview uses the recording clock. Check synchronization by listening.');self.status.setWordWrap(True);layout.addWidget(self.status)
@@ -104,6 +104,7 @@ class PlaybackPanel(QWidget):
         self.update_busy(False,False)
     def open_editor(self,*args):
         if not self.current or self.owner.busy():return
+        if getattr(self,'review_edit',None):return self.review_edit()
         from .editor_gui import ChartEditorDialog
         self.player.pause()
         dialog=ChartEditorDialog(self);dialog.exec();dialog.deleteLater()

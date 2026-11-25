@@ -22,7 +22,17 @@ def fingerprint(path):
     return h.hexdigest()
 
 
-def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=None,preserve_sustains=True):
+def difficulty_summary(original,prepared):
+    lines=[]
+    for d in ('Easy','Medium','Hard','Expert'):
+        before=original.tracks.get(d,[]);after=prepared.tracks.get(d,[])
+        same=before==after and original.phrases.get(d,[])==prepared.phrases.get(d,[]) and original.modifiers.get(d,[])==prepared.modifiers.get(d,[])
+        state='not present' if not before and not after else 'unchanged' if same else 'created' if not before else 'changed'
+        lines.append(f'{d}: {state} ({len(before)} → {len(after)} gems)')
+    return lines
+
+
+def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=None,preserve_sustains=True,create_easy=True,fill_missing=True,repair_others=True,repair_sustains=True,repair_medium_orange=True,allow_empty_fallback=True):
     path=Path(path).resolve()
     row={'path':str(path),'errors':[],'warnings':[],'changes':[],'metadata':{k:v for k,v in (metadata or {}).items() if k in FIELDS},'audio':str(audio) if audio else '','song':None,'hashes':{}}
     try:
@@ -109,22 +119,23 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
             if source not in ('Expert','Hard') or not song.tracks.get(source):
                 raise ChartError('No '+medium_source+' source track available')
             from .difficulty_set import complete_conversion
-            converted,conversion=complete_conversion(song,source,strict=False,randomize_orange_sustains=preserve_sustains,sustain_seed=0)
+            converted,conversion=complete_conversion(song,source,strict=False,randomize_orange_sustains=preserve_sustains,sustain_seed=0,create_easy=create_easy,fill_missing=fill_missing,repair_others=repair_others,repair_sustains=repair_sustains,allow_empty_fallback=allow_empty_fallback)
             # Already fully cleaned; keep the forced-note flips complete_conversion wrote.
-            clean,review=prepare_medium(converted,strip_markers=False,trim_sustains=True)
+            clean,review=prepare_medium(converted,strip_markers=False,trim_sustains=repair_sustains)
             row['conversion']=conversion
             row['changes']+=conversion['all_difficulty_cleanup']['changes']
             if conversion.get('hopo_intent'):row['changes'].append({'action':'keep forced HOPO/strum notes as TheGHOST flips','difficulties':conversion['hopo_intent']})
-            row['changes'].append({'action':'create three-fret Easy and fill missing difficulty slots',**conversion['difficulty_completion']})
+            row['changes'].append({'action':'difficulty choices',**conversion['difficulty_completion']})
             row['changes'].append({'action':'copy '+source+' to four-fret Medium','source_gems':conversion['source_gems'],'medium_gems':conversion['medium_gems'],'sustain_transfers':conversion.get('sustain_transfers',[])})
             row['changes']+=review['changes'];row['errors']+=review['remaining_errors']
-            row['warnings']+=song.warnings+['Existing Easy and Medium are replaced in the output. All four difficulties are cleaned; unsupported markers removed and incompatible sustains repaired as listed. Automatic timing translation affects all tracks together.']
+            row['warnings']+=song.warnings+conversion['warnings']
         else:
             # Medium must never export Orange; preserve its sustains using seeded four-fret placement.
             if any(n.lane==4 for n in song.tracks.get('Medium',[])):
-                song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=True,sustain_seed=0)
-                row['changes'].append({'action':'remove Medium Orange; transfer sustained Orange to four frets','removed':transfer['removed_orange_gems'],'transfers':transfer['sustain_transfers']})
-            clean,review=prepare_cleanup(song,strip_markers=True,trim_sustains=True)
+                if not repair_medium_orange:raise ChartError('Medium contains Orange. Approve Remove Medium Orange or adapt Medium; no output created.')
+                song,transfer=remove_orange_to_medium(song,'Medium',strict=False,randomize_orange_sustains=preserve_sustains,sustain_seed=0)
+                row['changes'].append({'action':'remove Medium Orange'+('; transfer sustained Orange to four frets' if preserve_sustains else ' including sustains'),'removed':transfer['removed_orange_gems'],'transfers':transfer['sustain_transfers']})
+            clean,review=prepare_cleanup(song,strip_markers=True,trim_sustains=repair_sustains)
             from .hopo import restore_hopo_intent
             intent=restore_hopo_intent(clean,song,{d:d for d in clean.tracks})
             row['changes']+=review['changes']
@@ -133,6 +144,17 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
             if not any(clean.tracks.values()):row['errors'].append('Cleanup would leave no playable guitar notes')
             row['warnings']+=song.warnings
             row['warnings']+=['All guitar difficulties are cleaned. Forced notes are kept as TheGHOST flips (set its HOPO measure to 2.95); tap notes become forced HOPOs; open notes are removed.','Other instrument chart sections and artwork are not included.','Metadata values require your verification; structural checks cannot prove factual correctness.']
+        checks=validate(clean)
+        row['errors']+=checks['errors']
+        structural,export_review=prepare_cleanup(clean,strip_markers=True,trim_sustains=True)
+        for d in clean.tracks:
+            if structural.tracks.get(d)!=clean.tracks[d]:
+                row['errors'].append(d+' needs sustain/chord repairs. Enable the corresponding repair choice or correct it in an editor.')
+        from .hopo import is_flip
+        if any(not is_flip(m) for ms in clean.modifiers.values() for _,m in ms):
+            row['errors'].append('Unsupported markers remain in retained difficulties. Allow repairs to other difficulties or use Repair existing charts.')
+        row['summary']=difficulty_summary(row['sync_source'],clean)
+        row['errors']=list(dict.fromkeys(row['errors']))
         row['song']=clean if not row['errors'] else None
     except Exception as exc:row['errors'].append(str(exc))
     return row
@@ -140,6 +162,9 @@ def inspect_chart(path,audio=None,metadata=None,sync_review=None,medium_source=N
 
 def scan_charts(root,cancel=lambda:False,progress=lambda done,total,name:None,*,inspect_options=None):
     root=Path(root).resolve()
+    if root.is_file():
+        if root.suffix.lower() not in ('.chart','.mid','.midi'):raise ChartError('Choose a chart or game-chart MIDI')
+        return [inspect_chart(root,**(inspect_options or {}))]
     if not root.is_dir():raise ChartError('Choose a song folder or parent directory')
     groups={}
     for p in root.rglob('*'):
@@ -185,7 +210,7 @@ def export_cleaned(rows,destination,source_root,cancel=lambda:False,progress=lam
             song=copy.deepcopy(row['song'])
             from .song_identity import export_folder_path
             folder=export_folder_path(dest,song.metadata,row['path'])
-            report={'operation':'clean-all-guitar-difficulties','cleanup_changes':row['changes'],'warnings':row['warnings'],'source_hashes':row['hashes']}
+            report={'operation':'clean-all-guitar-difficulties','cleanup_changes':row['changes'],'warnings':row['warnings'],'source_hashes':row['hashes'],'difficulty_summary':row.get('summary',[])}
             if row.get('conversion'):
                 report['operation']='bulk-four-fret-medium';report['conversion']=row['conversion']
             if row.get('sync_source'):report['source_ini_metadata']=dict(row['sync_source'].ini_metadata)

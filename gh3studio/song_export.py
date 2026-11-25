@@ -85,7 +85,7 @@ def _export_song_folder(song, report, destination, audio_path, source_path=None,
         if plan:report=dict(report,synchronization=plan);audio_padding_frames=plan['audio_padding_frames']
         else:audio_padding_frames=report.get('synchronization',{}).get('audio_padding_frames',audio_padding_frames)
         if not editor_all:clean_all=True
-    if report.get('difficulty_completion') or report.get('conversion',{}).get('difficulty_completion'):
+    if report.get('require_complete_set') or report.get('conversion',{}).get('require_complete_set'):
         from .difficulty_set import check_complete_conversion
         check_complete_conversion(song)
     if editor_all:
@@ -173,7 +173,10 @@ def _export_song_folder(song, report, destination, audio_path, source_path=None,
         (stage/'IMPORT_README.txt').write_text('GH3 Chart Studio song import\n\nSelect notes.chart as the chart and song.ogg as the full-mix audio in TheGHOST.\nUse the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.\nsong.ini carries the title, artist and duration; verify these in the importer.\nThis is an import folder, not a Wii game-ready archive. TheGHOST builds game assets.\nNo album artwork is supplied. Separate source tracks, if any, are mixed into song.ogg (see audio_stems).\nGuitar only: drum, vocal, keys and other non-GH3 chart data are left out (see gh3_lean).\nCheck timing, HOPO behavior and sustain lengths in TheGHOST and the game.\nIf HOPO assistance was enabled, set TheGHOST HOPO measure to 2.95.\nHOPO flips depend on this setting; HOPOs still require a starting/recovery strum.\nSee validation.json for reviewed cleanup and automated checks.\n',encoding='utf-8')
         if clean_all:
             readme=stage/'IMPORT_README.txt'
-            readme.write_text(readme.read_text(encoding='utf-8').replace('Use the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.','All included guitar difficulties were cleaned; see validation.json for repairs and any generated difficulty slots.'),encoding='utf-8')
+            readme.write_text(readme.read_text(encoding='utf-8').replace('Use the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.','Included guitar difficulties passed structural checks. See validation.json for retained, repaired and generated tracks.'),encoding='utf-8')
+        if report.get('difficulty_summary'):
+            readme=stage/'IMPORT_README.txt'
+            readme.write_text(readme.read_text(encoding='utf-8')+'\nDIFFICULTY SUMMARY\n'+'\n'.join(report['difficulty_summary'])+'\n',encoding='utf-8')
         if editor_all:
             readme=stage/'IMPORT_README.txt'
             readme.write_text(readme.read_text(encoding='utf-8').replace('Use the Medium difficulty for the four-fret output. Expert/Hard remain authored source tracks.','All included difficulties reflect the editor working copy; see validation.json for edit history.'),encoding='utf-8')

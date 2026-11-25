@@ -22,7 +22,7 @@ class EditHighway(Highway):
 
     def location(self, pos):
         e=self.editor; song=e.session.song
-        seconds=max(0,self.position+(pos.x()-90)/max(1,(self.width()-110)/6))
+        seconds=max(0,self.position+(pos.x()-90)/max(1,(self.width()-110)/6)-self.shift)
         tick=TempoClock(song).tick(seconds); step=e.step()
         tick=max(0,round(tick/step)*step)
         lane=max(0,min(self.lane_count()-1,round((pos.y()-35)/max(1,(self.height()-65)/(self.lane_count()-1)))))
@@ -99,19 +99,19 @@ class EditHighway(Highway):
 
 
 class ChartEditorDialog(QDialog):
-    def __init__(self,panel):
-        super().__init__(panel);self.panel=panel;self.session=EditSession(panel.current[0]);self.setWindowTitle('Edit chart — working copy');fit_size(self,960,680)
+    def __init__(self,panel,apply_callback=None):
+        super().__init__(panel);self.apply_callback=apply_callback;self.panel=panel;self.session=EditSession(panel.current[0]);self.setWindowTitle('Edit chart — working copy');fit_size(self,960,680)
         layout=QVBoxLayout(self)
         hint=QLabel('Right-click to add notes, star power or patterns. Drag note heads to move; drag square sustain handles to resize. Short notes: right-click → Set sustain length. Changes affect this copy only.');hint.setWordWrap(True);layout.addWidget(hint)
         row=QHBoxLayout();layout.addLayout(row);self.difficulty=QComboBox();self.difficulty.addItems([d for d in ('Expert','Hard','Medium','Easy') if self.session.song.tracks.get(d)]);self.difficulty.setCurrentText(panel.current[1]);row.addWidget(self.difficulty)
         row.addWidget(QLabel('Snap'));self.snap=QComboBox();self.snap.addItems(['¼ beat','½ beat','1 beat','⅓ beat','1 tick']);row.addWidget(self.snap)
         play=QPushButton('Play / pause');play.clicked.connect(panel.toggle);row.addWidget(play)
         self.follow=QCheckBox('Follow audio');self.follow.setChecked(True);row.addWidget(self.follow)
-        self.view=EditHighway(self);layout.addWidget(self.view,1)
+        self.view=EditHighway(self);self.view.shift=panel.highway.shift;layout.addWidget(self.view,1)
         self.seek=QSlider(Qt.Horizontal);self.seek.setRange(0,max(panel.player.duration(),int(max((self.session.song.seconds(n.tick+n.length) for ns in self.session.song.tracks.values() for n in ns),default=0)*1000)+6000));layout.addWidget(self.seek);self.seek.sliderMoved.connect(self.seek_to)
         self.status=QLabel('HOPO edits use TheGHOST measure 2.95 and require a starting strum. Purple bars indicate star power.');self.status.setWordWrap(True);layout.addWidget(self.status)
         row=QHBoxLayout();layout.addLayout(row)
-        for label,callback in [('Undo',self.undo),('Redo',self.redo),('Export edited song…',self.export),('Close editor',self.reject)]:
+        for label,callback in [('Undo',self.undo),('Redo',self.redo),('Apply edits to review' if apply_callback else 'Export edited song…',self.export),('Close editor',self.reject)]:
             button=QPushButton(label);button.clicked.connect(callback);row.addWidget(button)
         for key,callback in [('Ctrl+Z',self.undo),('Ctrl+Y',self.redo)]:
             shortcut=QShortcut(QKeySequence(key),self);shortcut.activated.connect(callback)
@@ -144,6 +144,10 @@ class ChartEditorDialog(QDialog):
             except ValueError:self.status.setText('Use space-separated G R Y B (O only outside Medium).');return
             self.edit('pattern',tick=tick,lanes=lanes,step=self.step())
     def export(self):
+        if self.apply_callback is not None:
+            try:self.apply_callback(self.session.song,self.session.log)
+            except Exception as exc:self.status.setText(str(exc));return
+            self.exported=True;self.timer.stop();self.panel.player.pause();self.accept();return
         try:check_editor_song(self.session.song)
         except ChartError as exc:self.status.setText(str(exc));return
         audio=self.panel.player.source().toLocalFile()
