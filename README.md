@@ -74,7 +74,7 @@ first, then correct metadata, preview, edit and approve.
 4. **Timing tools** previews stored Offset/delay and permits a reviewed override.
    The existing default uses `song.ini` delay, ignores chart Offset, and may add
    shared chart/audio lead-in. This is not automatic synchronization detection.
-5. Approve the listed changes and **Export reviewed copies**. Check-only mode
+5. Approve the listed changes and **Export songs**. Check-only mode
    cannot export. Open results/logs for failures as well as successful outputs.
 
 Output: an **Artist - Song Title** folder containing `notes.chart`, `song.ogg`,

@@ -50,7 +50,7 @@ The FIFO assumption is reported because the original pairing is ambiguous.
 
 ## Verification
 
-Final full local suite: **405 passed, 5 skipped in 47.03 seconds**. See M19_TEST_RESULTS.txt for the full executed result. A preceding full run stalled without a summary and was manually interrupted; M19_INTERRUPTED_TEST_RUN.txt retains its partial progress. The successful diagnostic rerun does not establish the cause or eliminate intermittent Qt/media hangs. Python 3.11.18 with real pinned app
+Final full local suite: **406 passed, 5 skipped in 43.49 seconds**. See M19_TEST_RESULTS.txt for the full executed result. A preceding full run stalled without a summary and was manually interrupted; M19_INTERRUPTED_TEST_RUN.txt retains its partial progress. The successful diagnostic rerun does not establish the cause or eliminate intermittent Qt/media hangs. Python 3.11.18 with real pinned app
 libraries on Linux; Qt offscreen. PowerShell is unavailable, so five installer
 integration tests are skipped locally. No dependency stubs used. Windows Actions
 must be checked on the final commit before a Windows pass/build claim.
@@ -99,3 +99,5 @@ rebuild costs are unchanged. Set-list tier handling remains outside this milesto
 
 Next: Windows and one-song game acceptance; then improve blocked-candidate editing
 and persistent review sessions before adding new transcription features.
+
+Initial Windows CI: 5 large-text layout failures, 404 other tests passed; installer build skipped. Footer action labels were shortened and a wider-font regression added. See docs/M19_WINDOWS_LAYOUT_FAILURE.txt (or M19_WINDOWS_LAYOUT_FAILURE.txt in this directory). Check the PR latest run for corrected Windows evidence.

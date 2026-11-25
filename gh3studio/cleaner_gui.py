@@ -98,7 +98,7 @@ class CleanerPanel(QWidget):
         self.approve=QCheckBox('Apply the reviewed conversion and repairs' if four_fret else 'Apply the cleanup changes I reviewed');self.approve.setToolTip('Approve the listed repairs and difficulty changes. Originals stay untouched; exported arrangements may change.');outer.addWidget(self.approve)
         self.status=QLabel('Step 1 · Choose a folder. Charts, audio and metadata are matched inside each song folder.');self.status.setWordWrap(True);self.status.setObjectName('nextStep');outer.addWidget(self.status)
         row=QHBoxLayout();outer.addLayout(row)
-        self.open_output=QPushButton('Open results / logs');self.open_output.clicked.connect(self.open_folder);row.addWidget(self.open_output)
+        self.open_output=QPushButton('Results / logs');self.open_output.clicked.connect(self.open_folder);row.addWidget(self.open_output)
         self.export_button=QPushButton('Start cleaning');primary(self.export_button);self.export_button.clicked.connect(self.browse_export);row.addWidget(self.export_button,1)
         self.table.itemChanged.connect(self.selection_changed);self.selection_changed()
         if unified:
@@ -154,7 +154,7 @@ class CleanerPanel(QWidget):
         if self.four_fret:self.export_button.setText(f'Prepare && export · {checked} songs')
         if self.unified:
             checking=self.goal_choice.currentIndex()==0
-            self.export_button.setText('Check only — save scan report' if checking else f'Export reviewed copies · {checked} songs')
+            self.export_button.setText('Report only — export disabled' if checking else f'Export songs · {checked}')
             self.export_button.setEnabled(not checking and bool(checked) and not self.owner.busy())
             self.approve.setEnabled(not checking and not self.owner.busy())
     def set_checked(self,checked,ready_only=False):

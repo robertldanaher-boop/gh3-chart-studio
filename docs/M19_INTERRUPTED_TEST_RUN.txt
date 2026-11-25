@@ -7,4 +7,4 @@ Partial output:
 ........................................................................ [ 35%]
 ........................
 
-Final diagnostic rerun: see M19_TEST_RESULTS.txt (405 passed, 5 skipped).
+Final diagnostic rerun: see M19_TEST_RESULTS.txt (406 passed, 5 skipped).

@@ -43,7 +43,7 @@ reconstruction guarantee.
 ## Tests and environment
 
 Run under Python 3.11 with the real requirements-dev.txt dependencies. Local tests
-use QT_QPA_PLATFORM=offscreen and GH3_NO_UPDATE_CHECK=1. Final full local suite: 405 passed, 5 skipped in 47.03 s. Full output is
+use QT_QPA_PLATFORM=offscreen and GH3_NO_UPDATE_CHECK=1. Final full local suite: 406 passed, 5 skipped in 43.49 s. Full output is
 in docs/M19_TEST_RESULTS.txt. A prior full run stalled and was interrupted; partial
 output is retained in docs/M19_INTERRUPTED_TEST_RUN.txt. Its cause was not established,
 and intermittent Qt/media hangs remain an acceptance concern. Five installer integration tests require PowerShell
@@ -79,3 +79,5 @@ borrowed implementation introduced. Keep credits/licenses and bootstrap tests.
 
 Next milestone: native Windows and one-song TheGHOST/Dolphin acceptance; then
 persistent review state and safe editing of blocked candidates.
+
+Initial Windows CI: 5 large-text layout failures, 404 other tests passed; installer build skipped. Footer action labels were shortened and a wider-font regression added. See docs/M19_WINDOWS_LAYOUT_FAILURE.txt (or M19_WINDOWS_LAYOUT_FAILURE.txt in this directory). Check the PR latest run for corrected Windows evidence.

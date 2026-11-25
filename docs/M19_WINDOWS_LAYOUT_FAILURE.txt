@@ -1,0 +1,30 @@
+Initial Windows CI evidence (before the footer-label fix)
+Run: https://github.com/robertldanaher-boop/gh3-chart-studio/actions/runs/45643783495
+Commit: aae202c58087e6b3a89c845f33e52c1c377b1f00
+
+Five large-text layout assertions failed because minimum window width was 1042,
+above the required 1024. All other 404 tests passed, including the installer
+integration tests that were skipped locally. Installer build was skipped.
+
+Layout evidence identified the combined footer action width. Reproduced locally
+with wider glyph metrics; shortened the action labels to Results / logs and
+Export songs, keeping the same functions. Added a 180% font-stretch regression.
+The original size assertions are retained. Check the PR's latest run for the
+corrected native Windows result; this initial failure is not a release pass.
+
++2026-11-25T15:20:21.3378982Z tests/test_focused_workspace.py::test_essential_actions_visible_at_1024_by_700[True] FAILED [ 35%]
+2026-11-25T15:20:23.6120758Z tests/test_focused_workspace.py::test_wider_font_metrics_fit_all_workspaces_and_export_actions[True] FAILED [ 36%]
+2026-11-25T15:20:23.9509051Z tests/test_focused_workspace.py::test_collection_source_hint_wraps_without_widening_hidden_or_active_page[True] FAILED [ 37%]
+2026-11-25T15:20:52.1442970Z tests/test_gui.py::test_guided_footer_visible_at_small_window[True] FAILED [ 42%]
+2026-11-25T15:21:27.9405980Z tests/test_song_workflow.py::test_shared_queue_footer_fits_small_window[True] FAILED [ 74%]
+2026-11-25T15:21:39.5481597Z E   assert (1042 <= 1024)
+2026-11-25T15:21:39.5569401Z E   assert (1042 <= 1024)
+2026-11-25T15:21:39.5605322Z E   assert (1042 <= 1024)
+2026-11-25T15:21:39.5646364Z E   assert (1042 <= 1024)
+2026-11-25T15:21:39.5686659Z E   assert (1042 <= 1024)
+2026-11-25T15:21:39.5729583Z assert (1042 <= 1024)
+2026-11-25T15:21:39.5763458Z assert (1042 <= 1024)
+2026-11-25T15:21:39.5803518Z assert (1042 <= 1024)
+2026-11-25T15:21:39.5837880Z assert (1042 <= 1024)
+2026-11-25T15:21:39.5873653Z assert (1042 <= 1024)
+2026-11-25T15:21:39.5874243Z ================== 5 failed, 404 passed in 97.99s (0:01:37) ===================

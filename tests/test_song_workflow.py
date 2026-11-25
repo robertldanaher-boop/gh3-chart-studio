@@ -177,3 +177,16 @@ def test_repair_does_not_inherit_hidden_sustain_transfer_choice(tmp_path,app):
     assert not panel.rows[0]['errors']
     assert panel.rows[0]['song'].tracks['Medium']==[Note(0,0)]
     w.close()
+
+
+def test_queue_footer_handles_extra_wide_text_without_widening_window(app):
+    from PySide6.QtWidgets import QWidget
+    w=Window();w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
+    for widget in [w,*w.findChildren(QWidget)]:
+        font=widget.font();font.setStretch(180);widget.setFont(font)
+    w.resize(1024,700);w.show()
+    for goal in ('clean','orange'):
+        w.enter_workspace(goal);app.processEvents()
+        assert w.width()<=1024 and w.height()<=700,w.layout_report()
+        assert w.cleaner.export_button.visibleRegion().boundingRect()==w.cleaner.export_button.rect()
+    w.close()
