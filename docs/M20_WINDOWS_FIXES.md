@@ -16,3 +16,5 @@ continues requiring valid signer trust, matching thumbprint and a timestamp.
 Read the latest PR Windows result for the corrected execution, including subsequent
 real SDK, frozen runtime and MSIX validation. Tests/verification were not disabled
 or replaced by stubs to obtain a passing production-signature claim.
+
+The next native run verified real RFC3161 signatures on PE and MSIX bundle. Inno then exposed its `uninst.e32.tmp` naming convention. The signing extension guard now permits only the specific Inno `.e32.tmp`/`.e64.tmp` suffixes, retaining SDK signature verification.

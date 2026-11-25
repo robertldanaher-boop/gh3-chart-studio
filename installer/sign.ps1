@@ -10,7 +10,10 @@ $ErrorActionPreference = 'Stop'
 try {
     $thumb = Assert-SigningThumbprint $Thumbprint
     $file = (Resolve-Path -LiteralPath $Path).Path
-    if ([IO.Path]::GetExtension($file) -notin @('.exe','.dll','.e32','.e64','.msix','.msixbundle')) { throw 'Unsupported signing file type' }
+    $signingExtension = [IO.Path]::GetExtension($file)
+    # Inno signs its uninstaller before renaming the temporary PE file.
+    if ($file -match '\.(e32|e64)\.tmp$') { $signingExtension = '.e32' }
+    if ($signingExtension -notin @('.exe','.dll','.e32','.e64','.msix','.msixbundle')) { throw 'Unsupported signing file type' }
     $tool = Find-WindowsSdkTool 'signtool'
     if (-not $VerifyOnly) {
         $uri = [uri]$TimestampUrl
