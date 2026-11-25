@@ -37,6 +37,8 @@ def test_missing_signing_identity_stops_without_modifying_file(tmp_path):
 
 
 def test_real_sign_timestamp_verify_and_tamper_rejection(tmp_path):
+    if os.environ.get('GH3_REQUIRE_WINDOWS_PACKAGING_TESTS')!='1' and os.environ.get('GH3_RUN_ISOLATED_SIGNING_TEST')!='1':
+        pytest.skip('Trust-store integration is opt-in for an isolated Windows VM/CI only')
     # Build the real installer hook against a minimal source fixture, with spaces in its path.
     source=tmp_path/'installer source';(source/'gh3studio/assets').mkdir(parents=True)
     shutil.copytree(ROOT/'installer',source/'installer',ignore=shutil.ignore_patterns('output'))
@@ -52,7 +54,7 @@ $cert=New-SelfSignedCertificate -Type CodeSigningCert -Subject $subject -KeyExpo
 $public=Join-Path $env:TEMP ([guid]::NewGuid().ToString()+'.cer')
 try {
  Export-Certificate -Cert $cert -FilePath $public | Out-Null
- Import-Certificate -FilePath $public -CertStoreLocation Cert:\CurrentUser\Root | Out-Null
+ Import-Certificate -FilePath $public -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
  # Exercise CI PFX import without exposing a password in a command line or a repository file.
  $base=Split-Path $PSCommandPath
  $pfx=Join-Path $base 'temporary-test-key.pfx'
@@ -97,7 +99,7 @@ try {
  if ($LASTEXITCODE -eq 0) {throw 'Tampered binary was accepted'}
  Write-Host 'SIGNED_TIMESTAMPED_VERIFIED_AND_TAMPER_REJECTED'
 } finally {
- Remove-Item "Cert:\CurrentUser\Root\$($cert.Thumbprint)" -Force -ErrorAction SilentlyContinue
+ Remove-Item "Cert:\LocalMachine\Root\$($cert.Thumbprint)" -Force -ErrorAction SilentlyContinue
  Remove-Item "Cert:\CurrentUser\My\$($cert.Thumbprint)" -DeleteKey -Force -ErrorAction SilentlyContinue
  Remove-Item $public -Force -ErrorAction SilentlyContinue
 }
