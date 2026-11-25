@@ -20,7 +20,8 @@ def app_icon():
 def apply_identity(app):
     """Window/taskbar icon. On Windows also group the taskbar button under the
     studio's own identity instead of python.exe (matches the shortcut's ID)."""
-    if sys.platform == 'win32':
+    from .package_runtime import is_msix
+    if sys.platform == 'win32' and not is_msix():
         try:
             import ctypes
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_USER_MODEL_ID)

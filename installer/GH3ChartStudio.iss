@@ -14,6 +14,11 @@
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
+#ifndef GH3SignedBuild
+  #ifndef GH3UnsignedBuild
+    #error Use build_installer.ps1: signed builds require a signing identity; development builds must explicitly select -Unsigned.
+  #endif
+#endif
 #define AppName "GH3 Chart Studio"
 #define AppUserModelID "GH3ChartStudio.Studio"
 #define ReleasesURL "https://github.com/robertldanaher-boop/gh3-chart-studio/releases"
@@ -34,6 +39,12 @@ DisableProgramGroupPage=yes
 DisableDirPage=yes
 CreateAppDir=no
 Uninstallable=no
+#ifdef GH3SignedBuild
+SignTool=gh3sign
+SignedUninstaller=yes
+#else
+SignedUninstaller=no
+#endif
 UsePreviousAppDir=no
 ; install.ps1 owns shortcuts and the per-user uninstall registry entry.
 PrivilegesRequired=lowest
@@ -49,7 +60,11 @@ WizardStyle=modern
 WizardImageFile=wizard_large.bmp,wizard_large_200.bmp
 WizardSmallImageFile=wizard_small.bmp,wizard_small_200.bmp
 OutputDir=output
+#ifdef GH3SignedBuild
 OutputBaseFilename=GH3ChartStudio-Setup-{#AppVersion}
+#else
+OutputBaseFilename=GH3ChartStudio-Setup-{#AppVersion}-unsigned
+#endif
 Compression=lzma2/max
 SolidCompression=yes
 CloseApplications=yes
@@ -65,7 +80,7 @@ Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "S
 ; Never overwrite the live app from Inno Setup. The shared script stages,
 ; validates at the final path, and restores the previous app on setup failure.
 Source: "..\*"; DestDir: "{tmp}\gh3-payload"; Flags: ignoreversion recursesubdirs createallsubdirs; \
-  Excludes: ".git,.github,.venv,dist,build,__pycache__,*.pyc,.pytest_cache,*.log,startup_timings.json,repository.bundle,*.zip,.startup-ready-*,installer\output"
+  Excludes: ".git,.github,.venv,dist,build,__pycache__,*.pyc,.pytest_cache,*.log,startup_timings.json,repository.bundle,*.zip,.startup-ready-*,installer\output,packaging\work,packaging\output,*.pfx,*.p12,*.key,*.pem,*.e32,*.e64"
 
 [Run]
 Filename: "{localappdata}\Programs\GH3 Chart Studio\.venv\Scripts\pythonw.exe"; \

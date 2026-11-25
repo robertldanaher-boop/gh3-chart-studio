@@ -1,83 +1,73 @@
-# GH3 Chart Studio — 0.19.0 workflow consolidation handoff
+# GH3 Chart Studio — 0.20.0 MSIX/signing handoff
 
-Prepared November 25, 2026 for Bob Danaher and the next assistant.
-Repository: https://github.com/robertldanaher-boop/gh3-chart-studio
-Working branch: workflow-consolidation. Base main: 175e6b0283895752aeeb9866b28011e65c2b2e3a.
-This is a stabilization/workflow change, pending native Windows and game acceptance.
-Do not publish a release or describe an installer as built until its CI result is checked.
+Prepared November 25, 2026. Repository: robertldanaher-boop/gh3-chart-studio.
+Branch/PR: workflow-consolidation / PR #1. Base: 1fdbaf1580c07e1efada0c95fbe297e2cac8ad03
+(the verified 0.19.0 consolidation; 411 native Windows tests passed and Inno built).
+Main remains the older baseline until the PR is merged. Do not overwrite newer work.
 
-## Read first
+Read docs/MSIX_AND_SIGNING.md, docs/M20_TEST_RESULTS.txt and the latest PR Windows
+result. Prior handoff is in docs/archive/HANDOFF_v0_19_0.md. Full source history is
+in GitHub; no actual Claude assistance was used for this milestone.
 
-Read README.md, docs/M19_RELEASE.md, docs/M19_TEST_RESULTS.txt and CHANGELOG.md.
-The full prior handoff is preserved in docs/archive/HANDOFF_v0_18_6.md.
-Use GitHub's newest main/PR state before editing. Never overwrite concurrent work,
-reuse an old ZIP baseline, or equate attached release ZIPs with committed main code.
+## New functionality
 
-## What changed
+- Self-contained PyInstaller onedir build via tools/freeze_app.py (no UPX), followed
+  by packaging/build_msix.ps1: manifest/icons, 1,000-note frozen chart/MIDI read-back,
+  native Ogg/FFmpeg/Qt/assets smoke checks, MakeAppx pack + bundle with validation,
+  optional production signing and public JSON/inventory reports.
+- installer/sign.ps1 signs using CurrentUser/My certificate thumbprint, SHA-256,
+  RFC3161 timestamp; validates trust, exact signer and timestamp. No PFX password
+  is placed on a process command line. No unsigned fallback on a signed build.
+- Inno build now uses its internal SignTool hook for setup/self-copies, verifies the
+  final EXE, and explicitly marks development unsigned output. build_windows.cmd
+  signs its standalone EXE by default too. Keys are excluded from Git/payload.
+- Protected-environment-ready CI release import/cleanup for a user-supplied PFX.
+  Production publisher/credential setup is NOT completed. Modern hardware/cloud
+  keys may need local/provider/self-hosted runner setup; hosted PFX isn't universal.
+- MSIX API/marker detection, user-data working directory, native package taskbar
+  identity, and source/Win32 update refusal. No self-replacement of WindowsApps.
 
-Home offers Repair existing charts and Create challenging Medium. Both use one
-Songs queue, including single chart files and recursive collections. Check charts
-— report only is a queue goal; it cannot export. Older converters, pattern tools
-and audio drafts remain under Advanced / experimental rather than primary tabs.
+## Release constraints — do not misstate
 
-The primary adaptation defaults to removing Orange from Expert/Hard into Medium:
-Easy retained, missing Hard/Expert left absent, no other-track repairs, no sustain
-shortening, no Orange sustain transfer. Each broader change is a separate option.
-Invalid untouched tracks block export. Main workflow refuses an empty Medium even
-when optional Easy/fill choices are enabled; legacy conversion still has its old
-explicitly documented full-set/default behavior.
+A production signing identity has not been provided, purchased or issued. MSIX
+is not an antivirus bypass or Store approval. User's exact Defender warning remains
+unknown. CI self-signed identities are isolated test roots only and never uploaded.
 
-Preview / edit has Original/Prepared comparison. It reuses PlaybackPanel with an
-isolated owner, and ChartEditorDialog uses Apply edits to review. No second export
-path inside the queue editor. Edits clear approval and retain change logs. The
-preview compensates export-only audio padding, including editor coordinate mapping.
-Per-difficulty summaries are shown and saved in validation.json/IMPORT_README.txt.
+The old THIRD_PARTY.md / FFMPEG_DEPENDENCY.md explicitly require matching-source/
+relinking/native license review before compiled redistribution. This milestone
+builds engineering bundles in CI but uploads MSIX JSON reports only on PR runs.
+Production publication requires signing plus GH3_BINARY_REDISTRIBUTION_REVIEWED=true
+AFTER the distributor arranges those materials. A boolean is not legal certification.
+Source-install fallback EXEs do not embed that self-contained runtime.
 
-The original 0.18.6 full local suite reproduced test_unpaired's failure: dangling
-notes with no possible duration before track end were silently lost. They block
-again; recoverable ones still end at track end. Overlap note-offs now use a reported
-FIFO policy, preventing an old release from shortening a restarted note. Same-tick
-duplicate note-ons don't consume the real release. FIFO is an assumption, not a
-reconstruction guarantee.
+Windows SDK/MSIX/signing and frozen-binary build results must be taken from the
+latest CI job, not inferred from Linux unit tests. Manual signed MSIX installation,
+startup, upgrade, uninstall, audible playback and TheGHOST/Dolphin acceptance remain
+separate. x64 only; no Store registration or .appinstaller feed is implemented.
 
-## Tests and environment
+## Files and tests
 
-Run under Python 3.11 with the real requirements-dev.txt dependencies. Local tests
-use QT_QPA_PLATFORM=offscreen and GH3_NO_UPDATE_CHECK=1. Final full local suite: 406 passed, 5 skipped in 43.49 s. Full output is
-in docs/M19_TEST_RESULTS.txt. A prior full run stalled and was interrupted; partial
-output is retained in docs/M19_INTERRUPTED_TEST_RUN.txt. Its cause was not established,
-and intermittent Qt/media hangs remain an acceptance concern. Five installer integration tests require PowerShell
-and are skipped when unavailable. No dependency stubs or disabled failure checks.
-A successful local suite does not certify Windows, audible output, TheGHOST or Wii.
-Check the PR Windows Actions result separately. No Claude assistance was used for
-this milestone; previous Claude-authored commits remain the baseline history.
+Changed/new: installer/windows_sdk.ps1, sign.ps1, import_ci_certificate.ps1,
+build_installer.ps1/.cmd, GH3ChartStudio.iss; packaging/build_msix.ps1,
+BUILD_MSIX.cmd, msix_manifest.py; tools/freeze_app.py; run_app.py;
+gh3studio/package_runtime.py, package_check.py, gui.py, branding.py, updates_gui.py;
+.github/workflows/windows.yml, build_windows.cmd, .gitignore, version files;
+tests/test_msix.py, test_signing_windows.py; README/CHANGELOG/this handoff and docs.
 
-## Acceptance and remaining limits
+Local Linux/Python 3.11.18 result: 414 passed, 8 skipped in 48.08 s.
+Read the full executed local result in M20_TEST_RESULTS.txt; Windows-only tests
+are explicitly skipped locally. Tests use real Windows tools/certificate APIs on
+Windows. The CI signs test PE/MSIX fixtures and a signed Inno fixture, then rejects
+a modified executable; its private key/root are removed in finally. Test fixtures
+are not release artifacts. The main CI also freezes and exercises the actual app,
+then packs the actual runtime bundle; do not equate structural packaging with
+successful OS deployment.
 
-Follow all Windows steps in docs/M19_RELEASE.md. Prioritize one real song with
-existing Easy/Medium/Hard/Expert, markers and sustains. Check the two goals, optional
-choices, Original/Prepared playback, edited export, negative-delay lead-in, a second
-batch after export, and 1024×700/large text. Import notes.chart + song.ogg together
-in TheGHOST with HOPO measure 2.95; normalized exports use zero extra importer delay.
-Then test in Dolphin before approving a collection.
+## Next action
 
-Changing goal/options regenerates rows and clears unsaved review edits (visible
-warning); choose options first. Prepared editing is available only after blockers
-are resolved; parsing-successful originals can still be previewed. Session reviews
-aren't persisted. Main MIDI import uses modern phrase interpretation; legacy mode
-is still in the advanced converter. Generic music MIDI isn't a game chart.
-
-Source files stay untouched, but reviewed exports may alter markers/holds/timing.
-Medium must never contain playable Orange: .chart lanes 0–3 and MIDI pitches 72–75.
-No arbitrary density inflation, automatic musical transcription, controller
-recording, or proven musical remapping of Orange attacks was added. Source/tempo/
-sustain mechanics must remain as authored except explicitly reviewed repairs.
-
-Installer retention/rebuild issues, set-list tiers, broader import support and
-blocked-candidate editing remain separate work. No new third-party dependency or
-borrowed implementation introduced. Keep credits/licenses and bootstrap tests.
-
-Next milestone: native Windows and one-song TheGHOST/Dolphin acceptance; then
-persistent review state and safe editing of blocked candidates.
-
-Initial Windows CI: 5 large-text layout failures, 404 other tests passed; installer build skipped. Footer action labels were shortened and a wider-font regression added. See docs/M19_WINDOWS_LAYOUT_FAILURE.txt (or M19_WINDOWS_LAYOUT_FAILURE.txt in this directory). Check the PR latest run for corrected Windows evidence.
+Finish the latest Windows CI; fix any actual build/signature failures before
+claiming success. Configure a real signing identity through secure local Windows
+certificate storage or GitHub environment secrets (never in chat). Complete the
+native dependency redistribution review, then follow every Windows step in
+MSIX_AND_SIGNING.md. Do not publish a release or merge the draft without the
+necessary review/acceptance. Medium must always remain G/R/Y/B only.

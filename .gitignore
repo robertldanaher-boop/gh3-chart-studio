@@ -11,3 +11,10 @@ startup_bootstrap.log
 startup_timings.json
 .startup-ready-*
 installer/output/
+
+packaging/work/
+packaging/output/
+*.pfx
+*.p12
+*.key
+*.pem

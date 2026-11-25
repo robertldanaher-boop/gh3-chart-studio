@@ -482,6 +482,8 @@ class Window(QMainWindow):
 
 def main():
     app=QApplication(sys.argv); app.setOrganizationName('GH3ChartStudio'); app.setApplicationName('GH3ChartStudio'); app.setStyle('Fusion')
+    from .package_runtime import configure_working_directory
+    configure_working_directory()
     from .branding import apply_identity
     apply_identity(app)
     from .first_run import FirstRunDialog, has_accepted

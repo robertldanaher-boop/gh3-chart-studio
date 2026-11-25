@@ -1,3 +1,11 @@
+# 0.20.0 — MSIX bundle packaging and explicit code signing
+
+- Primary binary path: self-contained x64 MSIX package/bundle, generated identity/icons, full MakeAppx validation, actual frozen-app conversion/audio/Qt smoke checks and binary inventory.
+- SHA-256 Authenticode signing with RFC3161 timestamp, exact certificate-store identity and verification. The fallback Inno compiler uses its internal SignTool hook; missing signing identity fails instead of silently emitting unsigned releases.
+- Explicit developer unsigned artifacts are labelled. Release MSIX publication requires signing credentials and matching-source/native-dependency redistribution review. MSIX PR artifacts are validation reports only until that review.
+- MSIX package/runtime detection, writable user-data working directory, Windows-managed update guidance and source/Win32 updater blocking. Existing chart algorithms and the four-fret Medium rule are unchanged.
+- Real Windows SDK tests exercise test-only signing, timestamps, tamper rejection, MakeAppx bundle construction and signed Inno compilation. No production identity is created or supplied. See docs/MSIX_AND_SIGNING.md and the current handoff for acceptance limits.
+
 # 0.19.0 — Clear repair and challenging-Medium workflows
 
 - One Songs queue for single charts and recursive collections. Home clearly separates Repair existing charts from Create challenging Medium; Check charts — report only cannot export.

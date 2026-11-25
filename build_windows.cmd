@@ -7,12 +7,17 @@ set QT_QPA_PLATFORM=offscreen
 .venv\Scripts\python.exe -m pytest -q
 if errorlevel 1 goto fail
 set QT_QPA_PLATFORM=
-.venv\Scripts\python.exe tools\collect_licenses.py
+.venv\Scripts\python.exe tools\freeze_app.py
 if errorlevel 1 goto fail
-.venv\Scripts\python.exe -m PyInstaller --noconfirm --clean --onedir --windowed --name GH3ChartStudio --collect-all imageio_ffmpeg --add-data "LICENSE;." --add-data "docs;docs" --add-data "licenses;licenses" --add-data "examples;examples" --add-data "gh3studio/assets;gh3studio/assets" --icon gh3studio/assets/app.ico run_app.py
-if errorlevel 1 goto fail
-echo Built dist\GH3ChartStudio\GH3ChartStudio.exe. Keep the entire folder together.
-echo This build still needs the manual acceptance test in docs\WINDOWS_TEST.md.
+if /I "%~1"=="-Unsigned" (
+  echo UNSIGNED DEVELOPMENT BUILD: dist\GH3ChartStudio\GH3ChartStudio.exe
+) else (
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File installer\sign.ps1 -Path dist\GH3ChartStudio\GH3ChartStudio.exe -ReportPath dist\GH3ChartStudio-signature.json
+  if errorlevel 1 goto fail
+  echo Signed and verified dist\GH3ChartStudio\GH3ChartStudio.exe.
+)
+echo Keep the entire folder together. MSIX is the primary package: packaging\BUILD_MSIX.cmd.
+echo Manual Windows and dependency redistribution acceptance remain required.
 pause
 exit /b 0
 :fail

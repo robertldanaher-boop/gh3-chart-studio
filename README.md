@@ -1,8 +1,22 @@
-# GH3 Chart Studio 0.19.0 — Wii chart workshop
+# GH3 Chart Studio 0.20.0 — Wii chart workshop
 
 Repair an existing guitar-game chart, or turn Expert/Hard into a challenging
 four-fret Medium. One **Songs** queue handles a single chart or a folder collection.
 Original files are never edited. Reviewed exports may change gameplay.
+
+## MSIX packaging and signing (0.20.0)
+
+The new binary packaging path builds a self-contained x64 **MSIX bundle**. See
+[MSIX/signing instructions](docs/MSIX_AND_SIGNING.md) for Windows build commands,
+certificate configuration and the installation/upgrade checklist. Signed builds
+require your real signing identity; no certificate or guaranteed Defender/Store
+approval is supplied. Public native-binary publication is gated on signing and
+the existing bundled dependency source/license review. PR CI uploads MSIX validation
+reports rather than redistributing an unreviewed runtime.
+
+The source workflow below remains available. Inno Setup is retained as a signed
+fallback; explicit -Unsigned builds are labelled as development artifacts. MSIX
+uses Windows-managed updates and does not run the source/Win32 updater.
 
 ## Start on Windows 10/11 x64
 

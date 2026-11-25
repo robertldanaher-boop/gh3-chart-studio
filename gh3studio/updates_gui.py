@@ -112,7 +112,8 @@ class UpdateChecker(QObject):
     def check_on_startup(self):
         """Every launch: look for a newer release; prompt only when one exists
         (no message when up to date, offline or the releases are not visible)."""
-        if os.environ.get('GH3_NO_UPDATE_CHECK'):
+        from .package_runtime import is_msix
+        if os.environ.get('GH3_NO_UPDATE_CHECK') or is_msix():
             return False
         return self.check(manual=False)
 
@@ -125,6 +126,10 @@ class UpdateChecker(QObject):
         return self.check(manual=False)
 
     def check(self, manual=True):
+        from .package_runtime import is_msix
+        if is_msix():
+            if manual:self.notify('This MSIX installation is managed by Windows. Install a newer signed MSIX bundle with the same publisher, or update through the Microsoft Store when available. The source/Win32 updater is disabled.')
+            return False
         if self.running():
             return False
         self.manual = manual
@@ -156,6 +161,10 @@ class UpdateChecker(QObject):
         return bool(window is not None and window.busy())
 
     def start_install(self, result):
+        from .package_runtime import is_msix
+        if is_msix():
+            self.notify('MSIX updates must be installed through Windows; source/Win32 setup cannot update this package.')
+            return False
         if self.installing:
             return False
         if self._owner_busy():
