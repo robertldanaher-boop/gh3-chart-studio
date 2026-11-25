@@ -50,7 +50,7 @@ The FIFO assumption is reported because the original pairing is ambiguous.
 
 ## Verification
 
-Final full local suite: **404 passed, 5 skipped in 43.28 seconds**. See M19_TEST_RESULTS.txt for the full executed result. A preceding full run stalled without a summary and was manually interrupted; M19_INTERRUPTED_TEST_RUN.txt retains its partial progress. The successful diagnostic rerun does not establish the cause or eliminate intermittent Qt/media hangs. Python 3.11.18 with real pinned app
+Final full local suite: **405 passed, 5 skipped in 47.03 seconds**. See M19_TEST_RESULTS.txt for the full executed result. A preceding full run stalled without a summary and was manually interrupted; M19_INTERRUPTED_TEST_RUN.txt retains its partial progress. The successful diagnostic rerun does not establish the cause or eliminate intermittent Qt/media hangs. Python 3.11.18 with real pinned app
 libraries on Linux; Qt offscreen. PowerShell is unavailable, so five installer
 integration tests are skipped locally. No dependency stubs used. Windows Actions
 must be checked on the final commit before a Windows pass/build claim.

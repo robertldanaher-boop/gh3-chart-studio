@@ -110,7 +110,7 @@ class CleanerPanel(QWidget):
     def inspection_options(self):
         if not self.unified:
             return dict(medium_source=self.bulk_source.currentText(),preserve_sustains=self.bulk_sustains.isChecked()) if self.four_fret else {}
-        options=dict(allow_empty_fallback=False,repair_sustains=self.repair_sustains.isChecked(),repair_medium_orange=self.repair_orange.isChecked(),preserve_sustains=self.bulk_sustains.isChecked())
+        options=dict(allow_empty_fallback=False,repair_sustains=self.repair_sustains.isChecked(),repair_medium_orange=self.repair_orange.isChecked(),preserve_sustains=self.four_fret and self.bulk_sustains.isChecked())
         if self.four_fret:options.update(medium_source=self.bulk_source.currentText(),preserve_sustains=self.bulk_sustains.isChecked(),create_easy=self.create_easy.isChecked(),fill_missing=self.fill_missing.isChecked(),repair_others=self.repair_others.isChecked())
         return options
     def change_goal(self,*args):

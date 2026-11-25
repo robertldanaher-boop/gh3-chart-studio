@@ -168,3 +168,12 @@ def test_scan_brings_song_review_into_view_at_small_size(tmp_path,app):
     assert w.cleaner.table.visibleRegion().boundingRect().height()>=125
     assert w.cleaner.export_button.visibleRegion().boundingRect()==w.cleaner.export_button.rect()
     w.close()
+
+
+def test_repair_does_not_inherit_hidden_sustain_transfer_choice(tmp_path,app):
+    path,_=song_folder(tmp_path,{'Expert':[Note(0,0),Note(192,2)],'Medium':[Note(0,0),Note(96,4,48)]})
+    w=Window();panel=w.cleaner;panel.set_goal('orange');panel.bulk_sustains.setChecked(True)
+    panel.set_goal('clean');panel.repair_orange.setChecked(True);panel.scan(path);wait(w)
+    assert not panel.rows[0]['errors']
+    assert panel.rows[0]['song'].tracks['Medium']==[Note(0,0)]
+    w.close()
