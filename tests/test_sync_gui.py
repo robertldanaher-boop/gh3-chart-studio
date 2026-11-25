@@ -32,7 +32,7 @@ def test_dialog_presets_preview_confirmation_and_cancel(tmp_path,app):
 
 def test_cleaner_review_button_rechecks_then_exports_without_mutating_converter(tmp_path,app):
     path=fixture(tmp_path/'source',{'Name':'Study','Artist':'Artist','Offset':'0.2'})
-    w=Window();w.cleaner.scan(path.parent);wait(w);w.show();panel=w.cleaner
+    w=Window();w.cleaner.repair_sustains.setChecked(True);w.cleaner.scan(path.parent);wait(w);w.show();panel=w.cleaner
     assert not panel.rows[0]['errors'];assert panel.sync_button.isEnabled()
     assert 'automatic — song.ini delay only' in panel.details.toPlainText()
     def accept_dialog():
@@ -78,7 +78,7 @@ def test_conflicting_anchor_requires_separate_acknowledgement(tmp_path,app):
 def test_gui_automatic_delay_exports_without_sync_dialog(tmp_path,app):
     path=fixture(tmp_path/'source',{'Name':'Automatic','Artist':'Artist','Offset':'0.2'})
     (path.parent/'song.ini').write_text('[song]\ndelay=75\n',encoding='utf-8')
-    w=Window();panel=w.cleaner;panel.scan(path.parent);wait(w)
+    w=Window();panel=w.cleaner;panel.repair_sustains.setChecked(True);panel.scan(path.parent);wait(w)
     assert not panel.rows[0]['errors'] and 'sync_review' not in panel.rows[0]
     assert panel.rows[0]['synchronization']['reviewed_shift_ms']==75
     assert panel.findChild(SynchronizationDialog) is None

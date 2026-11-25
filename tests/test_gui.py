@@ -21,7 +21,7 @@ def app():
     application.processEvents()
 
 def test_gui_workflow(tmp_path,app):
-    window=Window(); window.show()
+    window=Window(); window.show(); window.open_reserved(window.converter)
     mime=QMimeData(); mime.setUrls([QUrl.fromLocalFile(str(FIXTURE))])
     window.dropEvent(QDropEvent(QPointF(50,50),Qt.CopyAction,mime,Qt.LeftButton,Qt.NoModifier)); wait(window)
     assert window.song is not None
@@ -464,7 +464,7 @@ def test_orange_sustain_transfer_checkbox(tmp_path,app):
 def test_clean_goal_reviews_and_exports_folder(tmp_path,app):
     from test_cleaner import fixture
     source=tmp_path/'songs';fixture(source/'one')
-    w=Window();assert w.start_guided('clean',str(source));wait(w)
+    w=Window();w.cleaner.repair_sustains.setChecked(True);assert w.start_guided('clean',str(source));wait(w)
     assert w.tabs.currentWidget() is w.cleaner
     assert len(w.cleaner.rows)==1 and not w.cleaner.rows[0]['errors']
     assert w.cleaner.table.item(0,0).checkState()==Qt.Checked
@@ -534,7 +534,7 @@ def test_cleaner_bulk_selection_and_visible_start(tmp_path,app,monkeypatch):
     from PySide6.QtWidgets import QFileDialog
     source=tmp_path/'songs';fixture(source/'one');fixture(source/'two')
     bad=fixture(source/'bad');bad.write_text('broken',encoding='utf-8')
-    w=Window();w.resize(1024,700);w.show();w.start_guided('clean',str(source));wait(w)
+    w=Window();w.cleaner.repair_sustains.setChecked(True);w.resize(1024,700);w.show();w.start_guided('clean',str(source));wait(w)
     panel=w.cleaner
     panel.select_none.click()
     assert all(panel.table.item(i,0).checkState()==Qt.Unchecked for i in range(3))
@@ -556,7 +556,7 @@ def test_cleaner_select_all_reports_blocked_and_exports_valid(tmp_path,app,monke
     import json
     source=tmp_path/'songs';fixture(source/'good')
     bad=fixture(source/'bad');bad.write_text('broken',encoding='utf-8')
-    w=Window();w.cleaner.scan(source);wait(w);panel=w.cleaner
+    w=Window();w.cleaner.repair_sustains.setChecked(True);w.cleaner.scan(source);wait(w);panel=w.cleaner
     panel.select_all.click()
     assert all(panel.table.item(i,0).checkState()==Qt.Checked for i in range(2))
     assert '2 checked of 2' in panel.selection_summary.text()

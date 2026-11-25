@@ -1,3 +1,21 @@
+# 0.20.0 — MSIX bundle packaging and explicit code signing
+
+- Primary binary path: self-contained x64 MSIX package/bundle, generated identity/icons, full MakeAppx validation, actual frozen-app conversion/audio/Qt smoke checks and binary inventory.
+- SHA-256 Authenticode signing with RFC3161 timestamp, exact certificate-store identity and verification. The fallback Inno compiler uses its internal SignTool hook; missing signing identity fails instead of silently emitting unsigned releases.
+- Explicit developer unsigned artifacts are labelled. Release MSIX publication requires signing credentials and matching-source/native-dependency redistribution review. MSIX PR artifacts are validation reports only until that review.
+- MSIX package/runtime detection, writable user-data working directory, Windows-managed update guidance and source/Win32 updater blocking. Existing chart algorithms and the four-fret Medium rule are unchanged.
+- Real Windows SDK tests exercise test-only signing, timestamps, tamper rejection, MakeAppx bundle construction and signed Inno compilation. No production identity is created or supplied. See docs/MSIX_AND_SIGNING.md and the current handoff for acceptance limits.
+
+# 0.19.0 — Clear repair and challenging-Medium workflows
+
+- One Songs queue for single charts and recursive collections. Home clearly separates Repair existing charts from Create challenging Medium; Check charts — report only cannot export.
+- Main adaptation keeps authored Easy/Hard/Expert unless explicitly selected otherwise. Optional Easy replacement, missing-slot copies, other-track repair, Orange sustain transfer and sustain shortening are visible choices, initially off.
+- Unapproved sustain repairs and invalid retained tracks block export. Main workflow blocks an empty Medium instead of inventing notes. Medium remains G/R/Y/B only.
+- Original/Prepared playback and the existing editor feed back into the queue; Apply edits clears approval and export stays in Songs. Preview/editor account for export-only audio padding. Reports include per-difficulty summaries.
+- MIDI FIFO release pairing preserves restarted sustains; duplicate note-ons are handled and dangling notes with no recoverable duration block again, addressing the reproduced 0.18.6 test failure.
+- Current feature/usage documentation replaces stale historical claims. Previous handoff archived; advanced/experimental tools remain available with their broader legacy behavior documented.
+- See docs/M19_RELEASE.md, docs/M19_TEST_RESULTS.txt and HANDOFF_LATEST.md for evidence, limits and exact Windows checks. Native Windows/game acceptance is a separate step.
+
 # 0.18.6 — Downloaded MIDI charts no longer blocked by overlaps or track names
 
 Bob: songs blocked with "No PART GUITAR or T1 GEMS track found" and "Overlapping MIDI pitch 84 at 166464".

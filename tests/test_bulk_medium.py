@@ -72,11 +72,11 @@ def test_medium_collection_entry_routes_scan_nested_songs(tmp_path,monkeypatch,r
     root=tmp_path/'collection'
     fixture(root/'artist'/'album'/'one',tracks={'Expert':[Note(0,0),Note(192,4,96)]})
     fixture(root/'two',tracks={'Hard':[Note(0,1),Note(192,3)]})
-    w=Window();w.show();w.welcome.actions['orange'].click();app.processEvents()
+    w=Window();w.cleaner.create_easy.setChecked(True);w.cleaner.fill_missing.setChecked(True);w.cleaner.repair_others.setChecked(True);w.cleaner.repair_sustains.setChecked(True);w.show();w.welcome.actions['orange'].click();app.processEvents()
     if route=='folder_button':
         monkeypatch.setattr(QFileDialog,'getExistingDirectory',lambda *args,**kwargs:str(root))
-        assert w.adapt.folder_button.isVisible()
-        w.adapt.folder_button.click()
+        assert w.cleaner.scan_button.isVisible()
+        w.cleaner.scan_button.click()
     elif route in ('drop','home_drop'):
         if route=='home_drop':w.tabs.setCurrentWidget(w.welcome)
         mime=QMimeData();mime.setUrls([QUrl.fromLocalFile(str(root))])
@@ -84,10 +84,9 @@ def test_medium_collection_entry_routes_scan_nested_songs(tmp_path,monkeypatch,r
         w.dropEvent(event);assert event.isAccepted()
     else:assert w.start_guided('orange',root)
     wait(w);app.processEvents()
-    assert w.goal=='orange' and w.tabs.currentWidget() is w.adapt
-    assert w.adapt.pages.currentWidget() is w.adapt.bulk
-    assert len(w.adapt.bulk.rows)==2 and not w.cleaner.rows
-    for row in w.adapt.bulk.rows:
+    assert w.goal=='orange' and w.tabs.currentWidget() is w.cleaner
+    assert len(w.cleaner.rows)==2 and not w.adapt.bulk.rows
+    for row in w.cleaner.rows:
         assert not row['errors']
         assert row['song'].tracks['Medium'] and all(n.lane<4 for n in row['song'].tracks['Medium'])
         assert row['song'].tracks['Easy'] and all(n.lane<3 for n in row['song'].tracks['Easy'])
@@ -105,20 +104,20 @@ def test_second_batch_after_export_scans_and_shows_all_songs(tmp_path):
     first=tmp_path/'batch one';fixture(first/'a',tracks={'Expert':[Note(0,0),Note(192,4,96)]})
     second=tmp_path/'batch two'
     fixture(second/'b',tracks={'Expert':[Note(0,1),Note(192,2)]});fixture(second/'c',tracks={'Hard':[Note(0,0),Note(96,3)]})
-    w=Window();w.show();w.welcome.actions['orange'].click();app.processEvents()
+    w=Window();w.cleaner.create_easy.setChecked(True);w.cleaner.fill_missing.setChecked(True);w.cleaner.repair_others.setChecked(True);w.cleaner.repair_sustains.setChecked(True);w.show();w.welcome.actions['orange'].click();app.processEvents()
     def drop(folder):
         mime=QMimeData();mime.setUrls([QUrl.fromLocalFile(str(folder))])
         event=QDropEvent(QPointF(50,50),Qt.CopyAction,mime,Qt.LeftButton,Qt.NoModifier)
         w.dropEvent(event);assert event.isAccepted();wait(w);app.processEvents()
-    bulk=w.adapt.bulk
+    bulk=w.cleaner
     drop(first);assert len(bulk.rows)==1
     bulk.approve.setChecked(True);bulk.output_path.setText(str(tmp_path/'out'))
     bulk.export_button.click();wait(w);app.processEvents()
     assert (tmp_path/'out'/'cleanup_summary.json').exists()
-    assert w.goal=='orange' and w.tabs.currentWidget() is w.adapt  # export keeps the Prepare workflow
+    assert w.goal=='orange' and w.tabs.currentWidget() is w.cleaner  # export keeps the Prepare workflow
     bulk.search.setText('nothing matches this');bulk.filter.setCurrentIndex(1)  # leftovers from batch one
     drop(second)
-    assert w.tabs.currentWidget() is w.adapt and w.adapt.pages.currentWidget() is bulk
+    assert w.tabs.currentWidget() is bulk
     assert sorted(Path(r['path']).parent.name for r in bulk.rows)==['b','c']
     assert bulk.search.text()=='' and bulk.filter.currentIndex()==0
     assert not any(bulk.table.isRowHidden(i) for i in range(len(bulk.rows)))

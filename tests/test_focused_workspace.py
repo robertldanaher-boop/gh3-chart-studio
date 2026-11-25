@@ -13,7 +13,7 @@ from test_cleaner import fixture
 def test_home_only_offers_essential_goals_and_reserve_is_reversible(app):
     w=Window();w.show();app.processEvents()
     assert set(w.welcome.actions)=={'clean','orange'}
-    assert [w.tabs.tabText(i) for i in range(w.tabs.count()) if w.tabs.isTabVisible(i)]==['Home','Prepare songs','Clean only']
+    assert [w.tabs.tabText(i) for i in range(w.tabs.count()) if w.tabs.isTabVisible(i)]==['Home','Songs']
     w.welcome.actions['clean'].click();assert w.tabs.currentWidget() is w.cleaner
     w.open_reserved(w.library);assert w.tabs.currentWidget() is w.library and w.tabs.isTabVisible(w.tabs.indexOf(w.library))
     w.hide_reserved();assert w.tabs.currentWidget() is w.welcome
@@ -26,7 +26,7 @@ def test_essential_actions_visible_at_1024_by_700(app,large_text):
     w=Window()
     if large_text:w.setStyleSheet(w.styleSheet()+'\nQWidget {font-size:18px;}')
     w.resize(1024,700);w.show()
-    for goal,panel in [('clean',w.cleaner),('orange',w.adapt)]:
+    for goal,panel in [('clean',w.cleaner),('orange',w.cleaner)]:
         w.enter_workspace(goal);app.processEvents()
         assert w.width()<=1024 and w.height()<=700, w.layout_report()
         assert panel.export_button.visibleRegion().boundingRect().height()>=panel.export_button.height()-2
@@ -60,7 +60,7 @@ def test_guided_medium_preserves_sustain_and_compares_exact_source(tmp_path,app)
 
 def test_cleaner_filter_full_queue_selection_and_failed_log_access(tmp_path,app):
     good=fixture(tmp_path/'songs'/'good');bad=fixture(tmp_path/'songs'/'bad');bad.write_text('broken',encoding='utf-8')
-    w=Window();w.start_guided('clean',tmp_path/'songs');wait(w);panel=w.cleaner
+    w=Window();w.cleaner.repair_sustains.setChecked(True);w.start_guided('clean',tmp_path/'songs');wait(w);panel=w.cleaner
     panel.filter.setCurrentText('Needs help');app.processEvents()
     for i,row in enumerate(panel.rows):assert panel.table.isRowHidden(i)==(not row['errors'])
     panel.select_all.click();assert all(panel.table.item(i,0).checkState()==Qt.Checked for i in range(2))
@@ -79,7 +79,7 @@ def test_reserved_preview_returns_to_focused_workspace(app):
     w=Window();w.start_guided('orange',FIXTURE);wait(w)
     w.open_reserved(w.audio);w.audio.show_listen();app.processEvents()
     assert w.audio.pages.currentWidget() is w.playback
-    w.enter_workspace('orange');app.processEvents()
+    w.open_reserved(w.adapt);app.processEvents()
     assert w.adapt.isAncestorOf(w.playback) and not w.playback.legacy_conversion.isVisible()
     assert w.adapt.source.count()>0
     w.close()
@@ -136,7 +136,7 @@ def test_collection_source_hint_wraps_without_widening_hidden_or_active_page(app
     w.resize(1024,700);w.show();app.processEvents()
     assert hint.fontMetrics().horizontalAdvance(hint.text())>1024
     assert w.width()<=1024 and w.height()<=700, w.layout_report()
-    w.enter_workspace('orange');w.adapt.open_bulk();app.processEvents()
+    w.open_reserved(w.adapt);w.adapt.open_bulk();app.processEvents()
     assert w.width()<=1024 and w.height()<=700, w.layout_report()
     assert hint.height()>=hint.heightForWidth(hint.width())
     for button in (panel.export_button,panel.open_output,panel.output_button):
@@ -150,7 +150,8 @@ def test_collection_source_hint_wraps_without_widening_hidden_or_active_page(app
 
 def test_shared_prepare_toolbar_replaces_duplicate_folder_picker(app):
     w=Window();w.show();w.welcome.actions['orange'].click();app.processEvents()
-    assert w.welcome.actions['orange'].text()=='Prepare my songs'
+    assert w.welcome.actions['orange'].text()=='Create challenging Medium'
+    w.open_reserved(w.adapt);app.processEvents()
     for mode in (0,1):
         w.adapt.mode.setCurrentIndex(mode);app.processEvents()
         for button in (w.adapt.open_button,w.adapt.folder_button):

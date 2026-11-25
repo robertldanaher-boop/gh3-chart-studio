@@ -59,7 +59,9 @@ def read_midi(path, phrase_mode='modern'):
                         # Same fret restarted before its note-off (common in downloaded
                         # charts): end the earlier note here, as Clone Hero/Moonscraper do.
                         start = active.pop(key)
-                        early_ends[key] = early_ends.get(key, 0) + 1
+                        if absolute == start:
+                            song.warnings.append(f'Ignored duplicate MIDI note-on {msg.note} at {absolute}')
+                        else:early_ends[key] = early_ends.get(key, 0) + 1
                         if absolute > start:
                             spans.append((start,msg.note,absolute-start)); overlaps += 1
                         # A repeated note-on at the same tick is the same note.
@@ -69,8 +71,8 @@ def read_midi(path, phrase_mode='modern'):
                         if early_ends.get(key):
                             early_ends[key] -= 1; continue  # original end of a note already ended
                         song.warnings.append(f'Ignored stray MIDI note-off {msg.note} at {absolute}'); continue
-                    if early_ends.get(key) and absolute == active[key]:
-                        early_ends[key] -= 1; continue  # late note-off landing on the restart tick
+                    if early_ends.get(key):
+                        early_ends[key] -= 1; continue  # FIFO: original note-off must not shorten its restart
                     start = active.pop(key)
                     spans.append((start,msg.note,absolute-start))
             elif guitar and msg.type=='sysex':
@@ -78,7 +80,8 @@ def read_midi(path, phrase_mode='modern'):
         if guitar and active:
             # A note still sounding when the track ends: end it at the track end.
             for key,start in active.items():
-                if absolute > start:spans.append((start,key[1],absolute-start))
+                if absolute <= start:raise ChartError('Unterminated MIDI notes have no positive span before track end; review source')
+                spans.append((start,key[1],absolute-start))
             song.warnings.append(f'{len(active)} MIDI notes had no note-off; ended at the end of the track.')
         if guitar:
             modern_sp = []
@@ -101,7 +104,7 @@ def read_midi(path, phrase_mode='modern'):
             if modern_sp:
                 for diff in song.tracks:
                     song.phrases.setdefault(diff,[]).extend(modern_sp)
-    if overlaps:song.warnings.append(f'{overlaps} overlapping MIDI notes on the same fret were ended where the next one starts.')
+    if overlaps:song.warnings.append(f'{overlaps} overlapping MIDI notes on the same fret were ended where the next one starts; note-offs paired in FIFO order (review repaired sustains).')
     song.tempos = sorted(set(tempos)) or song.tempos
     song.signatures = sorted(set(signatures)) or song.signatures
     if song.tempos[0][0] != 0: song.tempos.insert(0,(0,Fraction(500000)))
