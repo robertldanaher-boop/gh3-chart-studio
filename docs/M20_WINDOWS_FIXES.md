@@ -18,3 +18,5 @@ real SDK, frozen runtime and MSIX validation. Tests/verification were not disabl
 or replaced by stubs to obtain a passing production-signature claim.
 
 The next native run verified real RFC3161 signatures on PE and MSIX bundle. Inno then exposed its `uninst.e32.tmp` naming convention. The signing extension guard now permits only the specific Inno `.e32.tmp`/`.e64.tmp` suffixes, retaining SDK signature verification.
+
+Final corrected code commit `6e0c203` passed the complete Windows job: 422 tests, frozen app smoke, actual MSIX pack/bundle and unsigned fallback installer. See M20_RELEASE.md for the run and evidence.

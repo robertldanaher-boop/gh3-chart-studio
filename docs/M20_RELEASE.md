@@ -64,3 +64,29 @@ Next: finish Windows build/signature checks, configure a real identity securely,
 arrange native corresponding-source materials, then execute the signed-MSIX clean
 VM installation/upgrade/uninstall and one-song TheGHOST/Dolphin tests listed in
 MSIX_AND_SIGNING.md. Keep the PR unmerged/unpublished until accepted.
+
+## Final native Windows verification — November 25, 2026
+
+Code commit: `6e0c203af078b64c1e8ad134925e64e9c10f9aef`.
+Successful run: https://github.com/robertldanaher-boop/gh3-chart-studio/actions/runs/45655608388
+
+- Windows x64 Python 3.11: **422 passed in 114.51 seconds**, no skips.
+- Real SDK signing/timestamp/verification, tamper rejection, PFX import and signed
+  Inno fixture passed using an isolated temporary identity, removed afterwards.
+- Actual frozen app passed chart/MIDI read-back, four-fret Medium, Ogg encode/decode,
+  bundled FFmpeg execution and Qt window/assets checks.
+- Actual self-contained x64 MSIX package and bundle passed MakeAppx validation.
+- Engineering bundle version 0.20.0.0 was explicitly unsigned. SHA-256:
+  `D0E39200E64BA91CF7FA66D1710EA3248211DD6A3803E93C83BE968E52A98958`.
+- Downloaded CI validation JSON confirmed all four frozen checks true,
+  makeappx_validation=passed, signed=false, installation_tested=false,
+  game_compatibility_tested=false. Only MSIX reports were uploaded; the runtime
+  bundle remains gated on the existing native redistribution review.
+- Explicitly unsigned source-install fallback Inno EXE compiled and uploaded.
+- Latest Linux regression repeat: **414 passed, 8 skipped in 46.06 seconds**.
+
+This proves compilation, frozen functional smoke and structural packaging, not
+public publisher trust, deployment/upgrade/uninstall or in-game acceptance.
+Next milestone: configure the real signing identity, complete native redistribution
+materials, then execute the clean Windows 10/11 acceptance steps in
+MSIX_AND_SIGNING.md. No production release was signed or published.
